@@ -4,7 +4,8 @@ import { Pause, Play, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { useCoachTeam } from "@/components/coach/team-picker";
+import { FormationPitch, FORMATIONS, type FormationName } from "@/components/match/formation-pitch";
+import { TeamPicker, useCoachTeam } from "@/components/coach/team-picker";
 import { useClubStore } from "@/stores/club-store";
 import { useMatchStore, type PlayerMatchState } from "@/stores/match-store";
 
@@ -31,16 +32,18 @@ export function LiveMatchTracker() {
   const [selectedOn, setSelectedOn] = useState<string | null>(null);
   const [opponent, setOpponent] = useState("");
   const [saved, setSaved] = useState(false);
+  const [formation, setFormation] = useState<FormationName>("4-4-2");
+  const teamId = team?.id ?? "";
   const squadKey = clubPlayers
-    .filter((player) => player.teamId === team?.id)
+    .filter((player) => player.teamId === teamId)
     .map((player) => player.id)
     .join("|");
   const teamName = team?.name ?? "Squad";
 
   useEffect(() => {
-    if (!team || isClockRunning || matchTimeSeconds > 0) return;
+    if (!teamId || isClockRunning || matchTimeSeconds > 0) return;
     const squad = clubPlayers
-      .filter((player) => player.teamId === team.id)
+      .filter((player) => player.teamId === teamId)
       .sort((a, b) => a.squadNumber - b.squadNumber)
       .map((player, index) => ({
         playerId: player.id,
@@ -50,8 +53,11 @@ export function LiveMatchTracker() {
         isOnPitch: index < 11,
         minutesPlayed: 0,
       }));
+    const current = useMatchStore.getState().players.map((player) => player.playerId).join("|");
+    const next = squad.map((player) => player.playerId).join("|");
+    if (current === next) return;
     loadSquad(squad);
-  }, [clubPlayers, isClockRunning, loadSquad, matchTimeSeconds, squadKey, team]);
+  }, [clubPlayers, isClockRunning, loadSquad, matchTimeSeconds, squadKey, teamId]);
 
   useEffect(() => {
     if (!isClockRunning) return;
@@ -82,32 +88,57 @@ export function LiveMatchTracker() {
     setSelectedOn((current) => (current === playerId ? null : playerId));
   }
 
+  const emptyMessage = !team
+    ? "Choose a team before kickoff."
+    : players.length === 0
+      ? `Add players to ${team.name} before kickoff.`
+      : null;
+
   return (
-    <div className="space-y-4">
-      <section className="rounded-xl bg-slate-900 p-4 text-white shadow-lg">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-emerald-300">{teamName}</p>
-            <label className="mt-2 block text-sm font-semibold text-emerald-100">
-              Opponent
-              <input
-                value={opponent}
-                onChange={(event) => {
-                  setOpponent(event.target.value);
-                  setSaved(false);
-                }}
-                placeholder="Opposition"
-                className="mt-1 block h-11 w-56 rounded-md border border-slate-600 bg-slate-800 px-3 text-base text-white"
-              />
-            </label>
+    <div className="min-w-0 max-w-full space-y-4 overflow-x-hidden">
+      <TeamPicker />
+      <div className="match-stage min-w-0 [@media(orientation:landscape)_and_(max-height:520px)]:grid [@media(orientation:landscape)_and_(max-height:520px)]:grid-cols-[minmax(0,1fr)_17rem] [@media(orientation:landscape)_and_(max-height:520px)]:items-stretch [@media(orientation:landscape)_and_(max-height:520px)]:gap-3">
+        <div className="flex min-h-0 min-w-0 flex-col">
+          <div className="mb-2 flex shrink-0 flex-wrap gap-1">
+            {FORMATIONS.map((name) => (
+              <button
+                key={name}
+                type="button"
+                onClick={() => setFormation(name)}
+                className={`h-9 rounded-md px-3 text-sm font-bold ${
+                  formation === name ? "bg-emerald-600 text-white" : "bg-white text-slate-950 ring-1 ring-slate-300"
+                }`}
+              >
+                {name}
+              </button>
+            ))}
           </div>
+          <div className="min-h-0 flex-1">
+            <FormationPitch formation={formation} players={players} emptyMessage={emptyMessage} />
+          </div>
+        </div>
+      <section className="mt-4 min-w-0 rounded-xl bg-slate-900 p-4 text-white shadow-lg [@media(orientation:landscape)_and_(max-height:520px)]:mt-0 [@media(orientation:landscape)_and_(max-height:520px)]:overflow-y-auto [@media(orientation:landscape)_and_(max-height:520px)]:p-3">
+        <div className="flex items-start justify-between gap-3">
+          <p className="text-sm font-semibold uppercase tracking-wide text-emerald-300">{teamName}</p>
           <p className="rounded-full bg-emerald-500 px-3 py-1 text-sm font-bold text-slate-950">
             {isClockRunning ? "LIVE" : "READY"}
           </p>
         </div>
-        <p className="my-4 text-center font-mono text-6xl tracking-wider text-emerald-400">
+        <p className="my-4 text-center font-mono text-5xl tracking-wider text-emerald-400 [@media(orientation:landscape)_and_(max-height:520px)]:my-2 [@media(orientation:landscape)_and_(max-height:520px)]:text-4xl">
           {formatClock(matchTimeSeconds)}
         </p>
+        <label className="mb-3 block text-sm font-semibold text-emerald-100">
+          Opponent
+          <input
+            value={opponent}
+            onChange={(event) => {
+              setOpponent(event.target.value);
+              setSaved(false);
+            }}
+            placeholder="Opposition"
+            className="mt-1 block h-11 w-full max-w-full rounded-md border border-slate-600 bg-slate-800 px-3 text-base text-white [@media(orientation:landscape)_and_(max-height:520px)]:h-9"
+          />
+        </label>
         <div className="flex flex-wrap justify-center gap-3">
           <Button
             type="button"
@@ -155,14 +186,14 @@ export function LiveMatchTracker() {
           </Button>
         </div>
         <p className="mt-3 text-center text-sm font-medium text-slate-300">
-          {!team ? "Choose a team on the coach home page. " : null}
-          {team && players.length === 0 ? `Add players to ${team.name} before kickoff. ` : null}
+          {emptyMessage ? `${emptyMessage} ` : null}
           {saved ? "Minutes saved. Players with time on the pitch are marked present." : null}{" "}
           Tap a player on the pitch, then a bench player, to substitute. Minutes accrue only while the clock runs.
         </p>
       </section>
+      </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid min-w-0 gap-4 md:grid-cols-2">
         <PlayerColumn
           title={`On pitch (${onPitch.length})`}
           players={onPitch}

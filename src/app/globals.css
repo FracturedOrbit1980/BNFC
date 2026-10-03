@@ -128,3 +128,18 @@
     @apply font-sans;
   }
 }
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .match-stage {
+    height: min(16rem, calc(100dvh - 12rem));
+  }
+}
+
+@media (orientation: landscape) and (max-height: 520px) and (max-width: 767px) {
+  .match-title {
+    display: none;
+  }
+  .match-stage {
+    height: calc(100dvh - 14.5rem);
+  }
+}

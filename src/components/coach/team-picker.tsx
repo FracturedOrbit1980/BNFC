@@ -25,12 +25,12 @@ export function TeamPicker() {
   }
 
   return (
-    <label className="mb-4 block text-sm font-semibold text-slate-800">
+    <label className="mb-4 block text-sm font-semibold text-slate-800 [@media(orientation:landscape)_and_(max-height:520px)]:mb-1">
       Team
       <select
         value={team?.id ?? ""}
         onChange={(event) => setCoachTeam(event.target.value)}
-        className="mt-1 block h-11 w-full max-w-sm rounded-md border border-slate-300 bg-white px-3 text-base"
+        className="mt-1 block h-11 w-full max-w-sm rounded-md border border-slate-300 bg-white px-3 text-base [@media(orientation:landscape)_and_(max-height:520px)]:h-9"
       >
         <option value="">Choose a team</option>
         {teams.map((item) => (
