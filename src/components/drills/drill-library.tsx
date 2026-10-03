@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { DrillBoard } from "@/components/drills/drill-board";
 import { DrillSetupDiagram } from "@/components/drills/drill-setup-diagram";
 import { DrillStopwatch } from "@/components/drills/drill-stopwatch";
 import { Badge } from "@/components/ui/badge";
@@ -29,8 +30,8 @@ export function DrillLibrary({
   const selected = visible.find((drill) => drill.id === selectedId) ?? visible[0];
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_26rem]">
-      <div className="order-2 lg:order-1">
+    <div className="grid min-w-0 max-w-full gap-6 overflow-x-hidden lg:grid-cols-[minmax(0,1fr)_26rem]">
+      <div className="order-2 min-w-0 lg:order-1">
         <div className="mb-4 flex flex-wrap gap-2">
           <FilterChip active={category === "All"} onClick={() => setCategory("All")}>
             All
@@ -81,7 +82,7 @@ export function DrillLibrary({
         </div>
       </div>
       {selected ? (
-        <div className="order-1 space-y-4 lg:order-2">
+        <div className="order-1 min-w-0 space-y-4 lg:order-2">
           <Card>
             <CardHeader>
               <CardTitle>{selected.title}</CardTitle>
@@ -104,6 +105,13 @@ export function DrillLibrary({
               </div>
             </CardContent>
           </Card>
+          {manageMode ? null : (
+            <DrillBoard
+              drillId={selected.id}
+              setup={selected.pitchSetup}
+              durationSeconds={selected.durationSeconds}
+            />
+          )}
           {showStopwatch ? (
             <DrillStopwatch
               drillTitle={selected.title}

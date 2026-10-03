@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   },
   description: "Club platform for Benoni Northerns FC. Squads, drills, and pitch-side match tools.",
   applicationName: CLUB_NAME,
-  manifest: "/manifest.webmanifest",
+  manifest: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/manifest.webmanifest`,
   appleWebApp: {
     capable: true,
     title: "BNFC",

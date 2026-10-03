@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { DrillBoard } from "@/components/drills/drill-board";
 import { DrillStopwatch } from "@/components/drills/drill-stopwatch";
 import { Button } from "@/components/ui/button";
 import { useCoachTeam } from "@/components/coach/team-picker";
@@ -34,7 +35,7 @@ export function SessionPlanner() {
   }
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_24rem]">
+    <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_24rem]">
       <div>
         <div className="flex flex-wrap gap-2">
           {drills.map((drill) => {
@@ -96,12 +97,15 @@ export function SessionPlanner() {
         </ul>
       </div>
       {active ? (
-        <DrillStopwatch
-          drillTitle={active.title}
-          targetSeconds={active.durationSeconds}
-          suggestedSeconds={active.defaultDurationSeconds}
-          onTargetSecondsChange={(seconds) => setDrillDuration(active.id, seconds)}
-        />
+        <div className="min-w-0 space-y-4 lg:col-span-2">
+          <DrillBoard drillId={active.id} setup={active.pitchSetup} durationSeconds={active.durationSeconds} />
+          <DrillStopwatch
+            drillTitle={active.title}
+            targetSeconds={active.durationSeconds}
+            suggestedSeconds={active.defaultDurationSeconds}
+            onTargetSecondsChange={(seconds) => setDrillDuration(active.id, seconds)}
+          />
+        </div>
       ) : null}
     </div>
   );

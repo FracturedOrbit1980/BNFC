@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 import { OBJECTIVE_CATEGORIES, type ObjectiveCategory, type SetupDiagram } from "@/lib/club/catalog";
+import type { DrillBoard } from "@/lib/club/board";
 import {
   createSeed,
   type AttendanceRecord,
@@ -54,6 +55,7 @@ interface ClubState extends ClubData {
   setHomework: (playerId: string, homework: string) => void;
   saveSession: (teamId: string, title: string, drillIds: string[]) => void;
   saveMatch: (teamId: string, opponent: string, minutes: { playerId: string; minutesPlayed: number }[]) => void;
+  setDrillBoard: (drillId: string, board: DrillBoard) => void;
   resetClub: () => void;
 }
 
@@ -198,6 +200,10 @@ export const useClubStore = create<ClubState>()(
             attendance: [...attendance, ...state.attendance],
           };
         }),
+      setDrillBoard: (drillId, board) =>
+        set((state) => ({
+          boards: { ...state.boards, [drillId]: board },
+        })),
       resetClub: () => set({ hydrated: true, ...createSeed() }),
     }),
     {
@@ -213,6 +219,7 @@ export const useClubStore = create<ClubState>()(
         sessions: state.sessions,
         matches: state.matches,
         coachTeamId: state.coachTeamId,
+        boards: state.boards,
       }),
       merge: (persisted, current) => {
         const saved = (persisted ?? {}) as Partial<ClubData>;
@@ -227,6 +234,7 @@ export const useClubStore = create<ClubState>()(
           ...saved,
           drills,
           coachTeamId: saved.coachTeamId ?? null,
+          boards: saved.boards ?? {},
           hydrated: false,
         };
       },

@@ -8,7 +8,7 @@ export default function CoachDrillsPage() {
     <div>
       <PageHeader
         title="Session drills"
-        description="Set your own block time, check the small setup diagram, then start the stopwatch."
+        description="Set the block time, lay out the drill on the pitch, then run the stopwatch."
       />
       <DrillLibrary />
     </div>

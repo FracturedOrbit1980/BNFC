@@ -1,4 +1,5 @@
 import type { ClubAgeGroup, DrillTemplate, SetupDiagram } from "@/lib/club/catalog";
+import type { DrillBoard } from "@/lib/club/board";
 import { clubLibrary } from "@/lib/club/library";
 
 export interface ClubPlayer {
@@ -66,6 +67,7 @@ export interface ClubData {
   sessions: SessionPlan[];
   matches: SavedMatch[];
   coachTeamId: string | null;
+  boards: Record<string, DrillBoard>;
 }
 
 export function createSeed(): ClubData {
@@ -83,5 +85,6 @@ export function createSeed(): ClubData {
     sessions: [],
     matches: [],
     coachTeamId: null,
+    boards: {},
   };
 }
