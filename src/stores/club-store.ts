@@ -56,6 +56,11 @@ interface ClubState extends ClubData {
   saveSession: (teamId: string, title: string, drillIds: string[]) => void;
   saveMatch: (teamId: string, opponent: string, minutes: { playerId: string; minutesPlayed: number }[]) => void;
   setDrillBoard: (drillId: string, board: DrillBoard) => void;
+  saveEditorDrill: (
+    drillId: string | null,
+    input: { title: string; durationSeconds: number; pitchSetup: string; coachingPoints: string[] },
+    board: DrillBoard,
+  ) => string;
   resetClub: () => void;
 }
 
@@ -204,6 +209,36 @@ export const useClubStore = create<ClubState>()(
         set((state) => ({
           boards: { ...state.boards, [drillId]: board },
         })),
+      saveEditorDrill: (drillId, input, board) => {
+        let savedId = "";
+        set((state) => {
+          const reusable =
+            drillId !== null &&
+            state.drills.some((drill) => drill.id === drillId && !drill.isClubOfficial);
+          savedId = reusable && drillId ? drillId : `dr-e-${Date.now()}`;
+          const existing = state.drills.find((drill) => drill.id === savedId);
+          const next = {
+            id: savedId,
+            title: input.title,
+            isClubOfficial: false,
+            targetAgeGroup: existing?.targetAgeGroup ?? "All ages",
+            objectiveCategory: existing?.objectiveCategory ?? "Technical",
+            diagram: existing?.diagram ?? "square",
+            pitchSetup: input.pitchSetup,
+            instructions: existing?.instructions || input.pitchSetup || "Lay out on the pitch.",
+            coachingPoints: input.coachingPoints,
+            defaultDurationSeconds: existing?.defaultDurationSeconds ?? input.durationSeconds,
+            durationSeconds: input.durationSeconds,
+          };
+          return {
+            drills: existing
+              ? state.drills.map((drill) => (drill.id === savedId ? next : drill))
+              : [next, ...state.drills],
+            boards: { ...state.boards, [savedId]: board },
+          };
+        });
+        return savedId;
+      },
       resetClub: () => set({ hydrated: true, ...createSeed() }),
     }),
     {

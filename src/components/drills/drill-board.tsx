@@ -319,7 +319,7 @@ function DrillBoardEditor({
   );
 }
 
-function frameBetween(frames: BoardFrame[], playhead: number): BoardFrame {
+export function frameBetween(frames: BoardFrame[], playhead: number): BoardFrame {
   if (frames.length === 0) return { id: "empty", pieces: [], marks: [] };
   const index = Math.floor(playhead) % frames.length;
   const nextIndex = (index + 1) % frames.length;
@@ -338,7 +338,7 @@ function frameBetween(frames: BoardFrame[], playhead: number): BoardFrame {
   return { ...from, pieces, marks: mix < 0.5 ? from.marks : to.marks };
 }
 
-function eventPoint(svg: SVGSVGElement | null, event: ReactPointerEvent): PitchPoint | null {
+export function eventPoint(svg: SVGSVGElement | null, event: ReactPointerEvent): PitchPoint | null {
   if (!svg) return null;
   const matrix = svg.getScreenCTM();
   if (!matrix) return null;
@@ -348,7 +348,7 @@ function eventPoint(svg: SVGSVGElement | null, event: ReactPointerEvent): PitchP
   return clampPoint(raw.matrixTransform(matrix.inverse()));
 }
 
-function PitchLines({ view }: { view: PitchView }) {
+export function PitchLines({ view }: { view: PitchView }) {
   return (
     <g fill="none" stroke="#ecfdf5" strokeWidth="0.6">
       <rect x="1" y="1" width="98" height="62" />
@@ -369,7 +369,7 @@ function PitchLines({ view }: { view: PitchView }) {
   );
 }
 
-function MarkShape({ mark, markerId }: { mark: BoardMark; markerId: string }) {
+export function MarkShape({ mark, markerId }: { mark: BoardMark; markerId: string }) {
   const [start, end] = mark.points;
   if (!start) return null;
   if (mark.kind === "marker") {
@@ -400,7 +400,7 @@ function MarkShape({ mark, markerId }: { mark: BoardMark; markerId: string }) {
   );
 }
 
-function PieceShape({
+export function PieceShape({
   piece,
   selected,
   onPointerDown,

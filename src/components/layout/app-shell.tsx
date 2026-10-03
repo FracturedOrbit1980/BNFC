@@ -4,6 +4,7 @@ import {
   ClipboardList,
   LayoutDashboard,
   Library,
+  Pencil,
   Timer,
   Users,
 } from "lucide-react";
@@ -26,6 +27,7 @@ const NAV: Record<UserRole, { href: string; label: string; icon: typeof Users }[
     { href: "/coach", label: "Home", icon: LayoutDashboard },
     { href: "/coach/roster", label: "Roster", icon: Users },
     { href: "/coach/drills", label: "Drills", icon: ClipboardList },
+    { href: "/coach/editor", label: "Editor", icon: Pencil },
     { href: "/coach/match", label: "Match", icon: Timer },
   ],
   PLAYER: [{ href: "/player", label: "My game", icon: Users }],

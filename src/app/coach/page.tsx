@@ -20,6 +20,9 @@ export default function CoachPage() {
           <Link href="/coach/roster">Rate the squad</Link>
         </Button>
         <Button asChild size="lg" variant="outline" className="h-11">
+          <Link href="/coach/editor">Drill editor and animator toolkit</Link>
+        </Button>
+        <Button asChild size="lg" variant="outline" className="h-11">
           <Link href="/coach/match">Live match</Link>
         </Button>
       </div>
