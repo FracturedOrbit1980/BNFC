@@ -1,7 +1,5 @@
-import { ageGroups, type ClubAgeGroup, type DrillTemplate, type SetupDiagram } from "@/lib/club/catalog";
+import type { ClubAgeGroup, DrillTemplate, SetupDiagram } from "@/lib/club/catalog";
 import { clubLibrary } from "@/lib/club/library";
-
-export const COACH_TEAM_ID = "tm-u13-premier";
 
 export interface ClubPlayer {
   id: string;
@@ -67,14 +65,12 @@ export interface ClubData {
   attendance: AttendanceRecord[];
   sessions: SessionPlan[];
   matches: SavedMatch[];
+  coachTeamId: string | null;
 }
 
 export function createSeed(): ClubData {
   return {
-    ageGroups: ageGroups.map((group) => ({
-      ...group,
-      teams: group.teams.map((team) => ({ ...team })),
-    })),
+    ageGroups: [],
     coaches: [],
     players: [],
     drills: clubLibrary.map((drill) => ({
@@ -86,5 +82,6 @@ export function createSeed(): ClubData {
     attendance: [],
     sessions: [],
     matches: [],
+    coachTeamId: null,
   };
 }

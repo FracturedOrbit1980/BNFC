@@ -11,6 +11,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
+import { useRole } from "@/components/auth/role-session";
 import { SignOutButton } from "@/components/layout/sign-out-button";
 import { ROLE_HOME, ROLE_LABEL, type UserRole } from "@/lib/auth/roles";
 import { CLUB_NAME } from "@/lib/club/catalog";
@@ -30,15 +31,22 @@ const NAV: Record<UserRole, { href: string; label: string; icon: typeof Users }[
   PLAYER: [{ href: "/player", label: "My game", icon: Users }],
 };
 
-function isActive(pathname: string, href: string) {
-  if (href === ROLE_HOME.SUPER_ADMIN || href === ROLE_HOME.HEAD_COACH || href === ROLE_HOME.PLAYER) {
-    return pathname === href;
-  }
-  return pathname === href || pathname.startsWith(`${href}/`);
+function stripSlash(path: string) {
+  return path.length > 1 && path.endsWith("/") ? path.slice(0, -1) : path;
 }
 
-export function AppShell({ role, children }: { role: UserRole | null; children: ReactNode }) {
+function isActive(pathname: string, href: string) {
+  const current = stripSlash(pathname);
+  const target = stripSlash(href);
+  if (href === ROLE_HOME.SUPER_ADMIN || href === ROLE_HOME.HEAD_COACH || href === ROLE_HOME.PLAYER) {
+    return current === target;
+  }
+  return current === target || current.startsWith(`${target}/`);
+}
+
+export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const { role } = useRole();
   const items = role ? NAV[role] : [];
 
   return (

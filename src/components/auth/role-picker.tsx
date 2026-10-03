@@ -1,8 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
-
-import { setClubRole } from "@/app/actions";
+import { useRole } from "@/components/auth/role-session";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ROLE_LABEL, type UserRole } from "@/lib/auth/roles";
@@ -10,11 +8,11 @@ import { ROLE_LABEL, type UserRole } from "@/lib/auth/roles";
 const ROLES: { role: UserRole; detail: string }[] = [
   {
     role: "SUPER_ADMIN",
-    detail: "Age groups, teams, people, and the full drill library.",
+    detail: "Create age groups and teams, then manage people and the drill library.",
   },
   {
     role: "HEAD_COACH",
-    detail: "Session plans, the squad you add, and the live match clock.",
+    detail: "Choose a team, plan the session, and run the match clock.",
   },
   {
     role: "PLAYER",
@@ -23,7 +21,7 @@ const ROLES: { role: UserRole; detail: string }[] = [
 ];
 
 export function RolePicker() {
-  const [pending, startTransition] = useTransition();
+  const { signIn } = useRole();
 
   return (
     <div className="grid gap-4 md:grid-cols-3">
@@ -34,13 +32,7 @@ export function RolePicker() {
             <CardDescription className="text-slate-700">{item.detail}</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button
-              type="button"
-              size="lg"
-              className="h-11 w-full text-base"
-              disabled={pending}
-              onClick={() => startTransition(() => void setClubRole(item.role))}
-            >
+            <Button type="button" size="lg" className="h-11 w-full text-base" onClick={() => signIn(item.role)}>
               Open {ROLE_LABEL[item.role].toLowerCase()}
             </Button>
           </CardContent>

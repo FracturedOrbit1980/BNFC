@@ -22,6 +22,12 @@ export function PeopleBoard() {
 
   return (
     <div className="space-y-4">
+      {teams.length === 0 ? (
+        <p className="rounded-lg bg-white px-4 py-3 font-semibold text-slate-800 ring-1 ring-slate-300">
+          Create an age group and a team on the Club page before adding coaches or players.
+        </p>
+      ) : (
+      <>
       <form
         className="grid gap-3 rounded-xl bg-white p-4 ring-1 ring-slate-300 sm:grid-cols-2"
         onSubmit={(event) => {
@@ -90,6 +96,8 @@ export function PeopleBoard() {
           Assign coach
         </Button>
       </form>
+      </>
+      )}
       {ageGroups.map((group) => (
         <section key={group.id}>
           <h2 className="mb-2 text-lg font-bold text-slate-950">{group.name}</h2>

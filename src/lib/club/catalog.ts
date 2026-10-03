@@ -20,36 +20,6 @@ export interface ClubAgeGroup {
   teams: ClubTeam[];
 }
 
-export const ageGroups: ClubAgeGroup[] = [
-  {
-    id: "ag-u11",
-    name: "Under 11",
-    displayOrder: 1,
-    teams: [{ id: "tm-u11-academy", name: "U11 Academy" }],
-  },
-  {
-    id: "ag-u13",
-    name: "Under 13",
-    displayOrder: 2,
-    teams: [
-      { id: "tm-u13-premier", name: "U13 Premier" },
-      { id: "tm-u13-academy", name: "U13 Academy" },
-    ],
-  },
-  {
-    id: "ag-u15",
-    name: "Under 15",
-    displayOrder: 3,
-    teams: [{ id: "tm-u15-premier", name: "U15 Premier" }],
-  },
-  {
-    id: "ag-u17",
-    name: "Under 17",
-    displayOrder: 4,
-    teams: [{ id: "tm-u17-dev", name: "U17 Development" }],
-  },
-];
-
 export interface DrillTemplate {
   id: string;
   title: string;

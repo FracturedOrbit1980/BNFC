@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
+import { RoleProvider } from "@/components/auth/role-session";
 import { ClubProvider } from "@/components/club/club-provider";
 import { AppShell } from "@/components/layout/app-shell";
-import { getClubRole } from "@/lib/auth/club-role";
 import { CLUB_NAME } from "@/lib/club/catalog";
 
 import "./globals.css";
@@ -47,15 +47,15 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const role = await getClubRole();
-
+export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full">
-        <AppShell role={role}>
-          <ClubProvider>{children}</ClubProvider>
-        </AppShell>
+        <RoleProvider>
+          <AppShell>
+            <ClubProvider>{children}</ClubProvider>
+          </AppShell>
+        </RoleProvider>
       </body>
     </html>
   );

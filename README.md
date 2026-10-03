@@ -1,12 +1,14 @@
 # Benoni Northerns FC
 
-Club platform for Benoni Northerns FC. The official drill library is included. Squads, ratings, and attendance start empty and are saved in the browser.
+Club platform. The official drill library is included. Age groups, teams, and squads start empty.
+
+Open the hosted app: https://fracturedorbit1980.github.io/BNFC/
+
+To run it on your own machine:
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open http://localhost:3000 and choose Club admin, Head coach, or Player.
-
-`npm run build` does not need a live Supabase project. Optional credentials are in `.env.example`.
+Then open http://localhost:3000.

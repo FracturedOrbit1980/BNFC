@@ -11,7 +11,7 @@ export function DrillForm() {
   const addDrill = useClubStore((state) => state.addDrill);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<ObjectiveCategory>("Technical");
-  const [age, setAge] = useState(ageGroups[1]?.name ?? "Under 13");
+  const [age, setAge] = useState("All ages");
   const [minutes, setMinutes] = useState(5);
   const [diagram, setDiagram] = useState<SetupDiagram>("square");
   const [pitchSetup, setPitchSetup] = useState("");
@@ -68,6 +68,7 @@ export function DrillForm() {
         </Field>
         <Field label="Age group">
           <select value={age} onChange={(event) => setAge(event.target.value)} className={inputClass}>
+            <option>All ages</option>
             {ageGroups.map((group) => (
               <option key={group.id}>{group.name}</option>
             ))}

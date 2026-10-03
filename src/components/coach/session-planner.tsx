@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { DrillStopwatch } from "@/components/drills/drill-stopwatch";
 import { Button } from "@/components/ui/button";
-import { COACH_TEAM_ID } from "@/lib/club/seed";
+import { useCoachTeam } from "@/components/coach/team-picker";
 import { useClubStore } from "@/stores/club-store";
 
 export function SessionPlanner() {
@@ -12,6 +12,7 @@ export function SessionPlanner() {
   const sessions = useClubStore((state) => state.sessions);
   const saveSession = useClubStore((state) => state.saveSession);
   const setDrillDuration = useClubStore((state) => state.setDrillDuration);
+  const { team } = useCoachTeam();
   const [picked, setPicked] = useState<string[]>([]);
   const [title, setTitle] = useState("");
   const [activeId, setActiveId] = useState("");
@@ -56,8 +57,8 @@ export function SessionPlanner() {
           className="mt-4 flex flex-wrap items-end gap-3"
           onSubmit={(event) => {
             event.preventDefault();
-            if (!title.trim() || picked.length === 0) return;
-            saveSession(title.trim(), picked);
+            if (!title.trim() || picked.length === 0 || !team) return;
+            saveSession(team.id, title.trim(), picked);
             setSaved(true);
           }}
         >
@@ -73,7 +74,7 @@ export function SessionPlanner() {
         </form>
         <ul className="mt-4 space-y-2">
           {sessions
-            .filter((session) => session.teamId === COACH_TEAM_ID)
+            .filter((session) => session.teamId === team?.id)
             .map((session) => (
               <li key={session.id}>
                 <button

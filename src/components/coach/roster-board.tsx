@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { COACH_TEAM_ID } from "@/lib/club/seed";
+import { useCoachTeam } from "@/components/coach/team-picker";
 import { useClubStore } from "@/stores/club-store";
 
 export function RosterBoard() {
@@ -11,8 +11,9 @@ export function RosterBoard() {
   const evaluations = useClubStore((state) => state.evaluations);
   const addEvaluation = useClubStore((state) => state.addEvaluation);
   const setHomework = useClubStore((state) => state.setHomework);
+  const { team } = useCoachTeam();
   const squad = players
-    .filter((player) => player.teamId === COACH_TEAM_ID)
+    .filter((player) => player.teamId === team?.id)
     .sort((a, b) => a.squadNumber - b.squadNumber);
   const [selectedId, setSelectedId] = useState(squad[0]?.id ?? "");
   const selected = squad.find((player) => player.id === selectedId) ?? squad[0];
@@ -25,9 +26,9 @@ export function RosterBoard() {
     return (
       <div className="space-y-4">
         <p className="rounded-lg bg-white px-4 py-3 font-semibold text-slate-800 ring-1 ring-slate-300">
-          U13 Premier has no players yet.
+          {team ? `${team.name} has no players yet.` : "Choose a team on the coach home page before adding players."}
         </p>
-        <AddSquadPlayer />
+        {team ? <AddSquadPlayer teamId={team.id} /> : null}
       </div>
     );
   }
@@ -99,13 +100,13 @@ export function RosterBoard() {
         {saved ? <p className="mt-2 text-sm font-semibold text-emerald-800">{saved}</p> : null}
       </form>
       <div className="lg:col-span-2">
-        <AddSquadPlayer />
+        {team ? <AddSquadPlayer teamId={team.id} /> : null}
       </div>
     </div>
   );
 }
 
-function AddSquadPlayer() {
+function AddSquadPlayer({ teamId }: { teamId: string }) {
   const addPlayer = useClubStore((state) => state.addPlayer);
   const [name, setName] = useState("");
   const [number, setNumber] = useState(1);
@@ -121,7 +122,7 @@ function AddSquadPlayer() {
           name: name.trim(),
           squadNumber: number,
           position,
-          teamId: COACH_TEAM_ID,
+          teamId,
         });
         setName("");
       }}

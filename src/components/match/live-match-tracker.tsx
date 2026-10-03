@@ -4,7 +4,7 @@ import { Pause, Play, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { COACH_TEAM_ID } from "@/lib/club/seed";
+import { useCoachTeam } from "@/components/coach/team-picker";
 import { useClubStore } from "@/stores/club-store";
 import { useMatchStore, type PlayerMatchState } from "@/stores/match-store";
 
@@ -26,22 +26,21 @@ export function LiveMatchTracker() {
   const saveMatch = useClubStore((state) => state.saveMatch);
   const loadSquad = useMatchStore((state) => state.loadSquad);
   const clubPlayers = useClubStore((state) => state.players);
-  const ageGroups = useClubStore((state) => state.ageGroups);
+  const { team } = useCoachTeam();
   const [selectedOff, setSelectedOff] = useState<string | null>(null);
   const [selectedOn, setSelectedOn] = useState<string | null>(null);
   const [opponent, setOpponent] = useState("");
   const [saved, setSaved] = useState(false);
   const squadKey = clubPlayers
-    .filter((player) => player.teamId === COACH_TEAM_ID)
+    .filter((player) => player.teamId === team?.id)
     .map((player) => player.id)
     .join("|");
-  const teamName =
-    ageGroups.flatMap((group) => group.teams).find((team) => team.id === COACH_TEAM_ID)?.name ?? "Squad";
+  const teamName = team?.name ?? "Squad";
 
   useEffect(() => {
-    if (isClockRunning || matchTimeSeconds > 0) return;
+    if (!team || isClockRunning || matchTimeSeconds > 0) return;
     const squad = clubPlayers
-      .filter((player) => player.teamId === COACH_TEAM_ID)
+      .filter((player) => player.teamId === team.id)
       .sort((a, b) => a.squadNumber - b.squadNumber)
       .map((player, index) => ({
         playerId: player.id,
@@ -52,7 +51,7 @@ export function LiveMatchTracker() {
         minutesPlayed: 0,
       }));
     loadSquad(squad);
-  }, [clubPlayers, isClockRunning, loadSquad, matchTimeSeconds, squadKey]);
+  }, [clubPlayers, isClockRunning, loadSquad, matchTimeSeconds, squadKey, team]);
 
   useEffect(() => {
     if (!isClockRunning) return;
@@ -140,7 +139,9 @@ export function LiveMatchTracker() {
             className="h-14 min-w-36 bg-white text-base text-slate-950 hover:bg-slate-200"
             disabled={players.length === 0 || opponent.trim().length === 0}
             onClick={() => {
+              if (!team) return;
               saveMatch(
+                team.id,
                 opponent.trim(),
                 players.map((player) => ({
                   playerId: player.playerId,
@@ -154,7 +155,8 @@ export function LiveMatchTracker() {
           </Button>
         </div>
         <p className="mt-3 text-center text-sm font-medium text-slate-300">
-          {players.length === 0 ? "Add players to U13 Premier before kickoff. " : null}
+          {!team ? "Choose a team on the coach home page. " : null}
+          {team && players.length === 0 ? `Add players to ${team.name} before kickoff. ` : null}
           {saved ? "Minutes saved. Players with time on the pitch are marked present." : null}{" "}
           Tap a player on the pitch, then a bench player, to substitute. Minutes accrue only while the clock runs.
         </p>
