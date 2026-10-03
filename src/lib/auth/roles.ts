@@ -2,7 +2,7 @@ export const USER_ROLES = ["SUPER_ADMIN", "HEAD_COACH", "PLAYER"] as const;
 
 export type UserRole = (typeof USER_ROLES)[number];
 
-export const DEMO_ROLE_COOKIE = "bnfc-demo-role";
+export const CLUB_ROLE_COOKIE = "bnfc-role";
 
 export const ROLE_HOME: Record<UserRole, string> = {
   SUPER_ADMIN: "/admin",

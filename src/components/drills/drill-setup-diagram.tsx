@@ -1,5 +1,7 @@
+import type { SetupDiagram } from "@/lib/club/catalog";
+
 type DiagramProps = {
-  drillId: string;
+  diagram: SetupDiagram;
   pitchSetup: string;
   size?: "sm" | "md";
 };
@@ -9,7 +11,7 @@ const frame = {
   md: { width: 176, height: 112 },
 };
 
-export function DrillSetupDiagram({ drillId, pitchSetup, size = "md" }: DiagramProps) {
+export function DrillSetupDiagram({ diagram, pitchSetup, size = "md" }: DiagramProps) {
   const box = frame[size];
   return (
     <svg
@@ -21,31 +23,29 @@ export function DrillSetupDiagram({ drillId, pitchSetup, size = "md" }: DiagramP
       className="shrink-0 rounded-lg bg-emerald-50 ring-1 ring-emerald-700"
     >
       <rect x="1" y="1" width="158" height="98" rx="8" fill="#ecfdf5" stroke="#047857" strokeWidth="2" />
-      <SetupShape drillId={drillId} />
+      <SetupShape diagram={diagram} />
     </svg>
   );
 }
 
-function SetupShape({ drillId }: { drillId: string }) {
-  switch (drillId) {
-    case "dr-1":
+function SetupShape({ diagram }: { diagram: SetupDiagram }) {
+  switch (diagram) {
+    case "square":
       return <SquarePassing />;
-    case "dr-2":
+    case "channel":
       return <ChannelToGoal />;
-    case "dr-3":
+    case "rondo":
       return <Rondo />;
-    case "dr-4":
+    case "overlap":
       return <Overlap />;
-    case "dr-5":
+    case "press":
       return <Press />;
-    case "dr-6":
+    case "gates":
       return <TwoGates />;
-    case "dr-7":
+    case "lanes":
       return <Lanes />;
-    case "dr-8":
+    case "corner":
       return <Corner />;
-    default:
-      return <SquarePassing />;
   }
 }
 

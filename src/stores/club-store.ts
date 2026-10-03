@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import { OBJECTIVE_CATEGORIES, type ObjectiveCategory } from "@/lib/demo/data";
+import { OBJECTIVE_CATEGORIES, type ObjectiveCategory, type SetupDiagram } from "@/lib/club/catalog";
 import {
   COACH_TEAM_ID,
   createSeed,
@@ -18,10 +18,18 @@ export interface NewDrillInput {
   objectiveCategory: ObjectiveCategory;
   targetAgeGroup: string;
   durationSeconds: number;
+  diagram: SetupDiagram;
   pitchSetup: string;
   instructions: string;
   coachingPoints: string[];
   isClubOfficial: boolean;
+}
+
+export interface NewPlayerInput {
+  name: string;
+  squadNumber: number;
+  position: string;
+  teamId: string;
 }
 
 export interface NewEvaluationInput {
@@ -39,6 +47,8 @@ interface ClubState extends ClubData {
   addDrill: (input: NewDrillInput) => void;
   setDrillOfficial: (drillId: string, official: boolean) => void;
   addTeam: (ageGroupId: string, name: string) => void;
+  addPlayer: (input: NewPlayerInput) => void;
+  addCoach: (teamId: string, name: string) => void;
   addEvaluation: (input: NewEvaluationInput) => void;
   setHomework: (playerId: string, homework: string) => void;
   saveSession: (title: string, drillIds: string[]) => void;
@@ -74,6 +84,7 @@ export const useClubStore = create<ClubState>()(
               isClubOfficial: input.isClubOfficial,
               targetAgeGroup: input.targetAgeGroup,
               objectiveCategory: input.objectiveCategory,
+              diagram: input.diagram,
               pitchSetup: input.pitchSetup,
               instructions: input.instructions,
               coachingPoints: input.coachingPoints,
@@ -88,6 +99,27 @@ export const useClubStore = create<ClubState>()(
           drills: state.drills.map((drill) =>
             drill.id === drillId ? { ...drill, isClubOfficial: official } : drill,
           ),
+        })),
+      addPlayer: (input) =>
+        set((state) => ({
+          players: [
+            ...state.players,
+            {
+              id: `p-${Date.now()}`,
+              name: input.name,
+              squadNumber: input.squadNumber,
+              position: input.position,
+              teamId: input.teamId,
+              homework: "",
+            },
+          ],
+        })),
+      addCoach: (teamId, name) =>
+        set((state) => ({
+          coaches: [
+            ...state.coaches.filter((coach) => coach.teamId !== teamId),
+            { id: `c-${Date.now()}`, name, teamId },
+          ],
         })),
       addTeam: (ageGroupId, name) =>
         set((state) => ({
@@ -155,7 +187,7 @@ export const useClubStore = create<ClubState>()(
       resetClub: () => set({ hydrated: true, ...createSeed() }),
     }),
     {
-      name: "bnfc-club-v1",
+      name: "bnfc-club-v2",
       skipHydration: true,
       partialize: (state) => ({
         ageGroups: state.ageGroups,
@@ -173,6 +205,7 @@ export const useClubStore = create<ClubState>()(
           ...drill,
           durationSeconds: drill.durationSeconds ?? drill.defaultDurationSeconds,
           coachingPoints: drill.coachingPoints ?? [],
+          diagram: drill.diagram ?? "square",
         }));
         return {
           ...current,

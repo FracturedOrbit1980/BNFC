@@ -4,7 +4,7 @@ import { Pause, Play, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { demoMatch } from "@/lib/demo/data";
+import { COACH_TEAM_ID } from "@/lib/club/seed";
 import { useClubStore } from "@/stores/club-store";
 import { useMatchStore, type PlayerMatchState } from "@/stores/match-store";
 
@@ -24,9 +24,35 @@ export function LiveMatchTracker() {
   const tickSecond = useMatchStore((state) => state.tickSecond);
   const resetMatch = useMatchStore((state) => state.resetMatch);
   const saveMatch = useClubStore((state) => state.saveMatch);
+  const loadSquad = useMatchStore((state) => state.loadSquad);
+  const clubPlayers = useClubStore((state) => state.players);
+  const ageGroups = useClubStore((state) => state.ageGroups);
   const [selectedOff, setSelectedOff] = useState<string | null>(null);
   const [selectedOn, setSelectedOn] = useState<string | null>(null);
+  const [opponent, setOpponent] = useState("");
   const [saved, setSaved] = useState(false);
+  const squadKey = clubPlayers
+    .filter((player) => player.teamId === COACH_TEAM_ID)
+    .map((player) => player.id)
+    .join("|");
+  const teamName =
+    ageGroups.flatMap((group) => group.teams).find((team) => team.id === COACH_TEAM_ID)?.name ?? "Squad";
+
+  useEffect(() => {
+    if (isClockRunning || matchTimeSeconds > 0) return;
+    const squad = clubPlayers
+      .filter((player) => player.teamId === COACH_TEAM_ID)
+      .sort((a, b) => a.squadNumber - b.squadNumber)
+      .map((player, index) => ({
+        playerId: player.id,
+        name: player.name,
+        squadNumber: player.squadNumber,
+        position: player.position,
+        isOnPitch: index < 11,
+        minutesPlayed: 0,
+      }));
+    loadSquad(squad);
+  }, [clubPlayers, isClockRunning, loadSquad, matchTimeSeconds, squadKey]);
 
   useEffect(() => {
     if (!isClockRunning) return;
@@ -62,13 +88,22 @@ export function LiveMatchTracker() {
       <section className="rounded-xl bg-slate-900 p-4 text-white shadow-lg">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-emerald-300">
-              {demoMatch.teamName}
-            </p>
-            <h2 className="text-xl font-bold">vs {demoMatch.opponent}</h2>
+            <p className="text-sm font-semibold uppercase tracking-wide text-emerald-300">{teamName}</p>
+            <label className="mt-2 block text-sm font-semibold text-emerald-100">
+              Opponent
+              <input
+                value={opponent}
+                onChange={(event) => {
+                  setOpponent(event.target.value);
+                  setSaved(false);
+                }}
+                placeholder="Opposition"
+                className="mt-1 block h-11 w-56 rounded-md border border-slate-600 bg-slate-800 px-3 text-base text-white"
+              />
+            </label>
           </div>
           <p className="rounded-full bg-emerald-500 px-3 py-1 text-sm font-bold text-slate-950">
-            {demoMatch.status}
+            {isClockRunning ? "LIVE" : "READY"}
           </p>
         </div>
         <p className="my-4 text-center font-mono text-6xl tracking-wider text-emerald-400">
@@ -103,9 +138,10 @@ export function LiveMatchTracker() {
             size="lg"
             variant="secondary"
             className="h-14 min-w-36 bg-white text-base text-slate-950 hover:bg-slate-200"
+            disabled={players.length === 0 || opponent.trim().length === 0}
             onClick={() => {
               saveMatch(
-                demoMatch.opponent,
+                opponent.trim(),
                 players.map((player) => ({
                   playerId: player.playerId,
                   minutesPlayed: player.minutesPlayed,
@@ -118,6 +154,7 @@ export function LiveMatchTracker() {
           </Button>
         </div>
         <p className="mt-3 text-center text-sm font-medium text-slate-300">
+          {players.length === 0 ? "Add players to U13 Premier before kickoff. " : null}
           {saved ? "Minutes saved. Players with time on the pitch are marked present." : null}{" "}
           Tap a player on the pitch, then a bench player, to substitute. Minutes accrue only while the clock runs.
         </p>

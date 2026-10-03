@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import {
-  DEMO_ROLE_COOKIE,
+  CLUB_ROLE_COOKIE,
   ROLE_HOME,
   isUserRole,
   requiredRoleForPath,
@@ -11,7 +11,7 @@ import { updateSession } from "@/lib/supabase/middleware";
 /**
  * Role gate for /admin, /coach, and /player.
  * Next.js 16 runs this skeleton as proxy.ts (the renamed middleware convention).
- * Demo access uses the bnfc-demo-role cookie until Supabase profiles supply the role.
+ * Access uses the bnfc-role cookie until Supabase profiles supply the role.
  */
 export async function proxy(request: NextRequest) {
   const required = requiredRoleForPath(request.nextUrl.pathname);
@@ -19,7 +19,7 @@ export async function proxy(request: NextRequest) {
     return updateSession(request, NextResponse.next());
   }
 
-  const roleValue = request.cookies.get(DEMO_ROLE_COOKIE)?.value;
+  const roleValue = request.cookies.get(CLUB_ROLE_COOKIE)?.value;
   const role = isUserRole(roleValue) ? roleValue : null;
 
   if (role !== required) {

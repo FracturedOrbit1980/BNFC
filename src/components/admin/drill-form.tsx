@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
-import { OBJECTIVE_CATEGORIES, type ObjectiveCategory } from "@/lib/demo/data";
+import { OBJECTIVE_CATEGORIES, SETUP_DIAGRAMS, type ObjectiveCategory, type SetupDiagram } from "@/lib/club/catalog";
 import { isObjectiveCategory, useClubStore } from "@/stores/club-store";
 
 export function DrillForm() {
@@ -13,6 +13,7 @@ export function DrillForm() {
   const [category, setCategory] = useState<ObjectiveCategory>("Technical");
   const [age, setAge] = useState(ageGroups[1]?.name ?? "Under 13");
   const [minutes, setMinutes] = useState(5);
+  const [diagram, setDiagram] = useState<SetupDiagram>("square");
   const [pitchSetup, setPitchSetup] = useState("");
   const [instructions, setInstructions] = useState("");
   const [points, setPoints] = useState("");
@@ -30,6 +31,7 @@ export function DrillForm() {
           objectiveCategory: category,
           targetAgeGroup: age,
           durationSeconds: Math.min(30, Math.max(1, minutes)) * 60,
+          diagram,
           pitchSetup: pitchSetup.trim(),
           instructions: instructions.trim() || "Coach to add the detail on the field.",
           coachingPoints: points
@@ -39,6 +41,7 @@ export function DrillForm() {
           isClubOfficial: official,
         });
         setTitle("");
+        setDiagram("square");
         setPitchSetup("");
         setInstructions("");
         setPoints("");
@@ -67,6 +70,19 @@ export function DrillForm() {
           <select value={age} onChange={(event) => setAge(event.target.value)} className={inputClass}>
             {ageGroups.map((group) => (
               <option key={group.id}>{group.name}</option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Setup diagram">
+          <select
+            value={diagram}
+            onChange={(event) => setDiagram(event.target.value as SetupDiagram)}
+            className={inputClass}
+          >
+            {SETUP_DIAGRAMS.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
             ))}
           </select>
         </Field>

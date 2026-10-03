@@ -3,8 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 
 import { ClubProvider } from "@/components/club/club-provider";
 import { AppShell } from "@/components/layout/app-shell";
-import { getDemoRole } from "@/lib/auth/demo-role";
-import { CLUB_NAME } from "@/lib/demo/data";
+import { getClubRole } from "@/lib/auth/club-role";
+import { CLUB_NAME } from "@/lib/club/catalog";
 
 import "./globals.css";
 
@@ -48,7 +48,7 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const role = await getDemoRole();
+  const role = await getClubRole();
 
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>

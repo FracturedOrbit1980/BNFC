@@ -21,7 +21,16 @@ export function RosterBoard() {
   const [homework, setHomeworkText] = useState(selected?.homework ?? "");
   const [saved, setSaved] = useState("");
 
-  if (!selected) return null;
+  if (!selected) {
+    return (
+      <div className="space-y-4">
+        <p className="rounded-lg bg-white px-4 py-3 font-semibold text-slate-800 ring-1 ring-slate-300">
+          U13 Premier has no players yet.
+        </p>
+        <AddSquadPlayer />
+      </div>
+    );
+  }
 
   const latest = evaluations.find((item) => item.playerId === selected.id);
 
@@ -89,7 +98,50 @@ export function RosterBoard() {
         </Button>
         {saved ? <p className="mt-2 text-sm font-semibold text-emerald-800">{saved}</p> : null}
       </form>
+      <div className="lg:col-span-2">
+        <AddSquadPlayer />
+      </div>
     </div>
+  );
+}
+
+function AddSquadPlayer() {
+  const addPlayer = useClubStore((state) => state.addPlayer);
+  const [name, setName] = useState("");
+  const [number, setNumber] = useState(1);
+  const [position, setPosition] = useState("CM");
+
+  return (
+    <form
+      className="flex flex-wrap items-end gap-3 rounded-xl bg-white p-4 ring-1 ring-slate-300"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (!name.trim()) return;
+        addPlayer({
+          name: name.trim(),
+          squadNumber: number,
+          position,
+          teamId: COACH_TEAM_ID,
+        });
+        setName("");
+      }}
+    >
+      <label className="text-sm font-semibold text-slate-800">
+        Add player
+        <input value={name} onChange={(event) => setName(event.target.value)} className="mt-1 block h-11 rounded-md border border-slate-300 px-3 text-base" required />
+      </label>
+      <label className="text-sm font-semibold text-slate-800">
+        Number
+        <input type="number" min={1} max={99} value={number} onChange={(event) => setNumber(Number(event.target.value))} className="mt-1 block h-11 w-24 rounded-md border border-slate-300 px-3 text-base" />
+      </label>
+      <label className="text-sm font-semibold text-slate-800">
+        Position
+        <input value={position} onChange={(event) => setPosition(event.target.value)} className="mt-1 block h-11 w-24 rounded-md border border-slate-300 px-3 text-base" />
+      </label>
+      <Button type="submit" size="lg" className="h-11">
+        Add to squad
+      </Button>
+    </form>
   );
 }
 

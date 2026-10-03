@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 
-import { setDemoRole } from "@/app/actions";
+import { setClubRole } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ROLE_LABEL, type UserRole } from "@/lib/auth/roles";
@@ -10,15 +10,15 @@ import { ROLE_LABEL, type UserRole } from "@/lib/auth/roles";
 const ROLES: { role: UserRole; detail: string }[] = [
   {
     role: "SUPER_ADMIN",
-    detail: "Age groups, teams, club drills, and sample analytics.",
+    detail: "Age groups, teams, people, and the full drill library.",
   },
   {
     role: "HEAD_COACH",
-    detail: "Roster, drill stopwatch, and the live substitution clock.",
+    detail: "Session plans, the squad you add, and the live match clock.",
   },
   {
     role: "PLAYER",
-    detail: "Profile, development radar, and an attendance placeholder.",
+    detail: "Your profile, homework, and attendance once you are on a squad.",
   },
 ];
 
@@ -39,9 +39,9 @@ export function RolePicker() {
               size="lg"
               className="h-11 w-full text-base"
               disabled={pending}
-              onClick={() => startTransition(() => void setDemoRole(item.role))}
+              onClick={() => startTransition(() => void setClubRole(item.role))}
             >
-              Continue as {ROLE_LABEL[item.role].toLowerCase()}
+              Open {ROLE_LABEL[item.role].toLowerCase()}
             </Button>
           </CardContent>
         </Card>

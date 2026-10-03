@@ -10,27 +10,18 @@ export function ClubOverview() {
   const ageGroups = useClubStore((state) => state.ageGroups);
   const players = useClubStore((state) => state.players);
   const drills = useClubStore((state) => state.drills);
-  const evaluations = useClubStore((state) => state.evaluations);
-  const matches = useClubStore((state) => state.matches);
   const addTeam = useClubStore((state) => state.addTeam);
   const resetClub = useClubStore((state) => state.resetClub);
   const [teamName, setTeamName] = useState("");
   const [groupId, setGroupId] = useState(ageGroups[0]?.id ?? "");
 
   const teamCount = ageGroups.reduce((sum, group) => sum + group.teams.length, 0);
-  const played = matches.flatMap((match) => match.minutes);
-  const averageMinutes =
-    played.length === 0
-      ? "—"
-      : (played.reduce((sum, row) => sum + row.minutesPlayed, 0) / played.length).toFixed(1);
 
   const stats = [
     { label: "Age groups", value: String(ageGroups.length) },
     { label: "Teams", value: String(teamCount) },
     { label: "Players", value: String(players.length) },
     { label: "Official drills", value: String(drills.filter((drill) => drill.isClubOfficial).length) },
-    { label: "Evaluations", value: String(evaluations.length) },
-    { label: "Avg minutes", value: averageMinutes },
   ];
 
   return (
@@ -105,7 +96,7 @@ export function ClubOverview() {
           Add team
         </Button>
         <Button type="button" variant="outline" size="lg" className="h-11" onClick={() => resetClub()}>
-          Reset demo data
+          Restore official library
         </Button>
       </form>
     </div>

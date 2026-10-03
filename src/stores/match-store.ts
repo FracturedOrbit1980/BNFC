@@ -1,7 +1,5 @@
 import { create } from "zustand";
 
-import { demoMatchPlayers } from "@/lib/demo/data";
-
 export interface PlayerMatchState {
   playerId: string;
   name: string;
@@ -19,17 +17,14 @@ interface MatchStore {
   pauseMatchClock: () => void;
   substitutePlayer: (playerOffId: string, playerOnId: string) => void;
   tickSecond: () => void;
+  loadSquad: (players: PlayerMatchState[]) => void;
   resetMatch: () => void;
-}
-
-function freshRoster(): PlayerMatchState[] {
-  return demoMatchPlayers.map((player) => ({ ...player }));
 }
 
 export const useMatchStore = create<MatchStore>((set, get) => ({
   matchTimeSeconds: 0,
   isClockRunning: false,
-  players: freshRoster(),
+  players: [],
   startMatchClock: () => set({ isClockRunning: true }),
   pauseMatchClock: () => set({ isClockRunning: false }),
   substitutePlayer: (playerOffId, playerOnId) => {
@@ -53,10 +48,16 @@ export const useMatchStore = create<MatchStore>((set, get) => ({
         player.isOnPitch ? { ...player, minutesPlayed: player.minutesPlayed + 1 / 60 } : player,
       ),
     })),
-  resetMatch: () =>
+  loadSquad: (players) =>
     set({
       matchTimeSeconds: 0,
       isClockRunning: false,
-      players: freshRoster(),
+      players,
     }),
+  resetMatch: () =>
+    set((state) => ({
+      matchTimeSeconds: 0,
+      isClockRunning: false,
+      players: state.players.map((player) => ({ ...player, minutesPlayed: 0 })),
+    })),
 }));

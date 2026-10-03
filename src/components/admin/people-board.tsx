@@ -1,5 +1,8 @@
 "use client";
 
+import { useState } from "react";
+
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useClubStore } from "@/stores/club-store";
 
@@ -7,9 +10,86 @@ export function PeopleBoard() {
   const ageGroups = useClubStore((state) => state.ageGroups);
   const coaches = useClubStore((state) => state.coaches);
   const players = useClubStore((state) => state.players);
+  const addPlayer = useClubStore((state) => state.addPlayer);
+  const addCoach = useClubStore((state) => state.addCoach);
+  const teams = ageGroups.flatMap((group) => group.teams.map((team) => ({ ...team, ageGroup: group.name })));
+  const [playerName, setPlayerName] = useState("");
+  const [squadNumber, setSquadNumber] = useState(1);
+  const [position, setPosition] = useState("CM");
+  const [playerTeam, setPlayerTeam] = useState(teams[0]?.id ?? "");
+  const [coachName, setCoachName] = useState("");
+  const [coachTeam, setCoachTeam] = useState(teams[0]?.id ?? "");
 
   return (
     <div className="space-y-4">
+      <form
+        className="grid gap-3 rounded-xl bg-white p-4 ring-1 ring-slate-300 sm:grid-cols-2"
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!playerName.trim() || !playerTeam) return;
+          addPlayer({
+            name: playerName.trim(),
+            squadNumber,
+            position: position.trim() || "CM",
+            teamId: playerTeam,
+          });
+          setPlayerName("");
+        }}
+      >
+        <h2 className="text-lg font-bold text-slate-950 sm:col-span-2">Add a player</h2>
+        <label className="text-sm font-semibold text-slate-800">
+          Name
+          <input value={playerName} onChange={(event) => setPlayerName(event.target.value)} className="mt-1 h-11 w-full rounded-md border border-slate-300 px-3 text-base" required />
+        </label>
+        <label className="text-sm font-semibold text-slate-800">
+          Team
+          <select value={playerTeam} onChange={(event) => setPlayerTeam(event.target.value)} className="mt-1 h-11 w-full rounded-md border border-slate-300 px-2 text-base">
+            {teams.map((team) => (
+              <option key={team.id} value={team.id}>
+                {team.ageGroup} · {team.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="text-sm font-semibold text-slate-800">
+          Number
+          <input type="number" min={1} max={99} value={squadNumber} onChange={(event) => setSquadNumber(Number(event.target.value))} className="mt-1 h-11 w-full rounded-md border border-slate-300 px-3 text-base" />
+        </label>
+        <label className="text-sm font-semibold text-slate-800">
+          Position
+          <input value={position} onChange={(event) => setPosition(event.target.value)} className="mt-1 h-11 w-full rounded-md border border-slate-300 px-3 text-base" />
+        </label>
+        <Button type="submit" size="lg" className="h-11 sm:col-span-2 sm:w-fit">
+          Save player
+        </Button>
+      </form>
+      <form
+        className="flex flex-wrap items-end gap-3 rounded-xl bg-white p-4 ring-1 ring-slate-300"
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!coachName.trim() || !coachTeam) return;
+          addCoach(coachTeam, coachName.trim());
+          setCoachName("");
+        }}
+      >
+        <label className="text-sm font-semibold text-slate-800">
+          Coach
+          <input value={coachName} onChange={(event) => setCoachName(event.target.value)} className="mt-1 block h-11 rounded-md border border-slate-300 px-3 text-base" required />
+        </label>
+        <label className="text-sm font-semibold text-slate-800">
+          Team
+          <select value={coachTeam} onChange={(event) => setCoachTeam(event.target.value)} className="mt-1 block h-11 rounded-md border border-slate-300 bg-white px-2 text-base">
+            {teams.map((team) => (
+              <option key={team.id} value={team.id}>
+                {team.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <Button type="submit" size="lg" className="h-11">
+          Assign coach
+        </Button>
+      </form>
       {ageGroups.map((group) => (
         <section key={group.id}>
           <h2 className="mb-2 text-lg font-bold text-slate-950">{group.name}</h2>

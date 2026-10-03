@@ -12,9 +12,9 @@ export function SessionPlanner() {
   const sessions = useClubStore((state) => state.sessions);
   const saveSession = useClubStore((state) => state.saveSession);
   const setDrillDuration = useClubStore((state) => state.setDrillDuration);
-  const [picked, setPicked] = useState<string[]>(["dr-1", "dr-2"]);
-  const [title, setTitle] = useState("Tonight's session");
-  const [activeId, setActiveId] = useState("dr-1");
+  const [picked, setPicked] = useState<string[]>([]);
+  const [title, setTitle] = useState("");
+  const [activeId, setActiveId] = useState("");
   const [saved, setSaved] = useState(false);
 
   const chosen = picked

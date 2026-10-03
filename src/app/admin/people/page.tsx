@@ -8,7 +8,7 @@ export default function PeoplePage() {
     <div>
       <PageHeader
         title="Coaches and players"
-        description="Every age group, the coach assigned to each team, and the players in that squad."
+        description="Assign coaches and add players. No squad list is loaded for you."
       />
       <PeopleBoard />
     </div>

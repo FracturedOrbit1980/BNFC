@@ -11,9 +11,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
-import { DemoRoleSwitcher } from "@/components/layout/demo-role-switcher";
+import { SignOutButton } from "@/components/layout/sign-out-button";
 import { ROLE_HOME, ROLE_LABEL, type UserRole } from "@/lib/auth/roles";
-import { CLUB_NAME } from "@/lib/demo/data";
+import { CLUB_NAME } from "@/lib/club/catalog";
 
 const NAV: Record<UserRole, { href: string; label: string; icon: typeof Users }[]> = {
   SUPER_ADMIN: [
@@ -48,7 +48,7 @@ export function AppShell({ role, children }: { role: UserRole | null; children: 
           <ClubMark />
           <span>BNFC</span>
         </Link>
-        <DemoRoleSwitcher role={role} />
+        {role ? <SignOutButton /> : null}
       </header>
 
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 flex-col bg-slate-950 text-white md:flex">
@@ -79,7 +79,7 @@ export function AppShell({ role, children }: { role: UserRole | null; children: 
         </nav>
         <div className="space-y-3 border-t border-slate-800 p-4">
           {role ? <p className="text-sm font-semibold text-slate-200">{ROLE_LABEL[role]}</p> : null}
-          <DemoRoleSwitcher role={role} />
+          {role ? <SignOutButton /> : null}
         </div>
       </aside>
 

@@ -8,7 +8,7 @@ export default function MatchPage() {
     <div>
       <PageHeader
         title="Live match"
-        description="Demo clock and substitution board. Minutes are kept in the browser until a match log is saved."
+        description="Run the clock from the squad you added, then save minutes to attendance."
       />
       <LiveMatchTracker />
     </div>

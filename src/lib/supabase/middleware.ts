@@ -31,7 +31,7 @@ export async function updateSession(request: NextRequest, response: NextResponse
   try {
     await supabase.auth.getUser();
   } catch {
-    // Invalid or placeholder credentials must not block the demo shell.
+    // Invalid or placeholder credentials must not block the app.
   }
 
   return response;

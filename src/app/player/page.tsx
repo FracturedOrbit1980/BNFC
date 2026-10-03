@@ -8,7 +8,7 @@ export default function PlayerPage() {
     <div>
       <PageHeader
         title="My game"
-        description="Your profile, latest scores, homework, and attendance. Ratings update when your coach saves them."
+        description="Open your name once you are on a squad. Scores appear only after a coach saves them."
       />
       <PlayerHome />
     </div>

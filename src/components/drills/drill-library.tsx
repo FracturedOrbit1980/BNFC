@@ -7,7 +7,7 @@ import { DrillStopwatch } from "@/components/drills/drill-stopwatch";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { OBJECTIVE_CATEGORIES, type ObjectiveCategory } from "@/lib/demo/data";
+import { OBJECTIVE_CATEGORIES, type ObjectiveCategory } from "@/lib/club/catalog";
 import { useClubStore } from "@/stores/club-store";
 
 export function DrillLibrary({
@@ -41,11 +41,7 @@ export function DrillLibrary({
             </FilterChip>
           ))}
         </div>
-        {manageMode ? (
-          <p className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-950">
-            Demo library. Adding or editing official drills will save to Supabase once a project is connected.
-          </p>
-        ) : null}
+        <p className="mb-4 text-sm font-semibold text-slate-700">{visible.length} drills in the club library</p>
         <div className="grid gap-3 sm:grid-cols-2">
           {visible.map((drill) => {
             const active = selected?.id === drill.id;
@@ -73,7 +69,7 @@ export function DrillLibrary({
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="flex items-center gap-3 text-sm font-medium text-slate-800">
-                    <DrillSetupDiagram drillId={drill.id} pitchSetup={drill.pitchSetup} size="sm" />
+                    <DrillSetupDiagram diagram={drill.diagram} pitchSetup={drill.pitchSetup} size="sm" />
                     <span>
                       {formatBlock(drill.durationSeconds)} · {drill.pitchSetup}
                     </span>
@@ -92,7 +88,7 @@ export function DrillLibrary({
               <CardDescription className="text-slate-700">{selected.instructions}</CardDescription>
             </CardHeader>
             <CardContent className="flex items-start gap-3">
-              <DrillSetupDiagram drillId={selected.id} pitchSetup={selected.pitchSetup} />
+              <DrillSetupDiagram diagram={selected.diagram} pitchSetup={selected.pitchSetup} />
               <div>
                 <p className="text-sm font-semibold text-slate-950">{selected.pitchSetup}</p>
                 {manageMode ? (

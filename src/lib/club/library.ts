@@ -1,0 +1,62 @@
+import type { DrillTemplate } from "@/lib/club/catalog";
+
+function drill(
+  id: string,
+  title: string,
+  age: string,
+  category: DrillTemplate["objectiveCategory"],
+  diagram: DrillTemplate["diagram"],
+  minutes: number,
+  pitchSetup: string,
+  instructions: string,
+  coachingPoints: string[],
+): DrillTemplate {
+  return {
+    id,
+    title,
+    isClubOfficial: true,
+    targetAgeGroup: age,
+    objectiveCategory: category,
+    diagram,
+    pitchSetup,
+    instructions,
+    coachingPoints,
+    defaultDurationSeconds: minutes * 60,
+  };
+}
+
+/** Official BNFC drill library. Squads start empty; this catalogue does not. */
+export const clubLibrary: DrillTemplate[] = [
+  drill("dr-01", "First-touch square", "Under 11", "Technical", "square", 6, "10m square, one ball, a cone on each corner.", "Two-touch around the square. The receiver checks off the cone, opens their body, and passes to the next corner.", ["First touch out of pressure", "Head up before the pass", "Pass into the back foot"]),
+  drill("dr-02", "Wall pass and move", "Under 11", "Technical", "square", 6, "8m square with a partner on each side.", "Play a wall pass, then take the return on the move into the next gap.", ["Firm first pass", "Move as the ball travels", "Receive side-on"]),
+  drill("dr-03", "Receive on the half-turn", "Under 13", "Technical", "square", 6, "Three cones in a line, 8m apart, one server.", "Check away, then receive on the half-turn and play forward with the second touch.", ["Scan before the ball arrives", "Back foot first", "Open the body to the next pass"]),
+  drill("dr-04", "1v1 to goal", "Under 13", "Technical", "channel", 8, "Channel from halfway to one goal. Balls at the start cone.", "Attacker receives facing forward and tries to score. Defender delays, then tackles on a heavy touch.", ["Attack the front foot", "Finish early", "Defender stays side-on"]),
+  drill("dr-05", "Dribble through gates", "Under 11", "Technical", "gates", 6, "Six small gates scattered in a 20m box.", "Dribble through as many gates as possible. Change foot and direction at each gate.", ["Ball close on the turn", "Head up between gates", "Use both feet"]),
+  drill("dr-06", "Cutback finish", "Under 15", "Technical", "channel", 8, "Half pitch, one goal, a cone on the byline for the crosser.", "Wide player drives to the byline and cuts the ball back. The runner finishes first time.", ["Cross along the ground", "Time the run", "Finish across the keeper"]),
+  drill("dr-07", "Weak-foot passing lanes", "Under 13", "Technical", "lanes", 6, "Four 15m lanes. One ball per pair.", "Pass and follow up the lane using the weak foot only. Switch lanes on the coach call.", ["Ankle locked", "Non-kicking foot beside the ball", "Pass weight to the next player"]),
+  drill("dr-08", "Strike the moving ball", "Under 15", "Technical", "channel", 8, "Penalty area, server on the side, balls in a pile.", "Server rolls the ball across the box. Striker meets it and finishes with one touch.", ["Set the standing foot", "Head still", "Pick a corner before contact"]),
+  drill("dr-09", "4v2 rondo", "Under 13", "Tactical", "rondo", 6, "12m square. Four outside, two inside.", "Outside players keep the ball in two touches. A defender who wins it swaps with the passer.", ["Body shape to play forward", "Split the two defenders", "Press as soon as the ball is lost"]),
+  drill("dr-10", "5v3 possession", "Under 15", "Tactical", "rondo", 8, "20m box. Five keepers of the ball, three pressing.", "The five keep possession. If the three win it and make three passes, the roles swap.", ["Angles of support", "Play away from pressure", "Compact press"]),
+  drill("dr-11", "Overlap and cross", "Under 15", "Tactical", "overlap", 8, "Half pitch, full goal, cones marking the overlap lane.", "The wide player drives inside. The fullback overlaps and delivers. Near and far runners attack the cross.", ["Timing of the overlap", "Decide the cross before the byline", "Attack the near space first"]),
+  drill("dr-12", "Pressing triggers", "Under 17", "Tactical", "press", 7, "Half pitch, goalkeeper and back four against six.", "The press starts on a backwards pass or a poor first touch. Jump together, then recover if the ball goes wide.", ["One trigger, everyone jumps", "Cover the inside pass", "Recover in a line"]),
+  drill("dr-13", "Build from the back", "Under 15", "Tactical", "press", 8, "Half pitch with a goalkeeper, back four, and a pivot.", "Goalkeeper plays into the build. The pivot shows between the lines. Restart if the press wins it.", ["Split the centre-backs", "Pivot on the half-turn", "Play forward when the picture is on"]),
+  drill("dr-14", "Counter-attack channel", "Under 17", "Tactical", "channel", 7, "Full width, two goals, a halfway line as the trigger.", "Win the ball and attack the far goal within eight seconds. If the move stalls, reset.", ["First pass forward", "Run beyond the ball", "Finish or cross before the extra defender arrives"]),
+  drill("dr-15", "Switch the point of attack", "Under 13", "Tactical", "square", 6, "Half pitch with two wide goals and a central square.", "Play through the square, then switch to the weak side and finish in the wide goal.", ["See the switch early", "Driven pass across", "Weak-side player is already wide"]),
+  drill("dr-16", "Rest defence after loss", "Under 17", "Tactical", "press", 7, "Half pitch, attacking six and a rest-defence three.", "Attack the big goal. On a loss, the three nearest players delay the counter while the rest recover.", ["Delay, do not dive in", "Protect the centre", "Recover behind the ball"]),
+  drill("dr-17", "Sprint and recover", "Under 13", "Physical", "gates", 4, "Two gates 20m apart.", "Sprint through the far gate, jog back, and repeat. Rest matches the work.", ["First three steps", "Stay tall on the jog", "Stop if the sprint shape breaks"]),
+  drill("dr-18", "Repeated sprint lanes", "Under 15", "Physical", "lanes", 5, "Four 30m lanes. One player per lane.", "Sprint the lane, walk back, and go again on the whistle. Eight reps.", ["Full effort each rep", "Walk the recovery", "Same start position every time"]),
+  drill("dr-19", "Agility square", "Under 11", "Physical", "square", 4, "5m square, one cone per corner.", "Sprint one side, shuffle the next, backpedal, then sprint out. Rotate the pattern.", ["Low hips on the shuffle", "Quick feet at the cone", "Eyes forward"]),
+  drill("dr-20", "Change-of-direction gates", "Under 13", "Physical", "gates", 5, "Three gates in a zigzag, 8m apart.", "Sprint through each gate and plant the outside foot to change direction.", ["Plant and push", "Ball of the foot", "Arms help the turn"]),
+  drill("dr-21", "Pitch laps", "Under 17", "Physical", "lanes", 8, "Touchline to touchline, full width.", "Run the width at tempo, walk the goal line, and repeat for the block.", ["Even pace", "Breathe out on the walk", "Stay in the lane"]),
+  drill("dr-22", "Jump and land", "Under 11", "Physical", "gates", 4, "A line of low hurdles or cones, with a landing square after each.", "Jump the hurdle and land soft on two feet inside the square.", ["Quiet landing", "Knees over toes", "Hold the landing before the next jump"]),
+  drill("dr-23", "Press and recover runs", "Under 15", "Physical", "press", 5, "Half pitch with mannequins as the press points.", "Close down the mannequin, then sprint back to the recovery cone.", ["Arrive on the angle", "Do not overrun", "Recover at full speed"]),
+  drill("dr-24", "Small-sided conditioning", "Under 17", "Physical", "rondo", 8, "30m box, 4v4, two small goals.", "Play until a goal, then the scorers sprint the width before the restart.", ["Work after the goal", "Restart quickly", "Keep the press"]),
+  drill("dr-25", "Corner delivery", "Under 15", "Set Piece", "corner", 6, "One corner arc, six attackers, four defenders, goalkeeper.", "Call the delivery, then attack near post, penalty spot, and back post. Restart quickly.", ["Deliver to a zone", "Attack the ball", "Set the second-ball shape"]),
+  drill("dr-26", "Near-post corner", "Under 13", "Set Piece", "corner", 6, "Corner flag, one runner on the near post, two on the edge.", "Inswinging delivery to the near post. The runner glances or flicks across.", ["Pace on the cross", "Run across the keeper", "Edge players attack the second ball"]),
+  drill("dr-27", "Short corner", "Under 17", "Set Piece", "corner", 6, "Corner arc with a short option 8m inside.", "Play short, then combine to cross or shoot. The decoy still attacks the near post.", ["Short pass quality", "Decoy run is real", "Decision before the cross"]),
+  drill("dr-28", "Direct free kick", "Under 17", "Set Piece", "channel", 6, "Free-kick range, a two-player wall, goalkeeper.", "Two takers. One strikes, one is ready for the layoff. Rotate after three kicks.", ["Plant foot aimed", "Strike through the ball", "Wall jump is timed"]),
+  drill("dr-29", "Wide free kick", "Under 15", "Set Piece", "overlap", 6, "Free kick from the wide channel, a wall, and two box runners.", "Deliver to the back-post runner or pull it back to the edge.", ["See the keeper's position", "Back-post run starts late", "Edge player is set"]),
+  drill("dr-30", "Throw-in to the runner", "Under 13", "Set Piece", "overlap", 5, "Touchline, thrower, a checking runner, and a target.", "Throw into the runner's feet or down the line for them to attack.", ["Thrower shows the target", "Runner checks then spins", "First touch forward"]),
+  drill("dr-31", "Goal-kick build", "Under 11", "Set Piece", "press", 6, "Goalkeeper, two centre-backs, and a pressing forward.", "Goal kick to a centre-back, who plays into the midfielder. Restart if the press wins it.", ["Centre-back body shape", "Goalkeeper has a second option", "Play simple under pressure"]),
+  drill("dr-32", "Defend the corner", "Under 15", "Set Piece", "corner", 6, "Same corner setup, focus on the defending four and the keeper.", "Mark zones, attack the ball, and clear to the side. Then set the rest defence.", ["Attack the ball, do not watch it", "Keeper owns the six-yard box", "First clear is wide"]),
+];

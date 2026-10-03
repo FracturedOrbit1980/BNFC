@@ -8,7 +8,7 @@ export default function AdminPage() {
     <div>
       <PageHeader
         title="Club overview"
-        description="Age groups, squads, and numbers from the club record saved in this browser."
+        description="Age groups, squads, and the official drill library. Player lists start empty."
       />
       <ClubOverview />
     </div>
