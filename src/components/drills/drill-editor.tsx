@@ -697,6 +697,24 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
             </g>
           ))}
         </svg>
+        <label className="editor-frame-bar mt-2 block rounded-lg bg-white px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-600 ring-1 ring-slate-300" data-frame-bar>
+          Frame {Math.min(frameCount, Math.floor(playing ? playhead : safeIndex) + 1)} / {frameCount}
+          <input
+            type="range"
+            aria-label="Scrub frames"
+            min={0}
+            max={Math.max(0, frameCount - 1)}
+            step={playing ? 0.01 : 1}
+            value={playing ? playhead : safeIndex}
+            onChange={(event) => {
+              const value = Number(event.target.value);
+              setPlaying(false);
+              setPlayhead(value);
+              setFrameIndex(Math.round(value));
+            }}
+            className="mt-1 block h-11 w-full accent-[#9a4a4f]"
+          />
+        </label>
       </div>
       <div className="editor-descriptions">
         {descriptions ? (
@@ -831,24 +849,6 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
             />
           </div>
           <p className="mt-2 text-xs font-medium text-slate-600">Drag a piece on the pitch, or tap an icon to drop one in the middle.</p>
-          <label className="mt-3 block text-xs font-bold uppercase tracking-wide text-slate-600">
-            Scrub · frame {Math.min(frameCount, Math.floor(playing ? playhead : safeIndex) + 1)} / {frameCount}
-            <input
-              type="range"
-              aria-label="Scrub frames"
-              min={0}
-              max={Math.max(0, frameCount - 1)}
-              step={playing ? 0.01 : 1}
-              value={playing ? playhead : safeIndex}
-              onChange={(event) => {
-                const value = Number(event.target.value);
-                setPlaying(false);
-                setPlayhead(value);
-                setFrameIndex(Math.round(value));
-              }}
-              className="mt-2 block h-11 w-full accent-[#9a4a4f]"
-            />
-          </label>
         </section>
         {notice ? <p className="text-sm font-semibold text-slate-800">{notice}</p> : null}
         {savedDrills.length > 0 ? (
