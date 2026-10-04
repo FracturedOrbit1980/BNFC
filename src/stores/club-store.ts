@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+import { ageLabel, ageNumber, sortByAge } from "@/lib/club/age";
 import { DRILL_LEVELS, OBJECTIVE_CATEGORIES, type DrillLevel, type ObjectiveCategory, type SetupDiagram } from "@/lib/club/catalog";
 import type { DrillBoard } from "@/lib/club/board";
 import { weekDates } from "@/lib/club/week";
@@ -50,7 +51,7 @@ interface ClubState extends ClubData {
   addDrill: (input: NewDrillInput) => void;
   setDrillOfficial: (drillId: string, official: boolean) => void;
   setDrillVideo: (drillId: string, videoUrl: string, videoName: string) => void;
-  addAgeGroup: (name: string) => void;
+  addAgeGroup: (age: number) => void;
   addTeam: (ageGroupId: string, name: string) => void;
   setCoachTeam: (teamId: string) => void;
   addPlayer: (input: NewPlayerInput) => void;
@@ -174,18 +175,23 @@ export const useClubStore = create<ClubState>()(
             { id: `c-${Date.now()}`, name, teamId },
           ],
         })),
-      addAgeGroup: (name) =>
-        set((state) => ({
-          ageGroups: [
-            ...state.ageGroups,
-            {
-              id: `ag-${Date.now()}`,
-              name,
-              displayOrder: state.ageGroups.length + 1,
-              teams: [],
-            },
-          ],
-        })),
+      addAgeGroup: (age) =>
+        set((state) => {
+          const number = Math.round(age);
+          if (!Number.isInteger(number) || number < 1 || number > 99) return state;
+          if (state.ageGroups.some((group) => ageNumber(group.name) === number)) return state;
+          return {
+            ageGroups: sortByAge([
+              ...state.ageGroups,
+              {
+                id: `ag-${Date.now()}`,
+                name: `U${number}`,
+                displayOrder: number,
+                teams: [],
+              },
+            ]),
+          };
+        }),
       setCoachTeam: (teamId) => set({ coachTeamId: teamId }),
       addTeam: (ageGroupId, name) =>
         set((state) => ({
@@ -350,6 +356,10 @@ export const useClubStore = create<ClubState>()(
       }),
       merge: (persisted, current) => {
         const saved = (persisted ?? {}) as Partial<ClubData>;
+        const ageGroups = sortByAge(saved.ageGroups ?? current.ageGroups).map((group) => {
+          const number = ageNumber(group.name);
+          return number === null ? group : { ...group, name: ageLabel(group.name), displayOrder: number };
+        });
         const drills = (saved.drills ?? current.drills).map((drill) => ({
           ...drill,
           durationSeconds: drill.durationSeconds ?? drill.defaultDurationSeconds,
@@ -362,6 +372,7 @@ export const useClubStore = create<ClubState>()(
         return {
           ...current,
           ...saved,
+          ageGroups,
           drills,
           coachTeamId: saved.coachTeamId ?? null,
           boards: saved.boards ?? {},

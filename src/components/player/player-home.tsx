@@ -5,6 +5,7 @@ import { useState } from "react";
 import { PlayerRadar } from "@/components/dashboard/player-radar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ageLabel, sortByAge } from "@/lib/club/age";
 import { formatDay } from "@/lib/club/week";
 import { useClubStore } from "@/stores/club-store";
 
@@ -16,8 +17,8 @@ export function PlayerHome() {
   const weeklyReports = useClubStore((state) => state.weeklyReports);
   const [playerId, setPlayerId] = useState("");
   const player = players.find((item) => item.id === playerId);
-  const team = ageGroups
-    .flatMap((group) => group.teams.map((item) => ({ ...item, ageGroup: group.name })))
+  const team = sortByAge(ageGroups)
+    .flatMap((group) => group.teams.map((item) => ({ ...item, ageGroup: ageLabel(group.name) })))
     .find((item) => item.id === player?.teamId);
   const latest = evaluations.find((item) => item.playerId === player?.id);
   const mine = attendance.filter((item) => item.playerId === player?.id);

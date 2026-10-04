@@ -4,15 +4,16 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ageLabel, sortByAge } from "@/lib/club/age";
 import { useClubStore } from "@/stores/club-store";
 
 export function PeopleBoard() {
-  const ageGroups = useClubStore((state) => state.ageGroups);
+  const ageGroups = sortByAge(useClubStore((state) => state.ageGroups));
   const coaches = useClubStore((state) => state.coaches);
   const players = useClubStore((state) => state.players);
   const addPlayer = useClubStore((state) => state.addPlayer);
   const addCoach = useClubStore((state) => state.addCoach);
-  const teams = ageGroups.flatMap((group) => group.teams.map((team) => ({ ...team, ageGroup: group.name })));
+  const teams = ageGroups.flatMap((group) => group.teams.map((team) => ({ ...team, ageGroup: ageLabel(group.name) })));
   const [playerName, setPlayerName] = useState("");
   const [squadNumber, setSquadNumber] = useState(1);
   const [position, setPosition] = useState("CM");
@@ -100,7 +101,7 @@ export function PeopleBoard() {
       )}
       {ageGroups.map((group) => (
         <section key={group.id}>
-          <h2 className="mb-2 text-lg font-bold text-slate-950">{group.name}</h2>
+          <h2 className="mb-2 text-lg font-bold text-slate-950">{ageLabel(group.name)}</h2>
           <div className="grid gap-4 md:grid-cols-2">
             {group.teams.map((team) => {
               const coach = coaches.find((item) => item.teamId === team.id);

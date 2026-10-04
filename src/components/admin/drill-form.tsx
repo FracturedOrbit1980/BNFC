@@ -3,11 +3,12 @@
 import { useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
+import { ageLabel, ageNumber, sortByAge } from "@/lib/club/age";
 import { DRILL_LEVELS, OBJECTIVE_CATEGORIES, SETUP_DIAGRAMS, type DrillLevel, type ObjectiveCategory, type SetupDiagram } from "@/lib/club/catalog";
 import { isDrillLevel, isObjectiveCategory, useClubStore } from "@/stores/club-store";
 
 export function DrillForm() {
-  const ageGroups = useClubStore((state) => state.ageGroups);
+  const ageGroups = sortByAge(useClubStore((state) => state.ageGroups));
   const addDrill = useClubStore((state) => state.addDrill);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<ObjectiveCategory>("Technical");
@@ -81,11 +82,13 @@ export function DrillForm() {
             ))}
           </select>
         </Field>
-        <Field label="Age group">
-          <select value={age} onChange={(event) => setAge(event.target.value)} className={inputClass}>
-            <option>All ages</option>
+        <Field label="Under">
+          <select value={age} data-field="drill-age" onChange={(event) => setAge(event.target.value)} className={inputClass}>
+            <option value="All ages">All ages</option>
             {ageGroups.map((group) => (
-              <option key={group.id}>{group.name}</option>
+              <option key={group.id} value={ageLabel(group.name)}>
+                {ageNumber(group.name) ?? ageLabel(group.name)}
+              </option>
             ))}
           </select>
         </Field>

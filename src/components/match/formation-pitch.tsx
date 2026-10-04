@@ -24,10 +24,10 @@ export const FORMATION_GROUPS: {
   label: string;
   formations: FormationName[];
 }[] = [
-  { id: "u6-u7", label: "U6 and U7 · 5-a-side", formations: ["2-2", "1-2-1", "2-1-1"] },
-  { id: "u8-u9", label: "U8 and U9 · 7-a-side", formations: ["2-3-1", "3-2-1", "3-1-2"] },
-  { id: "u10-u11", label: "U10 and U11 · 9-a-side", formations: ["3-3-2", "3-2-3", "2-3-3"] },
   { id: "eleven", label: "11-a-side", formations: ["4-4-2", "4-3-3", "3-5-2"] },
+  { id: "u10-u11", label: "U10 and U11 · 9-a-side", formations: ["3-3-2", "3-2-3", "2-3-3"] },
+  { id: "u8-u9", label: "U8 and U9 · 7-a-side", formations: ["2-3-1", "3-2-1", "3-1-2"] },
+  { id: "u6-u7", label: "U6 and U7 · 5-a-side", formations: ["2-2", "1-2-1", "2-1-1"] },
 ];
 
 const KEEPER = { x: 10, y: 32 };

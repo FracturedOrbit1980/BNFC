@@ -4,10 +4,11 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ageLabel, ageNumber, sortByAge } from "@/lib/club/age";
 import { useClubStore } from "@/stores/club-store";
 
 export function ClubOverview() {
-  const ageGroups = useClubStore((state) => state.ageGroups);
+  const ageGroups = sortByAge(useClubStore((state) => state.ageGroups));
   const players = useClubStore((state) => state.players);
   const drills = useClubStore((state) => state.drills);
   const addAgeGroup = useClubStore((state) => state.addAgeGroup);
@@ -50,7 +51,7 @@ export function ClubOverview() {
           {ageGroups.map((group) => (
             <Card key={group.id}>
               <CardHeader>
-                <CardTitle>{group.name}</CardTitle>
+                <CardTitle data-age-group={ageLabel(group.name)}>{ageLabel(group.name)}</CardTitle>
               </CardHeader>
               <CardContent>
                 {group.teams.length === 0 ? (
@@ -76,19 +77,21 @@ export function ClubOverview() {
         className="mt-6 flex flex-wrap items-end gap-3 rounded-xl bg-white p-4 ring-1 ring-slate-300"
         onSubmit={(event) => {
           event.preventDefault();
-          const name = groupName.trim();
-          if (!name) return;
-          addAgeGroup(name);
+          const age = Number(groupName);
+          if (!Number.isInteger(age) || age < 1) return;
+          addAgeGroup(age);
           setGroupName("");
         }}
       >
         <label className="text-sm font-semibold text-slate-800">
-          New age group
+          Under
           <input
             value={groupName}
-            onChange={(event) => setGroupName(event.target.value)}
-            placeholder="Under 13"
-            className="mt-1 block h-11 rounded-md border border-slate-300 px-3 text-base"
+            data-field="age-number"
+            inputMode="numeric"
+            onChange={(event) => setGroupName(event.target.value.replace(/\D/g, "").slice(0, 2))}
+            placeholder="11"
+            className="mt-1 block h-11 w-24 rounded-md border border-slate-300 px-3 text-base"
             required
           />
         </label>
@@ -107,9 +110,10 @@ export function ClubOverview() {
         }}
       >
         <label className="text-sm font-semibold text-slate-800">
-          Age group
+          Under
           <select
             value={selectedGroup}
+            data-field="age-group"
             onChange={(event) => setGroupId(event.target.value)}
             disabled={ageGroups.length === 0}
             className="mt-1 block h-11 rounded-md border border-slate-300 bg-white px-2 text-base disabled:bg-slate-100"
@@ -117,7 +121,7 @@ export function ClubOverview() {
             {ageGroups.length === 0 ? <option value="">Create an age group first</option> : null}
             {ageGroups.map((group) => (
               <option key={group.id} value={group.id}>
-                {group.name}
+                {ageNumber(group.name) ?? ageLabel(group.name)}
               </option>
             ))}
           </select>

@@ -1,13 +1,14 @@
 "use client";
 
+import { ageLabel, sortByAge } from "@/lib/club/age";
 import { useClubStore } from "@/stores/club-store";
 
 export function useCoachTeam() {
-  const ageGroups = useClubStore((state) => state.ageGroups);
+  const ageGroups = sortByAge(useClubStore((state) => state.ageGroups));
   const coachTeamId = useClubStore((state) => state.coachTeamId);
   const setCoachTeam = useClubStore((state) => state.setCoachTeam);
   const teams = ageGroups.flatMap((group) =>
-    group.teams.map((team) => ({ ...team, ageGroup: group.name })),
+    group.teams.map((team) => ({ ...team, ageGroup: ageLabel(group.name) })),
   );
   const team = teams.find((item) => item.id === coachTeamId) ?? null;
   return { teams, team, setCoachTeam };
