@@ -21,8 +21,8 @@ export function RosterBoard() {
   const squad = players
     .filter((player) => player.teamId === team?.id)
     .sort((a, b) => a.squadNumber - b.squadNumber);
-  const [selectedId, setSelectedId] = useState(squad[0]?.id ?? "");
-  const selected = squad.find((player) => player.id === selectedId) ?? squad[0];
+  const [selectedId, setSelectedId] = useState("");
+  const selected = squad.find((player) => player.id === selectedId) ?? null;
   const [scores, setScores] = useState({ technical: 6, tactical: 6, physical: 6, mental: 6 });
   const [notes, setNotes] = useState("");
   const [homework, setHomeworkText] = useState(selected?.homework ?? "");
@@ -66,10 +66,34 @@ export function RosterBoard() {
     return (
       <div className="space-y-4">
         <p className="rounded-lg bg-white px-4 py-3 font-semibold text-slate-800 ring-1 ring-slate-300">
-          {team ? `${team.ageGroup} · ${team.division ?? team.name} has no players yet. Register them, then allocate them to this team.` : "Open an age and a league on Home. Attendance starts after players are allocated."}
+          {team
+            ? squad.length === 0
+              ? `${team.ageGroup} · ${team.division ?? team.name} has no players yet. Register them, then allocate them to this team.`
+              : `${squad.length} players. Tap one to open their rating, details, and training week.`
+            : "Open an age and a league on Home. Attendance starts after players are allocated."}
         </p>
+        {squad.length > 0 ? (
+          <ul className="space-y-2" data-squad-list>
+            {squad.map((player) => (
+              <li key={player.id}>
+                <button
+                  type="button"
+                  onClick={() => selectPlayer(player.id)}
+                  className="flex min-h-11 w-full items-center gap-3 rounded-xl bg-white px-4 py-3 text-left ring-1 ring-slate-300"
+                >
+                  <span className="w-8 text-lg font-black tabular-nums text-slate-950">{player.squadNumber}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-semibold text-slate-950">{player.name}</span>
+                    <span className="text-sm text-slate-600">{formatPosition(player)}</span>
+                  </span>
+                  <span className="text-sm font-bold text-slate-700">Open</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
         {team ? <GameDay teamId={team.id} teamName={team.name} gameDay={team.gameDay} /> : null}
-        {team ? <ExportSquad teamName={team.name} players={[]} /> : null}
+        {team ? <ExportSquad teamName={team.name} players={squad} /> : null}
         {team ? <PlayerUpload /> : null}
         {team ? <AddSquadPlayer teamId={team.id} /> : null}
       </div>
@@ -79,49 +103,15 @@ export function RosterBoard() {
   const latest = evaluations.find((item) => item.playerId === selected.id);
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
-      {team ? <div className="lg:col-span-2"><GameDay teamId={team.id} teamName={team.name} gameDay={team.gameDay} /></div> : null}
-      <div className="min-w-0 space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-bold uppercase tracking-wide text-slate-700">
-            Training week {formatDay(weekStart)}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" size="lg" variant="outline" className="h-11" onClick={() => setWeekStart(addDays(weekStart, -7))}>
-              Previous week
-            </Button>
-            <Button type="button" size="lg" variant="outline" className="h-11" onClick={() => setWeekStart(addDays(weekStart, 7))}>
-              Next week
-            </Button>
-          </div>
-        </div>
-      <ul className="min-w-0 space-y-3">
-        {squad.map((player) => {
-          const active = player.id === selected.id;
-          return (
-            <li key={player.id} className="min-w-0 rounded-xl bg-white ring-1 ring-slate-300">
-              <button
-                type="button"
-                onClick={() => selectPlayer(player.id)}
-                className={`flex w-full items-center gap-3 rounded-t-xl px-4 py-3 text-left ${
-                  active ? "bg-emerald-600 text-white" : "text-slate-950"
-                }`}
-              >
-                <span className="w-8 text-lg font-black tabular-nums">{player.squadNumber}</span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-semibold">{player.name}</span>
-                  <span className={`text-sm ${active ? "text-emerald-100" : "text-slate-600"}`}>
-                    {formatPosition(player)}
-                  </span>
-                </span>
-              </button>
-              <TrainingWeek playerId={player.id} dates={dates} />
-              <WeeklyReport key={`${player.id}:${weekStart}`} playerId={player.id} playerName={player.name} teamId={player.teamId} weekStart={weekStart} />
-            </li>
-          );
-        })}
-      </ul>
-      </div>
+    <div className="space-y-4" data-player-detail={selected.id}>
+      <button
+        type="button"
+        onClick={() => setSelectedId("")}
+        className="min-h-11 rounded-xl bg-white px-4 py-2 text-left ring-1 ring-slate-300"
+      >
+        <span className="block text-sm font-bold text-slate-950">Back to squad</span>
+        <span className="mt-0.5 block text-xs font-medium text-slate-600">Return to the player list.</span>
+      </button>
       <div className="space-y-4">
       <form
         className="rounded-xl bg-white p-4 ring-1 ring-slate-300"
@@ -237,15 +227,8 @@ export function RosterBoard() {
                 size="lg"
                 className="h-11 bg-slate-950 text-white hover:bg-slate-800"
                 onClick={() => {
-                  const remaining = squad.filter((player) => player.id !== selected.id);
                   deletePlayer(selected.id);
-                  setSelectedId(remaining[0]?.id ?? "");
-                  setHomeworkText(remaining[0]?.homework ?? "");
-                  const nextPosition = normalizePositions(remaining[0]?.position ?? "Central midfielder", remaining[0]?.positions);
-                  setEditName(remaining[0]?.name ?? "");
-                  setEditNumber(remaining[0]?.squadNumber ?? 1);
-                  setEditRole(nextPosition.position);
-                  setEditRoles(nextPosition.positions);
+                  setSelectedId("");
                   setConfirmDelete(false);
                   setSaved("");
                 }}
@@ -262,11 +245,21 @@ export function RosterBoard() {
             Delete player
           </Button>
         )}
-      </div>
-      <div className="lg:col-span-2 space-y-4">
-        {team ? <ExportSquad teamName={team.name} players={squad} /> : null}
-        {team ? <PlayerUpload /> : null}
-        {team ? <AddSquadPlayer teamId={team.id} /> : null}
+        <section className="rounded-xl bg-white ring-1 ring-slate-300">
+          <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
+            <p className="text-sm font-bold text-slate-950">Training week {formatDay(weekStart)}</p>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" size="lg" variant="outline" className="h-11" onClick={() => setWeekStart(addDays(weekStart, -7))}>
+                Previous week
+              </Button>
+              <Button type="button" size="lg" variant="outline" className="h-11" onClick={() => setWeekStart(addDays(weekStart, 7))}>
+                Next week
+              </Button>
+            </div>
+          </div>
+          <TrainingWeek playerId={selected.id} dates={dates} />
+          <WeeklyReport key={`${selected.id}:${weekStart}`} playerId={selected.id} playerName={selected.name} teamId={selected.teamId} weekStart={weekStart} />
+        </section>
       </div>
     </div>
   );
