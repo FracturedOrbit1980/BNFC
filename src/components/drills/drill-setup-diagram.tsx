@@ -22,7 +22,7 @@ export function DrillSetupDiagram({ diagram, pitchSetup, size = "md" }: DiagramP
       aria-label={`Setup diagram. ${pitchSetup}`}
       className="shrink-0 rounded-lg bg-emerald-50 ring-1 ring-emerald-700"
     >
-      <rect x="1" y="1" width="158" height="98" rx="8" fill="#fff5f5" stroke="#880010" strokeWidth="2" />
+      <rect x="1" y="1" width="158" height="98" rx="8" fill="#fff5f5" stroke="#9a4a4f" strokeWidth="2" />
       <SetupShape diagram={diagram} />
     </svg>
   );
@@ -54,7 +54,7 @@ function Cone({ x, y }: { x: number; y: number }) {
 }
 
 function Player({ x, y, dark = false }: { x: number; y: number; dark?: boolean }) {
-  return <circle cx={x} cy={y} r="6" fill={dark ? "#1e1d1b" : "#e82028"} stroke="#fff" strokeWidth="1.5" />;
+  return <circle cx={x} cy={y} r="6" fill={dark ? "#1e1d1b" : "#d16b6f"} stroke="#fff" strokeWidth="1.5" />;
 }
 
 function Ball({ x, y }: { x: number; y: number }) {

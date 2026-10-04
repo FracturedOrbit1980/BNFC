@@ -364,7 +364,7 @@ export function PitchLines({ view }: { view: PitchView }) {
           <line x1="66.6" y1="1" x2="66.6" y2="63" />
         </g>
       ) : null}
-      {view === "channel" ? <rect x="38" y="1" width="24" height="62" fill="#5c0010" fillOpacity="0.35" stroke="none" /> : null}
+      {view === "channel" ? <rect x="38" y="1" width="24" height="62" fill="#7a4045" fillOpacity="0.35" stroke="none" /> : null}
     </g>
   );
 }
