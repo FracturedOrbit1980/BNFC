@@ -12,10 +12,19 @@ export const SETUP_DIAGRAMS = ["square", "channel", "rondo", "overlap", "press",
 
 export type SetupDiagram = (typeof SETUP_DIAGRAMS)[number];
 
+export const DIVISIONS = ["Perm", "Div1", "Div 2", "Div 3", "Div 4"] as const;
+
+export type Division = (typeof DIVISIONS)[number];
+
+export function isDivision(value: string): value is Division {
+  return (DIVISIONS as readonly string[]).includes(value);
+}
+
 export interface ClubTeam {
   id: string;
   name: string;
   gameDay?: string;
+  division?: Division;
 }
 
 export interface ClubAgeGroup {

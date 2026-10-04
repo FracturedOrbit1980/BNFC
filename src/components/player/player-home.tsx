@@ -6,6 +6,7 @@ import { PlayerRadar } from "@/components/dashboard/player-radar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ageLabel, sortByAge } from "@/lib/club/age";
+import { formatPosition } from "@/lib/club/positions";
 import { formatDay } from "@/lib/club/week";
 import { useClubStore } from "@/stores/club-store";
 
@@ -65,7 +66,7 @@ export function PlayerHome() {
             </CardHeader>
             <CardContent className="grid gap-3 sm:grid-cols-4">
               <Fact label="Squad" value={String(player.squadNumber)} />
-              <Fact label="Position" value={player.position} />
+              <Fact label="Position" value={formatPosition(player)} />
               <Fact label="Team" value={team?.name ?? "Squad"} />
               <Fact label="Age group" value={team?.ageGroup ?? "Youth"} />
               <p className="rounded-lg bg-slate-100 px-3 py-3 text-sm font-medium text-slate-800 sm:col-span-4">

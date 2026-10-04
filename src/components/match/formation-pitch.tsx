@@ -1,5 +1,6 @@
 "use client";
 
+import { playsInGoal } from "@/lib/club/positions";
 import type { PlayerMatchState } from "@/stores/match-store";
 
 export const FORMATIONS = [
@@ -100,7 +101,7 @@ const SLOTS: Record<FormationName, { x: number; y: number }[]> = {
 export function placeOnPitch(players: PlayerMatchState[], formation: FormationName) {
   const slots = SLOTS[formation] ?? [];
   const onPitch = players.filter((player) => player.isOnPitch);
-  const keeper = onPitch.find((player) => player.position.trim().toUpperCase() === "GK");
+  const keeper = onPitch.find((player) => playsInGoal(player.position));
   const rest = onPitch
     .filter((player) => player.playerId !== keeper?.playerId)
     .sort((a, b) => a.squadNumber - b.squadNumber);
@@ -143,7 +144,7 @@ export function FormationPitch({
         </g>
         {placed.map(({ player, x, y }) => (
           <g key={player.playerId} data-player-id={player.playerId} data-x={x} data-y={y} transform={`translate(${x} ${y})`}>
-            <circle r="2.4" fill={player.position.trim().toUpperCase() === "GK" ? "#f59e0b" : "#0f172a"} stroke="#ffffff" strokeWidth="0.4" />
+            <circle r="2.4" fill={playsInGoal(player.position) ? "#f59e0b" : "#0f172a"} stroke="#ffffff" strokeWidth="0.4" />
             <text y="0.8" textAnchor="middle" fontSize="2" fontWeight="700" fill="#ffffff">
               {player.squadNumber}
             </text>

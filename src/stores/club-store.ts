@@ -1,8 +1,9 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import { ageLabel, ageNumber, sortByAge } from "@/lib/club/age";
-import { DRILL_LEVELS, OBJECTIVE_CATEGORIES, type DrillLevel, type ObjectiveCategory, type SetupDiagram } from "@/lib/club/catalog";
+import { ageNumber, ensureYouthAges, sortByAge } from "@/lib/club/age";
+import { normalizePositions } from "@/lib/club/positions";
+import { DRILL_LEVELS, isDivision, OBJECTIVE_CATEGORIES, type Division, type DrillLevel, type ObjectiveCategory, type SetupDiagram } from "@/lib/club/catalog";
 import type { DrillBoard } from "@/lib/club/board";
 import { weekDates } from "@/lib/club/week";
 import {
@@ -33,6 +34,7 @@ export interface NewPlayerInput {
   name: string;
   squadNumber: number;
   position: string;
+  positions?: string[];
   teamId: string;
 }
 
@@ -52,10 +54,12 @@ interface ClubState extends ClubData {
   setDrillOfficial: (drillId: string, official: boolean) => void;
   setDrillVideo: (drillId: string, videoUrl: string, videoName: string) => void;
   addAgeGroup: (age: number) => void;
-  addTeam: (ageGroupId: string, name: string) => void;
+  addTeam: (ageGroupId: string, name: string, division: Division) => void;
+  openDivisionTeam: (ageGroupId: string, division: Division) => string;
+  setTeamDivision: (teamId: string, division: Division) => void;
   setCoachTeam: (teamId: string) => void;
   addPlayer: (input: NewPlayerInput) => void;
-  updatePlayer: (playerId: string, input: { name: string; squadNumber: number; position: string }) => void;
+  updatePlayer: (playerId: string, input: { name: string; squadNumber: number; position: string; positions?: string[] }) => void;
   deletePlayer: (playerId: string) => void;
   addCoach: (teamId: string, name: string) => void;
   addEvaluation: (input: NewEvaluationInput) => void;
@@ -143,7 +147,7 @@ export const useClubStore = create<ClubState>()(
               id: `p-${Date.now()}`,
               name: input.name,
               squadNumber: input.squadNumber,
-              position: input.position,
+              ...normalizePositions(input.position, input.positions),
               teamId: input.teamId,
               homework: "",
             },
@@ -157,7 +161,7 @@ export const useClubStore = create<ClubState>()(
                   ...player,
                   name: input.name,
                   squadNumber: input.squadNumber,
-                  position: input.position,
+                  ...normalizePositions(input.position, input.positions),
                 }
               : player,
           ),
@@ -193,16 +197,46 @@ export const useClubStore = create<ClubState>()(
           };
         }),
       setCoachTeam: (teamId) => set({ coachTeamId: teamId }),
-      addTeam: (ageGroupId, name) =>
+      openDivisionTeam: (ageGroupId, division) => {
+        let opened = "";
+        set((state) => {
+          const ageGroups = ensureYouthAges(state.ageGroups);
+          const group = ageGroups.find((item) => item.id === ageGroupId);
+          if (!group) return { ageGroups };
+          const existing = group.teams.find((team) => team.division === division);
+          if (existing) {
+            opened = existing.id;
+            return { ageGroups, coachTeamId: existing.id };
+          }
+          opened = `tm-${Date.now()}`;
+          return {
+            coachTeamId: opened,
+            ageGroups: ageGroups.map((item) =>
+              item.id === ageGroupId
+                ? { ...item, teams: [...item.teams, { id: opened, name: division, division }] }
+                : item,
+            ),
+          };
+        });
+        return opened;
+      },
+      addTeam: (ageGroupId, name, division) =>
         set((state) => ({
           ageGroups: state.ageGroups.map((group) =>
             group.id === ageGroupId
               ? {
                   ...group,
-                  teams: [...group.teams, { id: `tm-${Date.now()}`, name }],
+                  teams: [...group.teams, { id: `tm-${Date.now()}`, name, division }],
                 }
               : group,
           ),
+        })),
+      setTeamDivision: (teamId, division) =>
+        set((state) => ({
+          ageGroups: state.ageGroups.map((group) => ({
+            ...group,
+            teams: group.teams.map((team) => (team.id === teamId ? { ...team, division } : team)),
+          })),
         })),
       addEvaluation: (input) =>
         set((state) => ({
@@ -356,10 +390,17 @@ export const useClubStore = create<ClubState>()(
       }),
       merge: (persisted, current) => {
         const saved = (persisted ?? {}) as Partial<ClubData>;
-        const ageGroups = sortByAge(saved.ageGroups ?? current.ageGroups).map((group) => {
-          const number = ageNumber(group.name);
-          return number === null ? group : { ...group, name: ageLabel(group.name), displayOrder: number };
-        });
+        const ageGroups = ensureYouthAges(saved.ageGroups ?? current.ageGroups).map((group) => ({
+          ...group,
+          teams: (group.teams ?? []).map((team) => ({
+            ...team,
+            division: team.division && isDivision(team.division) ? team.division : undefined,
+          })),
+        }));
+        const players = (saved.players ?? current.players).map((player) => ({
+          ...player,
+          ...normalizePositions(player.position, player.positions),
+        }));
         const drills = (saved.drills ?? current.drills).map((drill) => ({
           ...drill,
           durationSeconds: drill.durationSeconds ?? drill.defaultDurationSeconds,
@@ -373,6 +414,7 @@ export const useClubStore = create<ClubState>()(
           ...current,
           ...saved,
           ageGroups,
+          players,
           drills,
           coachTeamId: saved.coachTeamId ?? null,
           boards: saved.boards ?? {},

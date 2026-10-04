@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FormationPitch, FORMATION_GROUPS, type FormationName } from "@/components/match/formation-pitch";
 import { TeamPicker, useCoachTeam } from "@/components/coach/team-picker";
+import { formatPosition } from "@/lib/club/positions";
 import { useClubStore } from "@/stores/club-store";
 import { useMatchStore, type PlayerMatchState } from "@/stores/match-store";
 
@@ -36,7 +37,7 @@ export function LiveMatchTracker() {
   const teamId = team?.id ?? "";
   const squadKey = clubPlayers
     .filter((player) => player.teamId === teamId)
-    .map((player) => player.id)
+    .map((player) => `${player.id}:${formatPosition(player)}`)
     .join("|");
   const teamName = team?.name ?? "Squad";
 
@@ -49,12 +50,12 @@ export function LiveMatchTracker() {
         playerId: player.id,
         name: player.name,
         squadNumber: player.squadNumber,
-        position: player.position,
+        position: formatPosition(player),
         isOnPitch: index < 11,
         minutesPlayed: 0,
       }));
-    const current = useMatchStore.getState().players.map((player) => player.playerId).join("|");
-    const next = squad.map((player) => player.playerId).join("|");
+    const current = useMatchStore.getState().players.map((player) => `${player.playerId}:${player.position}`).join("|");
+    const next = squad.map((player) => `${player.playerId}:${player.position}`).join("|");
     if (current === next) return;
     loadSquad(squad);
   }, [clubPlayers, isClockRunning, loadSquad, matchTimeSeconds, squadKey, teamId]);

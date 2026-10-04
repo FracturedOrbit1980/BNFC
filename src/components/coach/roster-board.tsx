@@ -2,8 +2,10 @@
 
 import { useRef, useState } from "react";
 
+import { PositionFields } from "@/components/club/position-fields";
 import { Button } from "@/components/ui/button";
 import { useCoachTeam } from "@/components/coach/team-picker";
+import { formatPosition, normalizePositions, type PositionChoice, type StandardPosition } from "@/lib/club/positions";
 import type { ClubPlayer } from "@/lib/club/seed";
 import { addDays, formatDay, mondayOf, sessionToday, weekDates } from "@/lib/club/week";
 import { useClubStore } from "@/stores/club-store";
@@ -23,9 +25,11 @@ export function RosterBoard() {
   const [notes, setNotes] = useState("");
   const [homework, setHomeworkText] = useState(selected?.homework ?? "");
   const [saved, setSaved] = useState("");
+  const initialPosition = normalizePositions(selected?.position ?? "Central midfielder", selected?.positions);
   const [editName, setEditName] = useState(selected?.name ?? "");
   const [editNumber, setEditNumber] = useState(selected?.squadNumber ?? 1);
-  const [editPosition, setEditPosition] = useState(selected?.position ?? "");
+  const [editRole, setEditRole] = useState<PositionChoice>(initialPosition.position);
+  const [editRoles, setEditRoles] = useState<StandardPosition[]>(initialPosition.positions);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const updatePlayer = useClubStore((state) => state.updatePlayer);
   const deletePlayer = useClubStore((state) => state.deletePlayer);
@@ -34,9 +38,11 @@ export function RosterBoard() {
   const loadedId = useRef(selected?.id ?? "");
   if ((selected?.id ?? "") !== loadedId.current) {
     loadedId.current = selected?.id ?? "";
+    const nextPosition = normalizePositions(selected?.position ?? "Central midfielder", selected?.positions);
     setEditName(selected?.name ?? "");
     setEditNumber(selected?.squadNumber ?? 1);
-    setEditPosition(selected?.position ?? "");
+    setEditRole(nextPosition.position);
+    setEditRoles(nextPosition.positions);
     setHomeworkText(selected?.homework ?? "");
     setConfirmDelete(false);
   }
@@ -45,9 +51,11 @@ export function RosterBoard() {
     const player = squad.find((item) => item.id === playerId);
     setSelectedId(playerId);
     setHomeworkText(player?.homework ?? "");
+    const nextPosition = normalizePositions(player?.position ?? "Central midfielder", player?.positions);
     setEditName(player?.name ?? "");
     setEditNumber(player?.squadNumber ?? 1);
-    setEditPosition(player?.position ?? "");
+    setEditRole(nextPosition.position);
+    setEditRoles(nextPosition.positions);
     setConfirmDelete(false);
     setSaved("");
   }
@@ -56,7 +64,7 @@ export function RosterBoard() {
     return (
       <div className="space-y-4">
         <p className="rounded-lg bg-white px-4 py-3 font-semibold text-slate-800 ring-1 ring-slate-300">
-          {team ? `${team.name} has no players yet.` : "Choose a team on the coach home page before adding players."}
+          {team ? `${team.ageGroup} · ${team.division ?? team.name} has no players yet.` : "Choose an age and division on Home before adding players."}
         </p>
         {team ? <GameDay teamId={team.id} teamName={team.name} gameDay={team.gameDay} /> : null}
         {team ? <ExportSquad teamName={team.name} players={[]} /> : null}
@@ -99,7 +107,7 @@ export function RosterBoard() {
                 <span className="w-8 text-lg font-black tabular-nums">{player.squadNumber}</span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-semibold">{player.name}</span>
-                  <span className={`text-sm ${active ? "text-emerald-100" : "text-slate-600"}`}>{player.position}</span>
+                  <span className={`text-sm ${active ? "text-emerald-100" : "text-slate-600"}`}>{formatPosition(player)}</span>
                 </span>
               </button>
               <TrainingWeek playerId={player.id} dates={dates} />
@@ -154,7 +162,8 @@ export function RosterBoard() {
             updatePlayer(selected.id, {
               name: editName.trim(),
               squadNumber: Math.min(99, Math.max(1, editNumber || 1)),
-              position: editPosition.trim() || selected.position,
+              position: editRole,
+              positions: editRoles,
             });
             setSaved(`Updated ${editName.trim()}.`);
             setConfirmDelete(false);
@@ -183,15 +192,16 @@ export function RosterBoard() {
               className="mt-1 block h-11 w-full rounded-md border border-slate-300 px-3 text-base"
             />
           </label>
-          <label className="block text-sm font-semibold text-slate-800">
-            Position
-            <input
-              value={editPosition}
-              data-field="edit-position"
-              onChange={(event) => setEditPosition(event.target.value)}
-              className="mt-1 block h-11 w-full rounded-md border border-slate-300 px-3 text-base"
-            />
-          </label>
+          <PositionFields
+            role={editRole}
+            roles={editRoles}
+            onRole={(next) => {
+              setEditRole(next);
+              if (next !== "All-rounder") setEditRoles([]);
+            }}
+            onToggle={(item) => setEditRoles((current) => (current.includes(item) ? current.filter((role) => role !== item) : [...current, item]))}
+            field="edit-position"
+          />
           <Button type="submit" size="lg" className="h-11 w-full">
             Save changes
           </Button>
@@ -209,9 +219,11 @@ export function RosterBoard() {
                   deletePlayer(selected.id);
                   setSelectedId(remaining[0]?.id ?? "");
                   setHomeworkText(remaining[0]?.homework ?? "");
+                  const nextPosition = normalizePositions(remaining[0]?.position ?? "Central midfielder", remaining[0]?.positions);
                   setEditName(remaining[0]?.name ?? "");
                   setEditNumber(remaining[0]?.squadNumber ?? 1);
-                  setEditPosition(remaining[0]?.position ?? "");
+                  setEditRole(nextPosition.position);
+                  setEditRoles(nextPosition.positions);
                   setConfirmDelete(false);
                   setSaved("");
                 }}
@@ -389,7 +401,7 @@ function ExportSquad({ teamName, players }: { teamName: string; players: ClubPla
   function download() {
     const rows = [
       ["name", "squad number", "position"],
-      ...players.map((player) => [player.name, String(player.squadNumber), player.position]),
+      ...players.map((player) => [player.name, String(player.squadNumber), formatPosition(player)]),
     ];
     const csv = rows.map((row) => row.map(csvCell).join(",")).join("\n");
     const file = new Blob([csv], { type: "text/csv" });
@@ -422,7 +434,8 @@ function AddSquadPlayer({ teamId }: { teamId: string }) {
   const addPlayer = useClubStore((state) => state.addPlayer);
   const [name, setName] = useState("");
   const [number, setNumber] = useState(1);
-  const [position, setPosition] = useState("CM");
+  const [role, setRole] = useState<PositionChoice>("Central midfielder");
+  const [roles, setRoles] = useState<StandardPosition[]>([]);
 
   return (
     <form
@@ -433,10 +446,13 @@ function AddSquadPlayer({ teamId }: { teamId: string }) {
         addPlayer({
           name: name.trim(),
           squadNumber: number,
-          position,
+          position: role,
+          positions: roles,
           teamId,
         });
         setName("");
+        setRole("Central midfielder");
+        setRoles([]);
       }}
     >
       <label className="text-sm font-semibold text-slate-800">
@@ -447,10 +463,16 @@ function AddSquadPlayer({ teamId }: { teamId: string }) {
         Number
         <input type="number" min={1} max={99} data-field="add-number" value={number} onChange={(event) => setNumber(Number(event.target.value))} className="mt-1 block h-11 w-24 rounded-md border border-slate-300 px-3 text-base" />
       </label>
-      <label className="text-sm font-semibold text-slate-800">
-        Position
-        <input value={position} data-field="add-position" onChange={(event) => setPosition(event.target.value)} className="mt-1 block h-11 w-24 rounded-md border border-slate-300 px-3 text-base" />
-      </label>
+      <PositionFields
+        role={role}
+        roles={roles}
+        onRole={(next) => {
+          setRole(next);
+          if (next !== "All-rounder") setRoles([]);
+        }}
+        onToggle={(item) => setRoles((current) => (current.includes(item) ? current.filter((role) => role !== item) : [...current, item]))}
+        field="add-position"
+      />
       <Button type="submit" size="lg" className="h-11">
         Add to squad
       </Button>

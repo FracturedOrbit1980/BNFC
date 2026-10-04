@@ -8,7 +8,7 @@ export default function AdminPage() {
     <div>
       <PageHeader
         title="Club overview"
-        description="Age groups and teams start empty. Enter the number only. 11 is saved as U11, and older groups are listed first."
+        description="U13 down to U6 are ready. Choose a division to open a team in that age group."
       />
       <ClubOverview />
     </div>

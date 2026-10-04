@@ -12,7 +12,7 @@ export default function CoachPage() {
     <div>
       <PageHeader
         title="Your team"
-        description="Choose a team after the club admin creates the age group and squad. Then plan the session."
+        description="Choose the age, then a division. That opens the team so you can add players."
       />
       <TeamPicker />
       <div className="mb-6 flex flex-wrap gap-3">

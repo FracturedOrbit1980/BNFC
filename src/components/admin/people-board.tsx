@@ -4,7 +4,9 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PositionFields } from "@/components/club/position-fields";
 import { ageLabel, sortByAge } from "@/lib/club/age";
+import { formatPosition, type PositionChoice, type StandardPosition } from "@/lib/club/positions";
 import { useClubStore } from "@/stores/club-store";
 
 export function PeopleBoard() {
@@ -16,7 +18,8 @@ export function PeopleBoard() {
   const teams = ageGroups.flatMap((group) => group.teams.map((team) => ({ ...team, ageGroup: ageLabel(group.name) })));
   const [playerName, setPlayerName] = useState("");
   const [squadNumber, setSquadNumber] = useState(1);
-  const [position, setPosition] = useState("CM");
+  const [role, setRole] = useState<PositionChoice>("Central midfielder");
+  const [roles, setRoles] = useState<StandardPosition[]>([]);
   const [playerTeam, setPlayerTeam] = useState(teams[0]?.id ?? "");
   const [coachName, setCoachName] = useState("");
   const [coachTeam, setCoachTeam] = useState(teams[0]?.id ?? "");
@@ -25,7 +28,7 @@ export function PeopleBoard() {
     <div className="space-y-4">
       {teams.length === 0 ? (
         <p className="rounded-lg bg-white px-4 py-3 font-semibold text-slate-800 ring-1 ring-slate-300">
-          Create an age group and a team on the Club page before adding coaches or players.
+          Choose a division on the Club page before adding coaches or players.
         </p>
       ) : (
       <>
@@ -37,7 +40,8 @@ export function PeopleBoard() {
           addPlayer({
             name: playerName.trim(),
             squadNumber,
-            position: position.trim() || "CM",
+            position: role,
+            positions: roles,
             teamId: playerTeam,
           });
           setPlayerName("");
@@ -53,7 +57,7 @@ export function PeopleBoard() {
           <select value={playerTeam} onChange={(event) => setPlayerTeam(event.target.value)} className="mt-1 h-11 w-full rounded-md border border-slate-300 px-2 text-base">
             {teams.map((team) => (
               <option key={team.id} value={team.id}>
-                {team.ageGroup} · {team.name}
+                {team.ageGroup} · {team.division ?? team.name}
               </option>
             ))}
           </select>
@@ -62,10 +66,18 @@ export function PeopleBoard() {
           Number
           <input type="number" min={1} max={99} value={squadNumber} onChange={(event) => setSquadNumber(Number(event.target.value))} className="mt-1 h-11 w-full rounded-md border border-slate-300 px-3 text-base" />
         </label>
-        <label className="text-sm font-semibold text-slate-800">
-          Position
-          <input value={position} onChange={(event) => setPosition(event.target.value)} className="mt-1 h-11 w-full rounded-md border border-slate-300 px-3 text-base" />
-        </label>
+        <div className="sm:col-span-2">
+          <PositionFields
+            role={role}
+            roles={roles}
+            onRole={(next) => {
+              setRole(next);
+              if (next !== "All-rounder") setRoles([]);
+            }}
+            onToggle={(item) => setRoles((current) => (current.includes(item) ? current.filter((role) => role !== item) : [...current, item]))}
+            field="admin-position"
+          />
+        </div>
         <Button type="submit" size="lg" className="h-11 sm:col-span-2 sm:w-fit">
           Save player
         </Button>
@@ -88,7 +100,7 @@ export function PeopleBoard() {
           <select value={coachTeam} onChange={(event) => setCoachTeam(event.target.value)} className="mt-1 block h-11 rounded-md border border-slate-300 bg-white px-2 text-base">
             {teams.map((team) => (
               <option key={team.id} value={team.id}>
-                {team.name}
+                {team.ageGroup} · {team.division ?? team.name}
               </option>
             ))}
           </select>
@@ -126,7 +138,7 @@ export function PeopleBoard() {
                             <span>
                               {player.squadNumber} {player.name}
                             </span>
-                            <span className="text-slate-600">{player.position}</span>
+                            <span className="text-slate-600">{formatPosition(player)}</span>
                           </li>
                         ))}
                       </ul>

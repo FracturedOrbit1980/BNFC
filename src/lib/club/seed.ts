@@ -1,3 +1,4 @@
+import { ensureYouthAges } from "@/lib/club/age";
 import type { ClubAgeGroup, DrillTemplate, SetupDiagram } from "@/lib/club/catalog";
 import type { DrillBoard } from "@/lib/club/board";
 import { clubLibrary } from "@/lib/club/library";
@@ -7,6 +8,7 @@ export interface ClubPlayer {
   name: string;
   squadNumber: number;
   position: string;
+  positions?: string[];
   teamId: string;
   homework: string;
 }
@@ -92,7 +94,7 @@ export interface ClubData {
 
 export function createSeed(): ClubData {
   return {
-    ageGroups: [],
+    ageGroups: ensureYouthAges([]),
     coaches: [],
     players: [],
     drills: clubLibrary.map((drill) => ({
