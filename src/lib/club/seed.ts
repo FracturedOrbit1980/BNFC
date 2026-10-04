@@ -2,11 +2,13 @@ import { ensureYouthAges } from "@/lib/club/age";
 import type { ClubAgeGroup, DrillTemplate, SetupDiagram } from "@/lib/club/catalog";
 import type { DrillBoard } from "@/lib/club/board";
 import { clubLibrary } from "@/lib/club/library";
+import { attachSquadTeam, playerId, SQUAD_TEAM_ID, U12_SQUAD } from "@/lib/club/roster";
 
 export interface ClubPlayer {
   id: string;
   name: string;
   squadNumber: number;
+  dateOfBirth?: string;
   position: string;
   positions?: string[];
   teamId: string;
@@ -94,9 +96,18 @@ export interface ClubData {
 
 export function createSeed(): ClubData {
   return {
-    ageGroups: ensureYouthAges([]),
+    ageGroups: attachSquadTeam(ensureYouthAges([])),
     coaches: [],
-    players: [],
+    players: U12_SQUAD.map((player) => ({
+      id: playerId(player.name),
+      name: player.name,
+      squadNumber: player.squadNumber,
+      dateOfBirth: player.dateOfBirth,
+      position: "Central midfielder",
+      positions: [],
+      teamId: SQUAD_TEAM_ID,
+      homework: "",
+    })),
     drills: clubLibrary.map((drill) => ({
       ...drill,
       coachingPoints: [...drill.coachingPoints],
@@ -108,7 +119,7 @@ export function createSeed(): ClubData {
     weeklyReports: [],
     sessions: [],
     matches: [],
-    coachTeamId: null,
+    coachTeamId: SQUAD_TEAM_ID,
     boards: {},
   };
 }

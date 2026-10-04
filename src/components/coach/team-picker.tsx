@@ -84,7 +84,7 @@ export function TeamPicker() {
       )}
       {openTeam ? (
         <p data-open-team={openTeam.id} className="mt-3 text-sm font-semibold text-slate-950">
-          Open team: {ageLabel(selected?.name ?? "")} · {openTeam.division}
+          Open team: {ageLabel(selected?.name ?? "")} · {openTeam.division ?? openTeam.name}
         </p>
       ) : selected ? (
         <p className="mt-3 text-sm font-medium text-slate-600">Choose a division to open the team.</p>

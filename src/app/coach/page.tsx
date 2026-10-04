@@ -12,7 +12,7 @@ export default function CoachPage() {
     <div>
       <PageHeader
         title="Your team"
-        description="Tap an age group, then a division. That opens the team so you can add players."
+        description="U12 already has the squad and shirt numbers. Tap an age group, then a division, to open a team."
       />
       <TeamPicker />
       <div className="mb-6 flex flex-wrap gap-3">

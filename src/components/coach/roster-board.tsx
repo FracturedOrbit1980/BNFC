@@ -5,7 +5,9 @@ import { useRef, useState } from "react";
 import { PositionFields } from "@/components/club/position-fields";
 import { Button } from "@/components/ui/button";
 import { useCoachTeam } from "@/components/coach/team-picker";
+import { PlayerUpload } from "@/components/coach/player-upload";
 import { formatPosition, normalizePositions, type PositionChoice, type StandardPosition } from "@/lib/club/positions";
+import { formatDateOfBirth } from "@/lib/club/roster";
 import type { ClubPlayer } from "@/lib/club/seed";
 import { addDays, formatDay, mondayOf, sessionToday, weekDates } from "@/lib/club/week";
 import { useClubStore } from "@/stores/club-store";
@@ -68,6 +70,7 @@ export function RosterBoard() {
         </p>
         {team ? <GameDay teamId={team.id} teamName={team.name} gameDay={team.gameDay} /> : null}
         {team ? <ExportSquad teamName={team.name} players={[]} /> : null}
+        {team ? <PlayerUpload teamId={team.id} /> : null}
         {team ? <AddSquadPlayer teamId={team.id} /> : null}
       </div>
     );
@@ -107,7 +110,10 @@ export function RosterBoard() {
                 <span className="w-8 text-lg font-black tabular-nums">{player.squadNumber}</span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-semibold">{player.name}</span>
-                  <span className={`text-sm ${active ? "text-emerald-100" : "text-slate-600"}`}>{formatPosition(player)}</span>
+                  <span className={`text-sm ${active ? "text-emerald-100" : "text-slate-600"}`}>
+                    {formatPosition(player)}
+                    {player.dateOfBirth ? ` · Born ${formatDateOfBirth(player.dateOfBirth)}` : ""}
+                  </span>
                 </span>
               </button>
               <TrainingWeek playerId={player.id} dates={dates} />
@@ -243,6 +249,7 @@ export function RosterBoard() {
       </div>
       <div className="lg:col-span-2 space-y-4">
         {team ? <ExportSquad teamName={team.name} players={squad} /> : null}
+        {team ? <PlayerUpload teamId={team.id} /> : null}
         {team ? <AddSquadPlayer teamId={team.id} /> : null}
       </div>
     </div>
@@ -400,8 +407,8 @@ function WeeklyReport({
 function ExportSquad({ teamName, players }: { teamName: string; players: ClubPlayer[] }) {
   function download() {
     const rows = [
-      ["name", "squad number", "position"],
-      ...players.map((player) => [player.name, String(player.squadNumber), formatPosition(player)]),
+      ["name", "date of birth", "squad number", "position"],
+      ...players.map((player) => [player.name, formatDateOfBirth(player.dateOfBirth), String(player.squadNumber), formatPosition(player)]),
     ];
     const csv = rows.map((row) => row.map(csvCell).join(",")).join("\n");
     const file = new Blob([csv], { type: "text/csv" });

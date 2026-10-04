@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PositionFields } from "@/components/club/position-fields";
 import { ageLabel, sortByAge } from "@/lib/club/age";
 import { formatPosition, type PositionChoice, type StandardPosition } from "@/lib/club/positions";
+import { formatDateOfBirth } from "@/lib/club/roster";
 import { useClubStore } from "@/stores/club-store";
 
 export function PeopleBoard() {
@@ -137,6 +138,7 @@ export function PeopleBoard() {
                           <li key={player.id} className="flex justify-between gap-3 text-sm font-semibold text-slate-950">
                             <span>
                               {player.squadNumber} {player.name}
+                              {player.dateOfBirth ? ` · ${formatDateOfBirth(player.dateOfBirth)}` : ""}
                             </span>
                             <span className="text-slate-600">{formatPosition(player)}</span>
                           </li>
