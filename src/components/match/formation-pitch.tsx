@@ -1,6 +1,11 @@
 "use client";
 
+import { useRef, type PointerEvent as ReactPointerEvent } from "react";
+
+import { MannequinFigure } from "@/components/pitch/mannequin-figure";
+import { DEFAULT_PLAYER_COLOR } from "@/lib/club/board";
 import { playsInGoal } from "@/lib/club/positions";
+import type { CustomFormation } from "@/lib/club/seed";
 import type { PlayerMatchState } from "@/stores/match-store";
 
 export const FORMATIONS = [
@@ -99,7 +104,10 @@ const SLOTS: Record<FormationName, { x: number; y: number }[]> = {
 };
 
 export function placeOnPitch(players: PlayerMatchState[], formation: FormationName) {
-  const slots = SLOTS[formation] ?? [];
+  return placeInSlots(players, SLOTS[formation] ?? []);
+}
+
+export function placeInSlots(players: PlayerMatchState[], slots: { x: number; y: number }[]) {
   const onPitch = players.filter((player) => player.isOnPitch);
   const keeper = onPitch.find((player) => playsInGoal(player.position));
   const rest = onPitch
@@ -108,30 +116,81 @@ export function placeOnPitch(players: PlayerMatchState[], formation: FormationNa
   const ordered = keeper ? [keeper, ...rest] : rest;
   return ordered.slice(0, slots.length).flatMap((player, index) => {
     const slot = slots[index];
-    return slot ? [{ player, ...slot }] : [];
+    return slot ? [{ player, x: slot.x, y: slot.y }] : [];
   });
+}
+
+export function nextCustomFormationName(formations: { name: string }[]) {
+  const used = new Set(formations.map((formation) => formation.name.toLowerCase()));
+  let count = 1;
+  while (used.has(`custom formation ${count}`)) count += 1;
+  return `Custom formation ${count}`;
+}
+
+export function isFormationName(value: string): value is FormationName {
+  return (FORMATIONS as readonly string[]).includes(value);
 }
 
 export function FormationPitch({
   formation,
   players,
   emptyMessage,
+  positions,
+  onMove,
 }: {
-  formation: FormationName;
+  formation: string;
   players: PlayerMatchState[];
   emptyMessage: string | null;
+  positions?: { playerId: string; x: number; y: number }[];
+  onMove?: (playerId: string, x: number, y: number) => void;
 }) {
-  const placed = placeOnPitch(players, formation);
+  const svgRef = useRef<SVGSVGElement | null>(null);
+  const dragId = useRef<string | null>(null);
+  const base = isFormationName(formation) ? placeOnPitch(players, formation) : [];
+  const placed = (positions ?? base.map((item) => ({ playerId: item.player.playerId, x: item.x, y: item.y })))
+    .map((spot) => {
+      const player = players.find((item) => item.playerId === spot.playerId && item.isOnPitch);
+      return player ? { player, x: spot.x, y: spot.y } : null;
+    })
+    .filter((item): item is { player: PlayerMatchState; x: number; y: number } => item !== null);
+
+  function pointFrom(event: ReactPointerEvent<SVGElement>) {
+    const svg = svgRef.current;
+    if (!svg) return null;
+    const matrix = svg.getScreenCTM();
+    if (!matrix) return null;
+    const raw = svg.createSVGPoint();
+    raw.x = event.clientX;
+    raw.y = event.clientY;
+    const point = raw.matrixTransform(matrix.inverse());
+    return {
+      x: Math.min(98, Math.max(2, point.x)),
+      y: Math.min(62, Math.max(2, point.y)),
+    };
+  }
 
   return (
     <div className="flex min-w-0 flex-col">
       <svg
+        ref={svgRef}
         viewBox="0 0 100 64"
         className="match-pitch-svg h-auto w-full max-w-full rounded-lg bg-emerald-700"
         role="img"
         aria-label={`${formation} formation`}
         data-formation={formation}
         data-placed={placed.length}
+        onPointerMove={(event) => {
+          if (!dragId.current || !onMove) return;
+          const point = pointFrom(event);
+          if (!point) return;
+          onMove(dragId.current, point.x, point.y);
+        }}
+        onPointerUp={() => {
+          dragId.current = null;
+        }}
+        onPointerCancel={() => {
+          dragId.current = null;
+        }}
       >
         <g fill="none" stroke="#fff6f5" strokeWidth="0.6">
           <rect x="1" y="1" width="98" height="62" />
@@ -143,11 +202,40 @@ export function FormationPitch({
           <rect x="94" y="24" width="5" height="16" />
         </g>
         {placed.map(({ player, x, y }) => (
-          <g key={player.playerId} data-player-id={player.playerId} data-x={x} data-y={y} transform={`translate(${x} ${y})`}>
-            <circle r="2.4" fill={playsInGoal(player.position) ? "#f59e0b" : "#0f172a"} stroke="#ffffff" strokeWidth="0.4" />
-            <text y="0.8" textAnchor="middle" fontSize="2" fontWeight="700" fill="#ffffff">
-              {player.squadNumber}
-            </text>
+          <g
+            key={player.playerId}
+            data-player-id={player.playerId}
+            data-x={x}
+            data-y={y}
+            transform={`translate(${x} ${y})`}
+            className="cursor-grab touch-none"
+            onPointerDown={(event) => {
+              if (!onMove) return;
+              event.preventDefault();
+              event.stopPropagation();
+              dragId.current = player.playerId;
+              try {
+                event.currentTarget.setPointerCapture(event.pointerId);
+              } catch {
+                /* the pitch still follows the pointer */
+              }
+            }}
+            onPointerMove={(event) => {
+              if (dragId.current !== player.playerId || !onMove) return;
+              const point = pointFrom(event);
+              if (!point) return;
+              onMove(player.playerId, point.x, point.y);
+            }}
+            onPointerUp={() => {
+              if (dragId.current === player.playerId) dragId.current = null;
+            }}
+          >
+            <circle r="4" fill="transparent" />
+            <MannequinFigure
+              fill={playsInGoal(player.position) ? "#f59e0b" : DEFAULT_PLAYER_COLOR}
+              ring="#ffffff"
+              label={String(player.squadNumber)}
+            />
           </g>
         ))}
       </svg>
@@ -155,3 +243,5 @@ export function FormationPitch({
     </div>
   );
 }
+
+export type { CustomFormation };

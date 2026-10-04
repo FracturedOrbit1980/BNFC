@@ -4,9 +4,17 @@ import { Pause, Play, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { FormationPitch, FORMATION_GROUPS, type FormationName } from "@/components/match/formation-pitch";
+import {
+  FormationPitch,
+  FORMATION_GROUPS,
+  isFormationName,
+  nextCustomFormationName,
+  placeInSlots,
+  placeOnPitch,
+  type FormationName,
+} from "@/components/match/formation-pitch";
 import { TeamPicker, useCoachTeam } from "@/components/coach/team-picker";
-import { formatPosition } from "@/lib/club/positions";
+import { formatPosition, playsInGoal } from "@/lib/club/positions";
 import { useClubStore } from "@/stores/club-store";
 import { useMatchStore, type PlayerMatchState } from "@/stores/match-store";
 
@@ -26,6 +34,8 @@ export function LiveMatchTracker() {
   const tickSecond = useMatchStore((state) => state.tickSecond);
   const resetMatch = useMatchStore((state) => state.resetMatch);
   const saveMatch = useClubStore((state) => state.saveMatch);
+  const customFormations = useClubStore((state) => state.customFormations);
+  const saveCustomFormation = useClubStore((state) => state.saveCustomFormation);
   const loadSquad = useMatchStore((state) => state.loadSquad);
   const clubPlayers = useClubStore((state) => state.players);
   const { team } = useCoachTeam();
@@ -33,7 +43,12 @@ export function LiveMatchTracker() {
   const [selectedOn, setSelectedOn] = useState<string | null>(null);
   const [opponent, setOpponent] = useState("");
   const [saved, setSaved] = useState(false);
-  const [formation, setFormation] = useState<FormationName>("4-4-2");
+  const [formation, setFormation] = useState<string>("4-4-2");
+  const [layout, setLayout] = useState<{ playerId: string; x: number; y: number }[] | null>(null);
+  const [formationName, setFormationName] = useState("Custom formation 1");
+  const [nameTouched, setNameTouched] = useState(false);
+  const [formationSaved, setFormationSaved] = useState(false);
+  const shownName = nameTouched ? formationName : nextCustomFormationName(customFormations);
   const teamId = team?.id ?? "";
   const squadKey = clubPlayers
     .filter((player) => player.teamId === teamId)
@@ -95,6 +110,56 @@ export function LiveMatchTracker() {
       ? `Add players to ${team.name} before kickoff.`
       : null;
 
+  function presetPositions(name: FormationName) {
+    return placeOnPitch(players, name).map(({ player, x, y }) => ({ playerId: player.playerId, x, y }));
+  }
+
+  function positionsFor(name: string, spots: { playerId: string; x: number; y: number }[] | null) {
+    if (spots) return spots;
+    const custom = customFormations.find((item) => item.id === name);
+    if (custom) {
+      return placeInSlots(players, custom.slots).map(({ player, x, y }) => ({ playerId: player.playerId, x, y }));
+    }
+    if (isFormationName(name)) return presetPositions(name);
+    return [];
+  }
+
+  function chooseFormation(name: string) {
+    setFormation(name);
+    setLayout(null);
+    setFormationSaved(false);
+  }
+
+  function movePlayer(playerId: string, x: number, y: number) {
+    setLayout((current) => {
+      const base = current ?? positionsFor(formation, null);
+      return base.map((spot) => (spot.playerId === playerId ? { playerId, x, y } : spot));
+    });
+    setFormationSaved(false);
+  }
+
+  function saveFormation() {
+    const spots = positionsFor(formation, layout);
+    const onPitchIds = players.filter((player) => player.isOnPitch);
+    const keeper = onPitchIds.find((player) => playsInGoal(player.position));
+    const rest = onPitchIds
+      .filter((player) => player.playerId !== keeper?.playerId)
+      .sort((a, b) => a.squadNumber - b.squadNumber);
+    const ordered = keeper ? [keeper, ...rest] : rest;
+    const byId = new Map(spots.map((spot) => [spot.playerId, spot]));
+    const slots = ordered.flatMap((player) => {
+      const spot = byId.get(player.playerId);
+      return spot ? [{ x: spot.x, y: spot.y }] : [];
+    });
+    if (slots.length === 0) return;
+    const id = saveCustomFormation(shownName, slots);
+    setFormation(id);
+    setLayout(null);
+    setFormationName(shownName.trim() || "Custom formation 1");
+    setNameTouched(true);
+    setFormationSaved(true);
+  }
+
   return (
     <div className="min-w-0 max-w-full space-y-4 overflow-x-hidden">
       <TeamPicker />
@@ -111,7 +176,7 @@ export function LiveMatchTracker() {
                       key={name}
                       type="button"
                       data-formation={name}
-                      onClick={() => setFormation(name)}
+                      onClick={() => chooseFormation(name)}
                       className={`min-h-11 rounded-md px-3 text-sm font-bold ${
                         formation === name ? "bg-emerald-600 text-white" : "bg-white text-slate-950 ring-1 ring-slate-300"
                       }`}
@@ -122,9 +187,64 @@ export function LiveMatchTracker() {
                 </div>
               </div>
             ))}
+            {customFormations.length > 0 ? (
+              <div data-formation-group="custom">
+                <p className="text-xs font-bold text-slate-800">Saved</p>
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {customFormations.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      data-formation={item.name}
+                      onClick={() => chooseFormation(item.id)}
+                      className={`min-h-11 rounded-md px-3 text-sm font-bold ${
+                        formation === item.id ? "bg-emerald-600 text-white" : "bg-white text-slate-950 ring-1 ring-slate-300"
+                      }`}
+                    >
+                      {item.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
           <div className="min-h-0 flex-1">
-            <FormationPitch formation={formation} players={players} emptyMessage={emptyMessage} />
+            <FormationPitch
+              formation={formation}
+              players={players}
+              emptyMessage={emptyMessage}
+              positions={layout ?? (isFormationName(formation) ? undefined : positionsFor(formation, null))}
+              onMove={movePlayer}
+            />
+            <div className="mt-2 flex flex-wrap items-end gap-2">
+              <label className="min-w-[12rem] flex-1 text-sm font-semibold text-slate-800">
+                Formation name
+                <input
+                  data-field="formation-name"
+                  value={shownName}
+                  onChange={(event) => {
+                    setNameTouched(true);
+                    setFormationName(event.target.value);
+                    setFormationSaved(false);
+                  }}
+                  className="mt-1 block h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950"
+                />
+              </label>
+              <button
+                type="button"
+                data-formation-save
+                onClick={saveFormation}
+                disabled={players.every((player) => !player.isOnPitch)}
+                className="min-h-11 rounded-md bg-emerald-600 px-4 text-sm font-bold text-white disabled:bg-slate-300"
+              >
+                Save
+              </button>
+            </div>
+            {formationSaved ? (
+              <p data-formation-saved role="status" className="mt-2 text-sm font-bold text-emerald-800">
+                Saved
+              </p>
+            ) : null}
           </div>
         </div>
       <section className="match-clock mt-4 min-w-0 rounded-xl bg-slate-900 p-4 text-white shadow-lg">

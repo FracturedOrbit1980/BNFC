@@ -78,8 +78,15 @@ export interface SavedMatch {
   minutes: { playerId: string; minutesPlayed: number }[];
 }
 
+export interface CustomFormation {
+  id: string;
+  name: string;
+  slots: { x: number; y: number }[];
+}
+
 export interface ClubData {
   clubKind: "bnfc" | "custom";
+  customFormations: CustomFormation[];
   ageGroups: ClubAgeGroup[];
   coaches: ClubCoach[];
   players: ClubPlayer[];
@@ -109,6 +116,7 @@ export function createSeed(): ClubData {
   );
   return {
     clubKind: "bnfc",
+    customFormations: [],
     ageGroups: placed.ageGroups,
     coaches: [],
     players: placed.players,
@@ -131,6 +139,7 @@ export function createSeed(): ClubData {
 export function createEmptyClub(): ClubData {
   return {
     clubKind: "custom",
+    customFormations: [],
     ageGroups: ensureYouthAges([]),
     coaches: [],
     players: [],

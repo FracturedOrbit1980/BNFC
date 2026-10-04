@@ -1,3 +1,5 @@
+import { MannequinFigure } from "@/components/pitch/mannequin-figure";
+import { DEFAULT_OPPONENT_COLOR, DEFAULT_PLAYER_COLOR } from "@/lib/club/board";
 import type { SetupDiagram } from "@/lib/club/catalog";
 
 type DiagramProps = {
@@ -54,7 +56,11 @@ function Cone({ x, y }: { x: number; y: number }) {
 }
 
 function Player({ x, y, dark = false }: { x: number; y: number; dark?: boolean }) {
-  return <circle cx={x} cy={y} r="6" fill={dark ? "#1e1d1b" : "#d16b6f"} stroke="#fff" strokeWidth="1.5" />;
+  return (
+    <g transform={`translate(${x} ${y}) scale(4.2)`}>
+      <MannequinFigure fill={dark ? DEFAULT_OPPONENT_COLOR : DEFAULT_PLAYER_COLOR} ring="#ffffff" label="" />
+    </g>
+  );
 }
 
 function Ball({ x, y }: { x: number; y: number }) {

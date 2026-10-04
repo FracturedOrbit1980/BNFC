@@ -74,6 +74,7 @@ interface ClubState extends ClubData {
   saveWeeklyReport: (playerId: string, teamId: string, weekStart: string, gameFeedback: string) => void;
   saveSession: (teamId: string, title: string, drillIds: string[]) => void;
   saveMatch: (teamId: string, opponent: string, minutes: { playerId: string; minutesPlayed: number }[]) => void;
+  saveCustomFormation: (name: string, slots: { x: number; y: number }[]) => string;
   setDrillBoard: (drillId: string, board: DrillBoard) => void;
   saveEditorDrill: (
     drillId: string | null,
@@ -392,6 +393,21 @@ export const useClubStore = create<ClubState>()(
             attendance: [...attendance, ...state.attendance],
           };
         }),
+      saveCustomFormation: (name, slots) => {
+        const trimmed = name.trim() || "Custom formation 1";
+        const existing = get().customFormations.find((item) => item.name.toLowerCase() === trimmed.toLowerCase());
+        if (existing) {
+          set((state) => ({
+            customFormations: state.customFormations.map((item) => (item.id === existing.id ? { ...item, slots } : item)),
+          }));
+          return existing.id;
+        }
+        const id = `form-${Date.now()}`;
+        set((state) => ({
+          customFormations: [...state.customFormations, { id, name: trimmed, slots }],
+        }));
+        return id;
+      },
       setDrillBoard: (drillId, board) =>
         set((state) => ({
           boards: { ...state.boards, [drillId]: board },
@@ -436,6 +452,7 @@ export const useClubStore = create<ClubState>()(
       skipHydration: true,
       partialize: (state) => ({
         clubKind: state.clubKind,
+        customFormations: state.customFormations,
         ageGroups: state.ageGroups,
         coaches: state.coaches,
         players: state.players,
@@ -493,6 +510,7 @@ export const useClubStore = create<ClubState>()(
           ...current,
           ...saved,
           clubKind: kind,
+          customFormations: saved.customFormations ?? [],
           ageGroups: kind === "custom" ? ageGroups : placed.ageGroups,
           players: kind === "custom" ? players : placed.players,
           drills,
