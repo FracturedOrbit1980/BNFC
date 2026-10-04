@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { parseRoster } from "@/lib/club/roster";
 import { useClubStore } from "@/stores/club-store";
 
-export function PlayerUpload({ teamId }: { teamId: string }) {
+export function PlayerUpload() {
   const importPlayers = useClubStore((state) => state.importPlayers);
   const [text, setText] = useState("");
   const [notice, setNotice] = useState("");
@@ -17,13 +17,13 @@ export function PlayerUpload({ teamId }: { teamId: string }) {
       setNotice(errors[0] ?? "No players found. Each line needs a name and shirt number.");
       return;
     }
-    const result = importPlayers(teamId, rows);
+    const result = importPlayers(rows);
     const summary = [
       result.added ? `Added ${result.added} ${result.added === 1 ? "player" : "players"}` : "",
       result.updated ? `Updated ${result.updated} ${result.updated === 1 ? "player" : "players"}` : "",
     ].filter(Boolean);
     const skipped = errors.length ? ` Skipped ${errors.length} ${errors.length === 1 ? "line" : "lines"}.` : "";
-    setNotice(`${summary.join(". ")}.${skipped}`);
+    setNotice(`${summary.join(". ")} on U12 Prem. Tap a player to edit the name, shirt number, date of birth, or position.${skipped}`);
   }
 
   return (
@@ -36,7 +36,7 @@ export function PlayerUpload({ teamId }: { teamId: string }) {
     >
       <h2 className="text-sm font-bold uppercase tracking-wide text-slate-700">Upload players</h2>
       <p className="text-sm font-medium text-slate-700">
-        Paste a list or choose a file. Each line is the player name, date of birth, and shirt number.
+        Paste a list or choose a file. Players are saved on U12 Prem, and you can edit each one after upload.
       </p>
       <textarea
         value={text}

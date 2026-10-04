@@ -40,12 +40,42 @@ export function formatDateOfBirth(iso?: string) {
   return `${day}/${month}/${year}`;
 }
 
-export function attachSquadTeam<T extends { name: string; teams: { id: string; name: string }[] }>(groups: T[]): T[] {
-  return groups.map((group) => {
+type PremTeam = { id: string; name: string; division?: string };
+
+export function placeOnU12Prem<G extends { name: string; teams: PremTeam[] }, P extends { name: string; teamId: string }>(
+  groups: G[],
+  players: P[],
+): { ageGroups: G[]; players: P[]; teamId: string } {
+  const squadNames = new Set(U12_SQUAD.map((player) => player.name.trim().toLowerCase()));
+  const u12 = groups.find((group) => ageNumber(group.name) === 12);
+  const prem = u12?.teams.find((team) => team.division === "Prem" || team.name === "Prem");
+  const squad = u12?.teams.find((team) => team.id === SQUAD_TEAM_ID);
+  const teamId = prem?.id ?? squad?.id ?? SQUAD_TEAM_ID;
+  const ageGroups = groups.map((group) => {
     if (ageNumber(group.name) !== 12) return group;
-    if (group.teams.some((team) => team.id === SQUAD_TEAM_ID)) return group;
-    return { ...group, teams: [{ id: SQUAD_TEAM_ID, name: "Squad" }, ...group.teams] };
+    const teams = group.teams
+      .filter((team) => team.id === teamId || (team.id !== SQUAD_TEAM_ID && team.division && team.division !== "Prem"))
+      .map((team) => (team.id === teamId ? { ...team, name: "Prem", division: "Prem" } : team));
+    if (!teams.some((team) => team.id === teamId)) {
+      teams.unshift({ id: teamId, name: "Prem", division: "Prem" });
+    }
+    return { ...group, teams };
   });
+  const ordered = [...players].sort((left, right) => Number(right.teamId === teamId) - Number(left.teamId === teamId));
+  const seen = new Set<string>();
+  const nextPlayers: P[] = [];
+  for (const player of ordered) {
+    const key = player.name.trim().toLowerCase();
+    const belongs = squadNames.has(key) || player.teamId === SQUAD_TEAM_ID || player.teamId === teamId;
+    if (!belongs) {
+      nextPlayers.push(player);
+      continue;
+    }
+    if (seen.has(key)) continue;
+    seen.add(key);
+    nextPlayers.push({ ...player, teamId });
+  }
+  return { ageGroups, players: nextPlayers, teamId };
 }
 
 export function parseRoster(text: string): { rows: RosterRow[]; errors: string[] } {

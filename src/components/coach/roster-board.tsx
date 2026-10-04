@@ -30,6 +30,7 @@ export function RosterBoard() {
   const initialPosition = normalizePositions(selected?.position ?? "Central midfielder", selected?.positions);
   const [editName, setEditName] = useState(selected?.name ?? "");
   const [editNumber, setEditNumber] = useState(selected?.squadNumber ?? 1);
+  const [editBorn, setEditBorn] = useState(selected?.dateOfBirth ?? "");
   const [editRole, setEditRole] = useState<PositionChoice>(initialPosition.position);
   const [editRoles, setEditRoles] = useState<StandardPosition[]>(initialPosition.positions);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -43,6 +44,7 @@ export function RosterBoard() {
     const nextPosition = normalizePositions(selected?.position ?? "Central midfielder", selected?.positions);
     setEditName(selected?.name ?? "");
     setEditNumber(selected?.squadNumber ?? 1);
+    setEditBorn(selected?.dateOfBirth ?? "");
     setEditRole(nextPosition.position);
     setEditRoles(nextPosition.positions);
     setHomeworkText(selected?.homework ?? "");
@@ -56,6 +58,7 @@ export function RosterBoard() {
     const nextPosition = normalizePositions(player?.position ?? "Central midfielder", player?.positions);
     setEditName(player?.name ?? "");
     setEditNumber(player?.squadNumber ?? 1);
+    setEditBorn(player?.dateOfBirth ?? "");
     setEditRole(nextPosition.position);
     setEditRoles(nextPosition.positions);
     setConfirmDelete(false);
@@ -70,7 +73,7 @@ export function RosterBoard() {
         </p>
         {team ? <GameDay teamId={team.id} teamName={team.name} gameDay={team.gameDay} /> : null}
         {team ? <ExportSquad teamName={team.name} players={[]} /> : null}
-        {team ? <PlayerUpload teamId={team.id} /> : null}
+        {team ? <PlayerUpload /> : null}
         {team ? <AddSquadPlayer teamId={team.id} /> : null}
       </div>
     );
@@ -168,6 +171,7 @@ export function RosterBoard() {
             updatePlayer(selected.id, {
               name: editName.trim(),
               squadNumber: Math.min(99, Math.max(1, editNumber || 1)),
+              dateOfBirth: editBorn,
               position: editRole,
               positions: editRoles,
             });
@@ -176,6 +180,7 @@ export function RosterBoard() {
           }}
         >
           <h3 className="text-sm font-bold uppercase tracking-wide text-slate-700">Edit player</h3>
+          <p className="text-sm font-medium text-slate-700">Change the name, shirt number, date of birth, or position, then save.</p>
           <label className="block text-sm font-semibold text-slate-800">
             Name
             <input
@@ -184,6 +189,16 @@ export function RosterBoard() {
               onChange={(event) => setEditName(event.target.value)}
               className="mt-1 block h-11 w-full rounded-md border border-slate-300 px-3 text-base"
               required
+            />
+          </label>
+          <label className="block text-sm font-semibold text-slate-800">
+            Date of birth
+            <input
+              type="date"
+              value={editBorn}
+              data-field="edit-born"
+              onChange={(event) => setEditBorn(event.target.value)}
+              className="mt-1 block h-11 w-full rounded-md border border-slate-300 px-3 text-base"
             />
           </label>
           <label className="block text-sm font-semibold text-slate-800">
@@ -228,6 +243,7 @@ export function RosterBoard() {
                   const nextPosition = normalizePositions(remaining[0]?.position ?? "Central midfielder", remaining[0]?.positions);
                   setEditName(remaining[0]?.name ?? "");
                   setEditNumber(remaining[0]?.squadNumber ?? 1);
+                  setEditBorn(remaining[0]?.dateOfBirth ?? "");
                   setEditRole(nextPosition.position);
                   setEditRoles(nextPosition.positions);
                   setConfirmDelete(false);
@@ -249,7 +265,7 @@ export function RosterBoard() {
       </div>
       <div className="lg:col-span-2 space-y-4">
         {team ? <ExportSquad teamName={team.name} players={squad} /> : null}
-        {team ? <PlayerUpload teamId={team.id} /> : null}
+        {team ? <PlayerUpload /> : null}
         {team ? <AddSquadPlayer teamId={team.id} /> : null}
       </div>
     </div>

@@ -5,7 +5,7 @@ import { ageNumber, ensureYouthAges, sortByAge } from "@/lib/club/age";
 import { normalizePositions } from "@/lib/club/positions";
 import { canonicalDivision, canonicalTeamName, DRILL_LEVELS, OBJECTIVE_CATEGORIES, type Division, type DrillLevel, type ObjectiveCategory, type SetupDiagram } from "@/lib/club/catalog";
 import type { DrillBoard } from "@/lib/club/board";
-import { attachSquadTeam, playerId, SQUAD_TEAM_ID, type RosterRow } from "@/lib/club/roster";
+import { placeOnU12Prem, playerId, SQUAD_TEAM_ID, type RosterRow } from "@/lib/club/roster";
 import { weekDates } from "@/lib/club/week";
 import {
   createSeed,
@@ -60,8 +60,8 @@ interface ClubState extends ClubData {
   setTeamDivision: (teamId: string, division: Division) => void;
   setCoachTeam: (teamId: string) => void;
   addPlayer: (input: NewPlayerInput) => void;
-  importPlayers: (teamId: string, rows: RosterRow[]) => { added: number; updated: number };
-  updatePlayer: (playerId: string, input: { name: string; squadNumber: number; position: string; positions?: string[] }) => void;
+  importPlayers: (rows: RosterRow[]) => { added: number; updated: number };
+  updatePlayer: (playerId: string, input: { name: string; squadNumber: number; position: string; positions?: string[]; dateOfBirth?: string }) => void;
   deletePlayer: (playerId: string) => void;
   addCoach: (teamId: string, name: string) => void;
   addEvaluation: (input: NewEvaluationInput) => void;
@@ -155,39 +155,40 @@ export const useClubStore = create<ClubState>()(
             },
           ],
         })),
-      importPlayers: (teamId, rows) => {
-        const players = [...get().players];
+      importPlayers: (rows) => {
+        const state = get();
+        const placed = placeOnU12Prem(ensureYouthAges(state.ageGroups), state.players);
+        const players = [...placed.players];
         let added = 0;
         let updated = 0;
         for (const row of rows) {
           const name = row.name.trim().replace(/\s+/g, " ");
-          const index = players.findIndex(
-            (player) => player.teamId === teamId && player.name.trim().toLowerCase() === name.toLowerCase(),
-          );
+          const index = players.findIndex((player) => player.name.trim().toLowerCase() === name.toLowerCase());
           if (index >= 0) {
             players[index] = {
               ...players[index],
               name,
               squadNumber: row.squadNumber,
               dateOfBirth: row.dateOfBirth ?? players[index].dateOfBirth,
+              teamId: placed.teamId,
             };
             updated += 1;
           } else {
             const id = playerId(name);
             players.push({
-              id: players.some((player) => player.id === id) ? `${id}-${teamId}` : id,
+              id: players.some((player) => player.id === id) ? `${id}-${placed.teamId}` : id,
               name,
               squadNumber: row.squadNumber,
               dateOfBirth: row.dateOfBirth,
               position: "Central midfielder",
               positions: [],
-              teamId,
+              teamId: placed.teamId,
               homework: "",
             });
             added += 1;
           }
         }
-        set({ players });
+        set({ ageGroups: placed.ageGroups, players, coachTeamId: placed.teamId });
         return { added, updated };
       },
       updatePlayer: (playerId, input) =>
@@ -198,6 +199,7 @@ export const useClubStore = create<ClubState>()(
                   ...player,
                   name: input.name,
                   squadNumber: input.squadNumber,
+                  dateOfBirth: input.dateOfBirth || undefined,
                   ...normalizePositions(input.position, input.positions),
                 }
               : player,
@@ -446,7 +448,7 @@ export const useClubStore = create<ClubState>()(
         const saved = (persisted ?? {}) as Partial<ClubData>;
         const savedPlayers = saved.players ?? [];
         const useSquad = savedPlayers.length === 0;
-        let ageGroups = ensureYouthAges(saved.ageGroups ?? current.ageGroups).map((group) => ({
+        const ageGroups = ensureYouthAges(saved.ageGroups ?? current.ageGroups).map((group) => ({
           ...group,
           teams: (group.teams ?? []).map((team) => ({
             ...team,
@@ -454,11 +456,18 @@ export const useClubStore = create<ClubState>()(
             division: canonicalDivision(team.division) ?? canonicalDivision(team.name),
           })),
         }));
-        if (useSquad) ageGroups = attachSquadTeam(ageGroups);
         const players = (useSquad ? current.players : savedPlayers).map((player) => ({
           ...player,
           ...normalizePositions(player.position, player.positions),
         }));
+        const placed = placeOnU12Prem(ageGroups, players);
+        const previousTeam = saved.coachTeamId ?? null;
+        const previousGroup = placed.ageGroups.find((group) => group.teams.some((team) => team.id === previousTeam));
+        const openPrem =
+          !previousTeam ||
+          previousTeam === SQUAD_TEAM_ID ||
+          previousTeam === placed.teamId ||
+          (previousGroup ? ageNumber(previousGroup.name) === 12 : true);
         const drills = (saved.drills ?? current.drills).map((drill) => ({
           ...drill,
           durationSeconds: drill.durationSeconds ?? drill.defaultDurationSeconds,
@@ -471,10 +480,10 @@ export const useClubStore = create<ClubState>()(
         return {
           ...current,
           ...saved,
-          ageGroups,
-          players,
+          ageGroups: placed.ageGroups,
+          players: placed.players,
           drills,
-          coachTeamId: useSquad ? SQUAD_TEAM_ID : (saved.coachTeamId ?? null),
+          coachTeamId: openPrem ? placed.teamId : previousTeam,
           boards: saved.boards ?? {},
           trainingMarks: saved.trainingMarks ?? [],
           weeklyReports: saved.weeklyReports ?? [],

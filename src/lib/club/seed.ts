@@ -2,7 +2,7 @@ import { ensureYouthAges } from "@/lib/club/age";
 import type { ClubAgeGroup, DrillTemplate, SetupDiagram } from "@/lib/club/catalog";
 import type { DrillBoard } from "@/lib/club/board";
 import { clubLibrary } from "@/lib/club/library";
-import { attachSquadTeam, playerId, SQUAD_TEAM_ID, U12_SQUAD } from "@/lib/club/roster";
+import { placeOnU12Prem, playerId, SQUAD_TEAM_ID, U12_SQUAD } from "@/lib/club/roster";
 
 export interface ClubPlayer {
   id: string;
@@ -95,19 +95,23 @@ export interface ClubData {
 }
 
 export function createSeed(): ClubData {
-  return {
-    ageGroups: attachSquadTeam(ensureYouthAges([])),
-    coaches: [],
-    players: U12_SQUAD.map((player) => ({
+  const placed = placeOnU12Prem(
+    ensureYouthAges([]),
+    U12_SQUAD.map((player) => ({
       id: playerId(player.name),
       name: player.name,
       squadNumber: player.squadNumber,
       dateOfBirth: player.dateOfBirth,
       position: "Central midfielder",
-      positions: [],
+      positions: [] as string[],
       teamId: SQUAD_TEAM_ID,
       homework: "",
     })),
+  );
+  return {
+    ageGroups: placed.ageGroups,
+    coaches: [],
+    players: placed.players,
     drills: clubLibrary.map((drill) => ({
       ...drill,
       coachingPoints: [...drill.coachingPoints],
@@ -119,7 +123,7 @@ export function createSeed(): ClubData {
     weeklyReports: [],
     sessions: [],
     matches: [],
-    coachTeamId: SQUAD_TEAM_ID,
+    coachTeamId: placed.teamId,
     boards: {},
   };
 }

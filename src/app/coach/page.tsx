@@ -12,7 +12,7 @@ export default function CoachPage() {
     <div>
       <PageHeader
         title="Your team"
-        description="U12 already has the squad and shirt numbers. Tap an age group, then a division, to open a team."
+        description="The imported players are on U12 Prem. Open that team to edit a name, shirt number, date of birth, or position."
       />
       <TeamPicker />
       <div className="mb-6 flex flex-wrap gap-3">
