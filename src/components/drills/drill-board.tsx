@@ -350,7 +350,7 @@ export function eventPoint(svg: SVGSVGElement | null, event: ReactPointerEvent):
 
 export function PitchLines({ view }: { view: PitchView }) {
   return (
-    <g fill="none" stroke="#ecfdf5" strokeWidth="0.6">
+    <g fill="none" stroke="#fff6f5" strokeWidth="0.6">
       <rect x="1" y="1" width="98" height="62" />
       <line x1="50" y1="1" x2="50" y2="63" />
       <circle cx="50" cy="32" r="8" />
@@ -364,7 +364,7 @@ export function PitchLines({ view }: { view: PitchView }) {
           <line x1="66.6" y1="1" x2="66.6" y2="63" />
         </g>
       ) : null}
-      {view === "channel" ? <rect x="38" y="1" width="24" height="62" fill="#064e3b" fillOpacity="0.35" stroke="none" /> : null}
+      {view === "channel" ? <rect x="38" y="1" width="24" height="62" fill="#5c0010" fillOpacity="0.35" stroke="none" /> : null}
     </g>
   );
 }

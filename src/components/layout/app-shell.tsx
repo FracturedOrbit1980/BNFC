@@ -122,9 +122,14 @@ export function AppShell({ children }: { children: ReactNode }) {
 }
 
 function ClubMark() {
+  const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
   return (
-    <span className="flex size-9 items-center justify-center rounded-full bg-emerald-500 text-xs font-black text-slate-950">
-      BN
-    </span>
+    <img
+      src={`${base}/icons/bnfc-logo.jpg`}
+      alt="Benoni Northerns FC"
+      width={40}
+      height={40}
+      className="size-10 rounded-full bg-white object-contain"
+    />
   );
 }

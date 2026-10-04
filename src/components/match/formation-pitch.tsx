@@ -81,7 +81,7 @@ export function FormationPitch({
         aria-label={`${formation} formation`}
         data-formation={formation}
       >
-        <g fill="none" stroke="#ecfdf5" strokeWidth="0.6">
+        <g fill="none" stroke="#fff6f5" strokeWidth="0.6">
           <rect x="1" y="1" width="98" height="62" />
           <line x1="50" y1="1" x2="50" y2="63" />
           <circle cx="50" cy="32" r="8" />
