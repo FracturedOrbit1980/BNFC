@@ -4,7 +4,7 @@ import { Pause, Play, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { FormationPitch, FORMATIONS, type FormationName } from "@/components/match/formation-pitch";
+import { FormationPitch, FORMATION_GROUPS, type FormationName } from "@/components/match/formation-pitch";
 import { TeamPicker, useCoachTeam } from "@/components/coach/team-picker";
 import { useClubStore } from "@/stores/club-store";
 import { useMatchStore, type PlayerMatchState } from "@/stores/match-store";
@@ -99,18 +99,27 @@ export function LiveMatchTracker() {
       <TeamPicker />
       <div className="match-stage min-w-0">
         <div className="flex min-h-0 min-w-0 flex-col">
-          <div className="mb-2 flex shrink-0 flex-wrap gap-1">
-            {FORMATIONS.map((name) => (
-              <button
-                key={name}
-                type="button"
-                onClick={() => setFormation(name)}
-                className={`min-h-11 rounded-md px-3 text-sm font-bold ${
-                  formation === name ? "bg-emerald-600 text-white" : "bg-white text-slate-950 ring-1 ring-slate-300"
-                }`}
-              >
-                {name}
-              </button>
+          <div className="mb-2 space-y-2" aria-label="Formations">
+            <p className="text-xs font-semibold text-slate-600">Goalkeeper included in every shape.</p>
+            {FORMATION_GROUPS.map((group) => (
+              <div key={group.id} data-formation-group={group.id}>
+                <p className="text-xs font-bold text-slate-800">{group.label}</p>
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {group.formations.map((name) => (
+                    <button
+                      key={name}
+                      type="button"
+                      data-formation={name}
+                      onClick={() => setFormation(name)}
+                      className={`min-h-11 rounded-md px-3 text-sm font-bold ${
+                        formation === name ? "bg-emerald-600 text-white" : "bg-white text-slate-950 ring-1 ring-slate-300"
+                      }`}
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
           <div className="min-h-0 flex-1">

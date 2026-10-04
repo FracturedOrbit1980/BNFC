@@ -2,11 +2,60 @@
 
 import type { PlayerMatchState } from "@/stores/match-store";
 
-export const FORMATIONS = ["4-4-2", "4-3-3", "3-5-2"] as const;
+export const FORMATIONS = [
+  "2-2",
+  "1-2-1",
+  "2-1-1",
+  "2-3-1",
+  "3-2-1",
+  "3-1-2",
+  "3-3-2",
+  "3-2-3",
+  "2-3-3",
+  "4-4-2",
+  "4-3-3",
+  "3-5-2",
+] as const;
 
 export type FormationName = (typeof FORMATIONS)[number];
 
+export const FORMATION_GROUPS: {
+  id: string;
+  label: string;
+  formations: FormationName[];
+}[] = [
+  { id: "u6-u7", label: "U6 and U7 · 5-a-side", formations: ["2-2", "1-2-1", "2-1-1"] },
+  { id: "u8-u9", label: "U8 and U9 · 7-a-side", formations: ["2-3-1", "3-2-1", "3-1-2"] },
+  { id: "u10-u11", label: "U10 and U11 · 9-a-side", formations: ["3-3-2", "3-2-3", "2-3-3"] },
+  { id: "eleven", label: "11-a-side", formations: ["4-4-2", "4-3-3", "3-5-2"] },
+];
+
+const KEEPER = { x: 10, y: 32 };
+
+function outfieldLine(count: number, x: number) {
+  const lanes: Record<number, number[]> = {
+    1: [32],
+    2: [20, 44],
+    3: [12, 32, 52],
+  };
+  return lanes[count].map((y) => ({ x, y }));
+}
+
+function smallSided(lines: number[]) {
+  const xs = lines.length === 2 ? [38, 72] : [30, 52, 74];
+  return [KEEPER, ...lines.flatMap((count, index) => outfieldLine(count, xs[index]))];
+}
+
 const SLOTS: Record<FormationName, { x: number; y: number }[]> = {
+  "2-2": smallSided([2, 2]),
+  "1-2-1": smallSided([1, 2, 1]),
+  "2-1-1": smallSided([2, 1, 1]),
+  "2-3-1": smallSided([2, 3, 1]),
+  "3-2-1": smallSided([3, 2, 1]),
+  "3-1-2": smallSided([3, 1, 2]),
+  "3-3-2": smallSided([3, 3, 2]),
+  "3-2-3": smallSided([3, 2, 3]),
+  "2-3-3": smallSided([2, 3, 3]),
   "4-4-2": [
     { x: 10, y: 32 },
     { x: 26, y: 10 },
@@ -49,16 +98,17 @@ const SLOTS: Record<FormationName, { x: number; y: number }[]> = {
 };
 
 export function placeOnPitch(players: PlayerMatchState[], formation: FormationName) {
+  const slots = SLOTS[formation] ?? [];
   const onPitch = players.filter((player) => player.isOnPitch);
   const keeper = onPitch.find((player) => player.position.trim().toUpperCase() === "GK");
   const rest = onPitch
     .filter((player) => player.playerId !== keeper?.playerId)
     .sort((a, b) => a.squadNumber - b.squadNumber);
   const ordered = keeper ? [keeper, ...rest] : rest;
-  return ordered.slice(0, SLOTS[formation].length).map((player, index) => ({
-    player,
-    ...SLOTS[formation][index],
-  }));
+  return ordered.slice(0, slots.length).flatMap((player, index) => {
+    const slot = slots[index];
+    return slot ? [{ player, ...slot }] : [];
+  });
 }
 
 export function FormationPitch({
@@ -80,6 +130,7 @@ export function FormationPitch({
         role="img"
         aria-label={`${formation} formation`}
         data-formation={formation}
+        data-placed={placed.length}
       >
         <g fill="none" stroke="#fff6f5" strokeWidth="0.6">
           <rect x="1" y="1" width="98" height="62" />
