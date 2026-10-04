@@ -7,8 +7,8 @@ export default function PeoplePage() {
   return (
     <div>
       <PageHeader
-        title="Coaches and players"
-        description="Assign coaches and add players. No squad list is loaded for you."
+        title="Register and allocate"
+        description="Register players first. Then put each one on a team and league. Positions stay editable, and a player can move to another team."
       />
       <PeopleBoard />
     </div>

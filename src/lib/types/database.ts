@@ -4,27 +4,27 @@ export type { UserRole };
 
 export type MatchStatus = "SCHEDULED" | "LIVE" | "COMPLETED";
 
-export interface Club {
+export type Club = {
   id: string;
   name: string;
   created_at: string;
 }
 
-export interface AgeGroup {
+export type AgeGroup = {
   id: string;
   club_id: string | null;
   name: string;
   display_order: number;
 }
 
-export interface Team {
+export type Team = {
   id: string;
   age_group_id: string | null;
   name: string;
   created_at: string;
 }
 
-export interface Profile {
+export type Profile = {
   id: string;
   full_name: string;
   role: UserRole;
@@ -32,7 +32,7 @@ export interface Profile {
   created_at: string;
 }
 
-export interface PlayerDetails {
+export type PlayerDetails = {
   id: string;
   user_id: string | null;
   team_id: string | null;
@@ -41,7 +41,7 @@ export interface PlayerDetails {
   created_at: string;
 }
 
-export interface Drill {
+export type Drill = {
   id: string;
   title: string;
   is_club_official: boolean;
@@ -56,7 +56,7 @@ export interface Drill {
   created_at: string;
 }
 
-export interface PlayerEvaluation {
+export type PlayerEvaluation = {
   id: string;
   player_id: string | null;
   evaluated_by: string | null;
@@ -68,7 +68,7 @@ export interface PlayerEvaluation {
   notes: string | null;
 }
 
-export interface MatchSession {
+export type MatchSession = {
   id: string;
   team_id: string | null;
   opponent: string;
@@ -76,7 +76,7 @@ export interface MatchSession {
   status: MatchStatus | string;
 }
 
-export interface MatchPlayerMinutes {
+export type MatchPlayerMinutes = {
   id: string;
   match_id: string | null;
   player_id: string | null;
@@ -84,14 +84,14 @@ export interface MatchPlayerMinutes {
   is_on_pitch: boolean;
 }
 
-type Table<Row, Insert = Partial<Row>, Update = Partial<Row>> = {
+type Table<Row extends Record<string, unknown>> = {
   Row: Row;
-  Insert: Insert;
-  Update: Update;
+  Insert: Partial<Row>;
+  Update: Partial<Row>;
   Relationships: [];
 };
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       clubs: Table<Club>;

@@ -62,6 +62,7 @@ interface ClubState extends ClubData {
   addPlayer: (input: NewPlayerInput) => void;
   importPlayers: (rows: RosterRow[]) => { added: number; updated: number };
   updatePlayer: (playerId: string, input: { name: string; squadNumber: number; position: string; positions?: string[] }) => void;
+  assignPlayer: (playerId: string, teamId: string) => void;
   deletePlayer: (playerId: string) => void;
   addCoach: (teamId: string, name: string) => void;
   addEvaluation: (input: NewEvaluationInput) => void;
@@ -201,6 +202,10 @@ export const useClubStore = create<ClubState>()(
                 }
               : player,
           ),
+        })),
+      assignPlayer: (playerId, teamId) =>
+        set((state) => ({
+          players: state.players.map((player) => (player.id === playerId ? { ...player, teamId } : player)),
         })),
       deletePlayer: (playerId) =>
         set((state) => ({

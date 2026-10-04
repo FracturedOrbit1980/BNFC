@@ -1,9 +1,7 @@
-import Link from "next/link";
-
 import { SessionPlanner } from "@/components/coach/session-planner";
 import { TeamPicker } from "@/components/coach/team-picker";
+import { ActionCard } from "@/components/layout/action-card";
 import { PageHeader } from "@/components/layout/page-header";
-import { Button } from "@/components/ui/button";
 
 export const metadata = { title: "Coach" };
 
@@ -11,20 +9,15 @@ export default function CoachPage() {
   return (
     <div>
       <PageHeader
-        title="Your team"
-        description="The imported players are on U12 Prem. Open that team to edit a name, shirt number, or position."
+        title="Coach this team"
+        description="Open the age and league. Coaching starts once players are allocated to that team: attendance, drills, and the match."
       />
       <TeamPicker />
       <div className="mb-6 flex flex-wrap gap-3">
-        <Button asChild size="lg" className="h-11">
-          <Link href="/coach/roster">Rate the squad</Link>
-        </Button>
-        <Button asChild size="lg" variant="outline" className="h-11">
-          <Link href="/coach/editor">Drill editor and animator toolkit</Link>
-        </Button>
-        <Button asChild size="lg" variant="outline" className="h-11">
-          <Link href="/coach/match">Live match</Link>
-        </Button>
+        <ActionCard href="/coach/roster" title="Attendance register" detail="Mark who trained, rate the squad, and edit a position for this team." />
+        <ActionCard href="/coach/drills" title="Run a drill" detail="Search the library, filter by level, and start the session clock." />
+        <ActionCard href="/coach/editor" title="Drill editor" detail="Lay out the practice, record frames, and save the animation." />
+        <ActionCard href="/coach/match" title="Live match" detail="Place the allocated squad and keep the clock for players on the pitch." />
       </div>
       <SessionPlanner />
     </div>

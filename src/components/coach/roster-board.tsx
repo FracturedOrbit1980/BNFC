@@ -16,7 +16,8 @@ export function RosterBoard() {
   const evaluations = useClubStore((state) => state.evaluations);
   const addEvaluation = useClubStore((state) => state.addEvaluation);
   const setHomework = useClubStore((state) => state.setHomework);
-  const { team } = useCoachTeam();
+  const { team, teams } = useCoachTeam();
+  const assignPlayer = useClubStore((state) => state.assignPlayer);
   const squad = players
     .filter((player) => player.teamId === team?.id)
     .sort((a, b) => a.squadNumber - b.squadNumber);
@@ -65,7 +66,7 @@ export function RosterBoard() {
     return (
       <div className="space-y-4">
         <p className="rounded-lg bg-white px-4 py-3 font-semibold text-slate-800 ring-1 ring-slate-300">
-          {team ? `${team.ageGroup} · ${team.division ?? team.name} has no players yet.` : "Choose an age and division on Home before adding players."}
+          {team ? `${team.ageGroup} · ${team.division ?? team.name} has no players yet. Register them, then allocate them to this team.` : "Open an age and a league on Home. Attendance starts after players are allocated."}
         </p>
         {team ? <GameDay teamId={team.id} teamName={team.name} gameDay={team.gameDay} /> : null}
         {team ? <ExportSquad teamName={team.name} players={[]} /> : null}
@@ -207,6 +208,22 @@ export function RosterBoard() {
             onToggle={(item) => setEditRoles((current) => (current.includes(item) ? current.filter((role) => role !== item) : [...current, item]))}
             field="edit-position"
           />
+          <label className="block text-sm font-semibold text-slate-800">
+            Team and league
+            <select
+              value={selected.teamId}
+              data-field="edit-team"
+              onChange={(event) => assignPlayer(selected.id, event.target.value)}
+              className="mt-1 block h-11 w-full rounded-md border border-slate-300 bg-white px-2 text-base"
+            >
+              <option value="">Not on a team yet</option>
+              {teams.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.ageGroup} · {item.division ?? item.name}
+                </option>
+              ))}
+            </select>
+          </label>
           <Button type="submit" size="lg" className="h-11 w-full">
             Save changes
           </Button>

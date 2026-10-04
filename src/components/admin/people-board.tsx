@@ -3,70 +3,309 @@
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PositionFields } from "@/components/club/position-fields";
-import { ageLabel, sortByAge } from "@/lib/club/age";
-import { formatPosition, type PositionChoice, type StandardPosition } from "@/lib/club/positions";
+import { TeamPicker } from "@/components/coach/team-picker";
+import { ageLabel, ensureYouthAges } from "@/lib/club/age";
+import { formatPosition, normalizePositions, type PositionChoice, type StandardPosition } from "@/lib/club/positions";
+import type { ClubPlayer } from "@/lib/club/seed";
 import { useClubStore } from "@/stores/club-store";
 
 export function PeopleBoard() {
-  const ageGroups = sortByAge(useClubStore((state) => state.ageGroups));
-  const coaches = useClubStore((state) => state.coaches);
+  const ageGroups = ensureYouthAges(useClubStore((state) => state.ageGroups));
   const players = useClubStore((state) => state.players);
   const addPlayer = useClubStore((state) => state.addPlayer);
+  const updatePlayer = useClubStore((state) => state.updatePlayer);
+  const assignPlayer = useClubStore((state) => state.assignPlayer);
   const addCoach = useClubStore((state) => state.addCoach);
-  const teams = ageGroups.flatMap((group) => group.teams.map((team) => ({ ...team, ageGroup: ageLabel(group.name) })));
-  const [playerName, setPlayerName] = useState("");
-  const [squadNumber, setSquadNumber] = useState(1);
-  const [role, setRole] = useState<PositionChoice>("Central midfielder");
-  const [roles, setRoles] = useState<StandardPosition[]>([]);
-  const [playerTeam, setPlayerTeam] = useState(teams[0]?.id ?? "");
-  const [coachName, setCoachName] = useState("");
-  const [coachTeam, setCoachTeam] = useState(teams[0]?.id ?? "");
+  const coaches = useClubStore((state) => state.coaches);
+  const teams = ageGroups.flatMap((group) =>
+    group.teams.map((team) => ({ ...team, ageGroup: ageLabel(group.name) })),
+  );
+  const waiting = players.filter((player) => !player.teamId);
+  const placed = players.filter((player) => player.teamId);
 
   return (
-    <div className="space-y-4">
-      {teams.length === 0 ? (
-        <p className="rounded-lg bg-white px-4 py-3 font-semibold text-slate-800 ring-1 ring-slate-300">
-          Choose a division on the Club page before adding coaches or players.
-        </p>
-      ) : (
-      <>
-      <form
-        className="grid gap-3 rounded-xl bg-white p-4 ring-1 ring-slate-300 sm:grid-cols-2"
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (!playerName.trim() || !playerTeam) return;
-          addPlayer({
-            name: playerName.trim(),
-            squadNumber,
-            position: role,
-            positions: roles,
-            teamId: playerTeam,
-          });
-          setPlayerName("");
+    <div className="space-y-6">
+      <ol className="grid gap-3 md:grid-cols-3">
+        <Step n="1" title="Register" detail="Add each player and set a position. A team is not required yet." />
+        <Step n="2" title="Allocate" detail="Put the player on an age group and league, or move them to another." />
+        <Step n="3" title="Coach" detail="Drills and the attendance register run for that team after allocation." />
+      </ol>
+      <RegisterForm
+        onSave={(input) => {
+          addPlayer(input);
         }}
-      >
-        <h2 className="text-lg font-bold text-slate-950 sm:col-span-2">Add a player</h2>
-        <label className="text-sm font-semibold text-slate-800">
-          Name
-          <input value={playerName} onChange={(event) => setPlayerName(event.target.value)} className="mt-1 h-11 w-full rounded-md border border-slate-300 px-3 text-base" required />
-        </label>
-        <label className="text-sm font-semibold text-slate-800">
-          Team
-          <select value={playerTeam} onChange={(event) => setPlayerTeam(event.target.value)} className="mt-1 h-11 w-full rounded-md border border-slate-300 px-2 text-base">
-            {teams.map((team) => (
-              <option key={team.id} value={team.id}>
-                {team.ageGroup} · {team.division ?? team.name}
-              </option>
+      />
+      <section className="rounded-xl bg-white p-4 ring-1 ring-slate-300">
+        <h2 className="text-lg font-bold text-slate-950">Open a league</h2>
+        <p className="mt-1 text-sm font-medium text-slate-600">
+          Tap an age, then Prem, Div 1, Div 2, Div 3, or Div 4. That team can then take players.
+        </p>
+        <div className="mt-3">
+          <TeamPicker />
+        </div>
+      </section>
+      <PlayerList
+        title="Waiting to be allocated"
+        empty="Registered players who are not on a team yet appear here."
+        players={waiting}
+        teams={teams}
+        onSave={updatePlayer}
+        onAssign={assignPlayer}
+      />
+      <PlayerList
+        title="On a team"
+        empty="Allocate a registered player to see them with their team and league."
+        players={placed}
+        teams={teams}
+        onSave={updatePlayer}
+        onAssign={assignPlayer}
+      />
+      <CoachAssign teams={teams} coaches={coaches} onAssign={addCoach} />
+    </div>
+  );
+}
+
+function CoachAssign({
+  teams,
+  coaches,
+  onAssign,
+}: {
+  teams: { id: string; ageGroup: string; division?: string; name: string }[];
+  coaches: { teamId: string; name: string }[];
+  onAssign: (teamId: string, name: string) => void;
+}) {
+  const [name, setName] = useState("");
+  const [teamId, setTeamId] = useState(teams[0]?.id ?? "");
+  if (teams.length === 0) return null;
+  return (
+    <form
+      className="flex flex-wrap items-end gap-3 rounded-xl bg-white p-4 ring-1 ring-slate-300"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (!name.trim() || !teamId) return;
+        onAssign(teamId, name.trim());
+        setName("");
+      }}
+    >
+      <div className="w-full">
+        <h2 className="text-lg font-bold text-slate-950">Coach for the team</h2>
+        <p className="mt-1 text-sm font-medium text-slate-600">The named coach runs drills and attendance after players are allocated.</p>
+      </div>
+      <label className="text-sm font-semibold text-slate-800">
+        Coach
+        <input value={name} onChange={(event) => setName(event.target.value)} className="mt-1 block h-11 rounded-md border border-slate-300 px-3 text-base" required />
+      </label>
+      <label className="text-sm font-semibold text-slate-800">
+        Team and league
+        <select value={teamId} onChange={(event) => setTeamId(event.target.value)} className="mt-1 block h-11 rounded-md border border-slate-300 bg-white px-2 text-base">
+          {teams.map((team) => (
+            <option key={team.id} value={team.id}>
+              {team.ageGroup} · {team.division ?? team.name}
+              {coaches.find((coach) => coach.teamId === team.id) ? ` · ${coaches.find((coach) => coach.teamId === team.id)?.name}` : ""}
+            </option>
+          ))}
+        </select>
+      </label>
+      <Button type="submit" size="lg" className="h-11">
+        Assign coach
+      </Button>
+    </form>
+  );
+}
+
+function Step({ n, title, detail }: { n: string; title: string; detail: string }) {
+  return (
+    <li className="rounded-xl bg-white px-4 py-3 ring-1 ring-slate-300">
+      <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Step {n}</p>
+      <p className="mt-1 text-base font-bold text-slate-950">{title}</p>
+      <p className="mt-1 text-sm font-medium text-slate-600">{detail}</p>
+    </li>
+  );
+}
+
+function RegisterForm({
+  onSave,
+}: {
+  onSave: (input: { name: string; squadNumber: number; position: string; positions: string[]; teamId: string }) => void;
+}) {
+  const [name, setName] = useState("");
+  const [number, setNumber] = useState(1);
+  const [role, setRole] = useState<PositionChoice>("Central midfielder");
+  const [roles, setRoles] = useState<StandardPosition[]>([]);
+
+  return (
+    <form
+      className="grid gap-3 rounded-xl bg-white p-4 ring-1 ring-slate-300 sm:grid-cols-2"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (!name.trim()) return;
+        onSave({
+          name: name.trim(),
+          squadNumber: number,
+          position: role,
+          positions: roles,
+          teamId: "",
+        });
+        setName("");
+        setNumber((current) => Math.min(99, current + 1));
+      }}
+    >
+      <div className="sm:col-span-2">
+        <h2 className="text-lg font-bold text-slate-950">Register a player</h2>
+        <p className="mt-1 text-sm font-medium text-slate-600">Add another after this one. Positions stay editable.</p>
+      </div>
+      <label className="text-sm font-semibold text-slate-800">
+        Name
+        <input
+          value={name}
+          data-field="register-name"
+          onChange={(event) => setName(event.target.value)}
+          className="mt-1 h-11 w-full rounded-md border border-slate-300 px-3 text-base"
+          required
+        />
+      </label>
+      <label className="text-sm font-semibold text-slate-800">
+        Number
+        <input
+          type="number"
+          min={1}
+          max={99}
+          value={number}
+          onChange={(event) => setNumber(Number(event.target.value))}
+          className="mt-1 h-11 w-full rounded-md border border-slate-300 px-3 text-base"
+        />
+      </label>
+      <div className="sm:col-span-2">
+        <PositionFields
+          role={role}
+          roles={roles}
+          onRole={(next) => {
+            setRole(next);
+            if (next !== "All-rounder") setRoles([]);
+          }}
+          onToggle={(item) => setRoles((current) => (current.includes(item) ? current.filter((role) => role !== item) : [...current, item]))}
+          field="register-position"
+        />
+      </div>
+      <Button type="submit" size="lg" className="h-11 sm:col-span-2 sm:w-fit">
+        Register player
+      </Button>
+    </form>
+  );
+}
+
+function PlayerList({
+  title,
+  empty,
+  players,
+  teams,
+  onSave,
+  onAssign,
+}: {
+  title: string;
+  empty: string;
+  players: ClubPlayer[];
+  teams: { id: string; ageGroup: string; division?: string; name: string }[];
+  onSave: (playerId: string, input: { name: string; squadNumber: number; position: string; positions?: string[] }) => void;
+  onAssign: (playerId: string, teamId: string) => void;
+}) {
+  return (
+    <section>
+      <h2 className="text-lg font-bold text-slate-950">
+        {title}
+        <span className="ml-2 text-sm font-semibold text-slate-500">{players.length}</span>
+      </h2>
+      {players.length === 0 ? (
+        <p className="mt-2 rounded-lg bg-white px-4 py-3 text-sm font-medium text-slate-600 ring-1 ring-slate-300">{empty}</p>
+      ) : (
+        <ul className="mt-2 space-y-3">
+          {players
+            .slice()
+            .sort((a, b) => a.squadNumber - b.squadNumber || a.name.localeCompare(b.name))
+            .map((player) => (
+              <PlayerRow key={player.id} player={player} teams={teams} onSave={onSave} onAssign={onAssign} />
             ))}
-          </select>
-        </label>
-        <label className="text-sm font-semibold text-slate-800">
-          Number
-          <input type="number" min={1} max={99} value={squadNumber} onChange={(event) => setSquadNumber(Number(event.target.value))} className="mt-1 h-11 w-full rounded-md border border-slate-300 px-3 text-base" />
-        </label>
-        <div className="sm:col-span-2">
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function PlayerRow({
+  player,
+  teams,
+  onSave,
+  onAssign,
+}: {
+  player: ClubPlayer;
+  teams: { id: string; ageGroup: string; division?: string; name: string }[];
+  onSave: (playerId: string, input: { name: string; squadNumber: number; position: string; positions?: string[] }) => void;
+  onAssign: (playerId: string, teamId: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const stored = normalizePositions(player.position, player.positions);
+  const [name, setName] = useState(player.name);
+  const [number, setNumber] = useState(player.squadNumber);
+  const [role, setRole] = useState<PositionChoice>(stored.position);
+  const [roles, setRoles] = useState<StandardPosition[]>(stored.positions);
+  const teamLabel = teams.find((team) => team.id === player.teamId);
+
+  return (
+    <li className="rounded-xl bg-white p-4 ring-1 ring-slate-300" data-player={player.name}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-base font-bold text-slate-950">
+            {player.squadNumber} {player.name}
+          </p>
+          <p className="text-sm font-medium text-slate-600">{formatPosition(player)}</p>
+          <p className="text-sm font-medium text-slate-600">
+            {teamLabel ? `${teamLabel.ageGroup} · ${teamLabel.division ?? teamLabel.name}` : "Not on a team yet"}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setOpen((current) => !current)}
+          className="min-h-11 rounded-xl bg-slate-100 px-3 py-2 text-left ring-1 ring-slate-300"
+        >
+          <span className="block text-sm font-bold text-slate-950">{open ? "Close editor" : "Edit player"}</span>
+          <span className="mt-0.5 block text-xs font-medium text-slate-600">Change the name, number, or position.</span>
+        </button>
+      </div>
+      <label className="mt-3 block text-sm font-semibold text-slate-800">
+        Team and league
+        <select
+          value={player.teamId}
+          data-field="allocate"
+          onChange={(event) => onAssign(player.id, event.target.value)}
+          className="mt-1 block h-11 w-full max-w-md rounded-md border border-slate-300 bg-white px-2 text-base"
+        >
+          <option value="">Not on a team yet</option>
+          {teams.map((team) => (
+            <option key={team.id} value={team.id}>
+              {team.ageGroup} · {team.division ?? team.name}
+            </option>
+          ))}
+        </select>
+      </label>
+      {open ? (
+        <form
+          className="mt-3 space-y-3 border-t border-slate-200 pt-3"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (!name.trim()) return;
+            onSave(player.id, { name: name.trim(), squadNumber: number, position: role, positions: roles });
+            setOpen(false);
+          }}
+        >
+          <label className="block text-sm font-semibold text-slate-800">
+            Name
+            <input value={name} onChange={(event) => setName(event.target.value)} className="mt-1 block h-11 w-full rounded-md border border-slate-300 px-3 text-base" required />
+          </label>
+          <label className="block text-sm font-semibold text-slate-800">
+            Number
+            <input type="number" min={1} max={99} value={number} onChange={(event) => setNumber(Number(event.target.value))} className="mt-1 block h-11 w-28 rounded-md border border-slate-300 px-3 text-base" />
+          </label>
           <PositionFields
             role={role}
             roles={roles}
@@ -74,82 +313,14 @@ export function PeopleBoard() {
               setRole(next);
               if (next !== "All-rounder") setRoles([]);
             }}
-            onToggle={(item) => setRoles((current) => (current.includes(item) ? current.filter((role) => role !== item) : [...current, item]))}
-            field="admin-position"
+            onToggle={(item) => setRoles((current) => (current.includes(item) ? current.filter((entry) => entry !== item) : [...current, item]))}
+            field={`edit-${player.id}`}
           />
-        </div>
-        <Button type="submit" size="lg" className="h-11 sm:col-span-2 sm:w-fit">
-          Save player
-        </Button>
-      </form>
-      <form
-        className="flex flex-wrap items-end gap-3 rounded-xl bg-white p-4 ring-1 ring-slate-300"
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (!coachName.trim() || !coachTeam) return;
-          addCoach(coachTeam, coachName.trim());
-          setCoachName("");
-        }}
-      >
-        <label className="text-sm font-semibold text-slate-800">
-          Coach
-          <input value={coachName} onChange={(event) => setCoachName(event.target.value)} className="mt-1 block h-11 rounded-md border border-slate-300 px-3 text-base" required />
-        </label>
-        <label className="text-sm font-semibold text-slate-800">
-          Team
-          <select value={coachTeam} onChange={(event) => setCoachTeam(event.target.value)} className="mt-1 block h-11 rounded-md border border-slate-300 bg-white px-2 text-base">
-            {teams.map((team) => (
-              <option key={team.id} value={team.id}>
-                {team.ageGroup} · {team.division ?? team.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <Button type="submit" size="lg" className="h-11">
-          Assign coach
-        </Button>
-      </form>
-      </>
-      )}
-      {ageGroups.map((group) => (
-        <section key={group.id}>
-          <h2 className="mb-2 text-lg font-bold text-slate-950">{ageLabel(group.name)}</h2>
-          <div className="grid gap-4 md:grid-cols-2">
-            {group.teams.map((team) => {
-              const coach = coaches.find((item) => item.teamId === team.id);
-              const squad = players
-                .filter((player) => player.teamId === team.id)
-                .sort((a, b) => a.squadNumber - b.squadNumber);
-              return (
-                <Card key={team.id}>
-                  <CardHeader>
-                    <CardTitle>{team.name}</CardTitle>
-                    <p className="text-sm font-medium text-slate-700">
-                      Coach: {coach?.name ?? "Unassigned"}
-                    </p>
-                  </CardHeader>
-                  <CardContent>
-                    {squad.length === 0 ? (
-                      <p className="text-sm font-medium text-slate-600">No players in this squad yet.</p>
-                    ) : (
-                      <ul className="space-y-1">
-                        {squad.map((player) => (
-                          <li key={player.id} className="flex justify-between gap-3 text-sm font-semibold text-slate-950">
-                            <span>
-                              {player.squadNumber} {player.name}
-                            </span>
-                            <span className="text-slate-600">{formatPosition(player)}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </section>
-      ))}
-    </div>
+          <Button type="submit" size="lg" className="h-11">
+            Save player
+          </Button>
+        </form>
+      ) : null}
+    </li>
   );
 }

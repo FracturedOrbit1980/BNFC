@@ -439,8 +439,9 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
                 {PIECE_NAME[kind]}
               </Chip>
             ))}
-            <Chip
-              active={false}
+            <DetailAction
+              title="Remove piece"
+              detail="Takes the selected player or cone off this frame."
               onClick={() => {
                 if (!selectedId) return;
                 updateFrame(
@@ -449,9 +450,7 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
                 );
                 setSelectedId(null);
               }}
-            >
-              Remove
-            </Chip>
+            />
           </ControlRow>
           <p className="mt-2 text-xs font-medium text-slate-600">Drag a piece on the pitch, or drop a new one from the list.</p>
         </section>
@@ -469,18 +468,16 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
             ))}
           </ControlRow>
           <ControlRow label="Frames">
-            <Chip active={false} onClick={recordFrame}>
-              Record frame
-            </Chip>
-            <Chip
+            <DetailAction title="Record frame" detail="Stores this layout as the next step in the drill." onClick={recordFrame} />
+            <DetailAction
+              title={playing ? "Pause" : "Play frames"}
+              detail="Moves the pieces between the frames you recorded."
               active={playing}
               onClick={() => {
                 if (frameCount < 2) return;
                 setPlaying((current) => !current);
               }}
-            >
-              {playing ? "Pause" : "Play"}
-            </Chip>
+            />
             {SPEEDS.map((speed) => (
               <Chip key={speed} active={board.speed === speed} onClick={() => setBoard({ ...board, speed })}>
                 {speed}x
@@ -507,13 +504,12 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
           </label>
         </section>
 
-        <button
-          type="button"
+        <DetailAction
+          title="Save drill"
+          detail="Keeps the layout, frames, level, and video with this drill."
           onClick={save}
-          className="h-11 w-full rounded-md bg-emerald-600 text-base font-bold text-white"
-        >
-          Save drill
-        </button>
+          active
+        />
         {notice ? <p className="text-sm font-semibold text-slate-800">{notice}</p> : null}
         {savedDrills.length > 0 ? (
           <div className="min-w-0">
@@ -524,11 +520,14 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
                   key={drill.id}
                   type="button"
                   onClick={() => openSaved(drill.id)}
-                  className={`h-8 max-w-full truncate rounded-md px-2 text-xs font-bold ${
+                  className={`min-h-11 max-w-full rounded-xl px-3 py-2 text-left ${
                     drill.id === drillId ? "bg-emerald-600 text-white" : "bg-white text-slate-950 ring-1 ring-slate-300"
                   }`}
                 >
-                  {drill.title}
+                  <span className="block truncate text-sm font-bold">{drill.title}</span>
+                  <span className={`mt-0.5 block text-xs font-medium ${drill.id === drillId ? "text-emerald-50" : "text-slate-600"}`}>
+                    {drill.level} · open this layout in the editor
+                  </span>
                 </button>
               ))}
             </div>
@@ -547,6 +546,31 @@ function clientPoint(svg: SVGSVGElement | null, clientX: number, clientY: number
   raw.x = clientX;
   raw.y = clientY;
   return clampPoint(raw.matrixTransform(matrix.inverse()));
+}
+
+function DetailAction({
+  title,
+  detail,
+  onClick,
+  active = false,
+}: {
+  title: string;
+  detail: string;
+  onClick: () => void;
+  active?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`min-h-11 min-w-36 flex-1 rounded-xl px-3 py-2 text-left ${
+        active ? "bg-emerald-600 text-white" : "bg-white text-slate-950 ring-1 ring-slate-300"
+      }`}
+    >
+      <span className="block text-sm font-bold">{title}</span>
+      <span className={`mt-0.5 block text-xs font-medium ${active ? "text-emerald-50" : "text-slate-600"}`}>{detail}</span>
+    </button>
+  );
 }
 
 function ControlRow({ label, children }: { label: string; children: ReactNode }) {

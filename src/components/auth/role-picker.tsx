@@ -8,11 +8,11 @@ import { ROLE_LABEL, type UserRole } from "@/lib/auth/roles";
 const ROLES: { role: UserRole; detail: string }[] = [
   {
     role: "SUPER_ADMIN",
-    detail: "Open a team by age and division, then manage people and the drill library.",
+    detail: "Register players, allocate them to a team and league, then open the drill library.",
   },
   {
     role: "HEAD_COACH",
-    detail: "Choose an age and division, plan the session, and run the match clock.",
+    detail: "Coach the allocated team: attendance, drills, and the match clock.",
   },
   {
     role: "PLAYER",
