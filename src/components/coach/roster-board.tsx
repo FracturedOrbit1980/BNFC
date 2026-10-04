@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useCoachTeam } from "@/components/coach/team-picker";
+import type { ClubPlayer } from "@/lib/club/seed";
 import { useClubStore } from "@/stores/club-store";
 
 export function RosterBoard() {
@@ -21,6 +22,32 @@ export function RosterBoard() {
   const [notes, setNotes] = useState("");
   const [homework, setHomeworkText] = useState(selected?.homework ?? "");
   const [saved, setSaved] = useState("");
+  const [editName, setEditName] = useState(selected?.name ?? "");
+  const [editNumber, setEditNumber] = useState(selected?.squadNumber ?? 1);
+  const [editPosition, setEditPosition] = useState(selected?.position ?? "");
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const updatePlayer = useClubStore((state) => state.updatePlayer);
+  const deletePlayer = useClubStore((state) => state.deletePlayer);
+  const loadedId = useRef(selected?.id ?? "");
+  if ((selected?.id ?? "") !== loadedId.current) {
+    loadedId.current = selected?.id ?? "";
+    setEditName(selected?.name ?? "");
+    setEditNumber(selected?.squadNumber ?? 1);
+    setEditPosition(selected?.position ?? "");
+    setHomeworkText(selected?.homework ?? "");
+    setConfirmDelete(false);
+  }
+
+  function selectPlayer(playerId: string) {
+    const player = squad.find((item) => item.id === playerId);
+    setSelectedId(playerId);
+    setHomeworkText(player?.homework ?? "");
+    setEditName(player?.name ?? "");
+    setEditNumber(player?.squadNumber ?? 1);
+    setEditPosition(player?.position ?? "");
+    setConfirmDelete(false);
+    setSaved("");
+  }
 
   if (!selected) {
     return (
@@ -28,6 +55,7 @@ export function RosterBoard() {
         <p className="rounded-lg bg-white px-4 py-3 font-semibold text-slate-800 ring-1 ring-slate-300">
           {team ? `${team.name} has no players yet.` : "Choose a team on the coach home page before adding players."}
         </p>
+        {team ? <ExportSquad teamName={team.name} players={[]} /> : null}
         {team ? <AddSquadPlayer teamId={team.id} /> : null}
       </div>
     );
@@ -44,11 +72,7 @@ export function RosterBoard() {
             <li key={player.id}>
               <button
                 type="button"
-                onClick={() => {
-                  setSelectedId(player.id);
-                  setHomeworkText(player.homework);
-                  setSaved("");
-                }}
+                onClick={() => selectPlayer(player.id)}
                 className={`flex w-full items-center gap-3 px-4 py-3 text-left ${
                   active ? "bg-emerald-600 text-white" : "border-b border-slate-200 text-slate-950"
                 }`}
@@ -63,6 +87,7 @@ export function RosterBoard() {
           );
         })}
       </ul>
+      <div className="space-y-4">
       <form
         className="rounded-xl bg-white p-4 ring-1 ring-slate-300"
         onSubmit={(event) => {
@@ -99,11 +124,128 @@ export function RosterBoard() {
         </Button>
         {saved ? <p className="mt-2 text-sm font-semibold text-emerald-800">{saved}</p> : null}
       </form>
-      <div className="lg:col-span-2">
+        <form
+          className="space-y-3 rounded-xl bg-white p-4 ring-1 ring-slate-300"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (!editName.trim()) return;
+            updatePlayer(selected.id, {
+              name: editName.trim(),
+              squadNumber: Math.min(99, Math.max(1, editNumber || 1)),
+              position: editPosition.trim() || selected.position,
+            });
+            setSaved(`Updated ${editName.trim()}.`);
+            setConfirmDelete(false);
+          }}
+        >
+          <h3 className="text-sm font-bold uppercase tracking-wide text-slate-700">Edit player</h3>
+          <label className="block text-sm font-semibold text-slate-800">
+            Name
+            <input
+              value={editName}
+              data-field="edit-name"
+              onChange={(event) => setEditName(event.target.value)}
+              className="mt-1 block h-11 w-full rounded-md border border-slate-300 px-3 text-base"
+              required
+            />
+          </label>
+          <label className="block text-sm font-semibold text-slate-800">
+            Squad number
+            <input
+              type="number"
+              min={1}
+              max={99}
+              value={editNumber}
+              data-field="edit-number"
+              onChange={(event) => setEditNumber(Number(event.target.value))}
+              className="mt-1 block h-11 w-full rounded-md border border-slate-300 px-3 text-base"
+            />
+          </label>
+          <label className="block text-sm font-semibold text-slate-800">
+            Position
+            <input
+              value={editPosition}
+              data-field="edit-position"
+              onChange={(event) => setEditPosition(event.target.value)}
+              className="mt-1 block h-11 w-full rounded-md border border-slate-300 px-3 text-base"
+            />
+          </label>
+          <Button type="submit" size="lg" className="h-11 w-full">
+            Save changes
+          </Button>
+        </form>
+        {confirmDelete ? (
+          <div className="mt-3 rounded-lg bg-slate-100 p-3">
+            <p className="text-sm font-semibold text-slate-900">Remove {selected.name} from {team?.name ?? "this team"}?</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <Button
+                type="button"
+                size="lg"
+                className="h-11 bg-slate-950 text-white hover:bg-slate-800"
+                onClick={() => {
+                  const remaining = squad.filter((player) => player.id !== selected.id);
+                  deletePlayer(selected.id);
+                  setSelectedId(remaining[0]?.id ?? "");
+                  setHomeworkText(remaining[0]?.homework ?? "");
+                  setEditName(remaining[0]?.name ?? "");
+                  setEditNumber(remaining[0]?.squadNumber ?? 1);
+                  setEditPosition(remaining[0]?.position ?? "");
+                  setConfirmDelete(false);
+                  setSaved("");
+                }}
+              >
+                Confirm delete
+              </Button>
+              <Button type="button" size="lg" variant="outline" className="h-11" onClick={() => setConfirmDelete(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Button type="button" size="lg" variant="outline" className="mt-3 h-11 w-full" onClick={() => setConfirmDelete(true)}>
+            Delete player
+          </Button>
+        )}
+      </div>
+      <div className="lg:col-span-2 space-y-4">
+        {team ? <ExportSquad teamName={team.name} players={squad} /> : null}
         {team ? <AddSquadPlayer teamId={team.id} /> : null}
       </div>
     </div>
   );
+}
+
+function ExportSquad({ teamName, players }: { teamName: string; players: ClubPlayer[] }) {
+  function download() {
+    const rows = [
+      ["name", "squad number", "position"],
+      ...players.map((player) => [player.name, String(player.squadNumber), player.position]),
+    ];
+    const csv = rows.map((row) => row.map(csvCell).join(",")).join("\n");
+    const file = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(file);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${teamName.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-") || "team"}-players.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white px-4 py-3 ring-1 ring-slate-300">
+      <p className="text-sm font-semibold text-slate-800">
+        {players.length === 0 ? `${teamName} has nobody to export yet.` : `${players.length} players in ${teamName}.`}
+      </p>
+      <Button type="button" size="lg" variant="outline" className="h-11" onClick={download}>
+        Export players
+      </Button>
+    </div>
+  );
+}
+
+function csvCell(value: string) {
+  if (/[",\n]/.test(value)) return `"${value.replaceAll('"', '""')}"`;
+  return value;
 }
 
 function AddSquadPlayer({ teamId }: { teamId: string }) {
@@ -129,15 +271,15 @@ function AddSquadPlayer({ teamId }: { teamId: string }) {
     >
       <label className="text-sm font-semibold text-slate-800">
         Add player
-        <input value={name} onChange={(event) => setName(event.target.value)} className="mt-1 block h-11 rounded-md border border-slate-300 px-3 text-base" required />
+        <input value={name} data-field="add-name" onChange={(event) => setName(event.target.value)} className="mt-1 block h-11 rounded-md border border-slate-300 px-3 text-base" required />
       </label>
       <label className="text-sm font-semibold text-slate-800">
         Number
-        <input type="number" min={1} max={99} value={number} onChange={(event) => setNumber(Number(event.target.value))} className="mt-1 block h-11 w-24 rounded-md border border-slate-300 px-3 text-base" />
+        <input type="number" min={1} max={99} data-field="add-number" value={number} onChange={(event) => setNumber(Number(event.target.value))} className="mt-1 block h-11 w-24 rounded-md border border-slate-300 px-3 text-base" />
       </label>
       <label className="text-sm font-semibold text-slate-800">
         Position
-        <input value={position} onChange={(event) => setPosition(event.target.value)} className="mt-1 block h-11 w-24 rounded-md border border-slate-300 px-3 text-base" />
+        <input value={position} data-field="add-position" onChange={(event) => setPosition(event.target.value)} className="mt-1 block h-11 w-24 rounded-md border border-slate-300 px-3 text-base" />
       </label>
       <Button type="submit" size="lg" className="h-11">
         Add to squad

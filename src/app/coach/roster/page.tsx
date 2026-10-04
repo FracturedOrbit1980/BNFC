@@ -7,8 +7,8 @@ export default function RosterPage() {
   return (
     <div>
       <PageHeader
-        title="U13 Premier"
-        description="Pick a player, set the four scores, and leave homework they can read on their profile."
+        title="Squad"
+        description="Add players to the team you chose, then export, edit, or remove them. Ratings and homework stay on this page."
       />
       <RosterBoard />
     </div>
