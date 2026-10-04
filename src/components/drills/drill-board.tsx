@@ -465,19 +465,15 @@ export function PieceShape({
 function MannequinFigure({ fill, ring, label }: { fill: string; ring: string; label: string }) {
   return (
     <g data-figure="mannequin" data-fill={fill}>
-      <circle cy="-2.05" r="0.78" fill={fill} stroke={ring} strokeWidth="0.22" />
+      <circle cy="-1.15" r="0.82" fill={fill} stroke={ring} strokeWidth="0.22" />
       <path
-        d="M-0.95 -1.32 C-1.4 -0.15 -1.15 0.55 -0.72 0.72 L0.72 0.72 C1.15 0.55 1.4 -0.15 0.95 -1.32 Z"
+        d="M-1.05 -0.42 C-1.25 0.4 -1.05 1.15 -0.72 1.38 L0.72 1.38 C1.05 1.15 1.25 0.4 1.05 -0.42 Z"
         fill={fill}
         stroke={ring}
         strokeWidth="0.22"
       />
-      <path d="M-0.85 -0.9 L-2.05 0.25" fill="none" stroke={fill} strokeWidth="0.42" strokeLinecap="round" />
-      <path d="M0.85 -0.9 L2.05 0.25" fill="none" stroke={fill} strokeWidth="0.42" strokeLinecap="round" />
-      <path d="M-0.38 0.68 L-0.85 2.4" fill="none" stroke={fill} strokeWidth="0.48" strokeLinecap="round" />
-      <path d="M0.38 0.68 L0.85 2.4" fill="none" stroke={fill} strokeWidth="0.48" strokeLinecap="round" />
       {label ? (
-        <text y="0.2" textAnchor="middle" fontSize="1.15" fontWeight="700" fill={inkOn(fill)} stroke="none">
+        <text y="0.85" textAnchor="middle" fontSize="1.15" fontWeight="700" fill={inkOn(fill)} stroke="none">
           {label}
         </text>
       ) : null}
