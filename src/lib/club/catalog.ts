@@ -12,12 +12,27 @@ export const SETUP_DIAGRAMS = ["square", "channel", "rondo", "overlap", "press",
 
 export type SetupDiagram = (typeof SETUP_DIAGRAMS)[number];
 
-export const DIVISIONS = ["Perm", "Div1", "Div 2", "Div 3", "Div 4"] as const;
+export const DIVISIONS = ["Prem", "Div 1", "Div 2", "Div 3", "Div 4"] as const;
 
 export type Division = (typeof DIVISIONS)[number];
 
+const PREVIOUS_DIVISION: Record<string, Division> = {
+  Perm: "Prem",
+  Div1: "Div 1",
+};
+
 export function isDivision(value: string): value is Division {
   return (DIVISIONS as readonly string[]).includes(value);
+}
+
+export function canonicalDivision(value: string | undefined | null): Division | undefined {
+  if (!value) return undefined;
+  if (isDivision(value)) return value;
+  return PREVIOUS_DIVISION[value];
+}
+
+export function canonicalTeamName(name: string) {
+  return PREVIOUS_DIVISION[name] ?? name;
 }
 
 export interface ClubTeam {

@@ -3,7 +3,7 @@ import { persist } from "zustand/middleware";
 
 import { ageNumber, ensureYouthAges, sortByAge } from "@/lib/club/age";
 import { normalizePositions } from "@/lib/club/positions";
-import { DRILL_LEVELS, isDivision, OBJECTIVE_CATEGORIES, type Division, type DrillLevel, type ObjectiveCategory, type SetupDiagram } from "@/lib/club/catalog";
+import { canonicalDivision, canonicalTeamName, DRILL_LEVELS, OBJECTIVE_CATEGORIES, type Division, type DrillLevel, type ObjectiveCategory, type SetupDiagram } from "@/lib/club/catalog";
 import type { DrillBoard } from "@/lib/club/board";
 import { weekDates } from "@/lib/club/week";
 import {
@@ -394,7 +394,8 @@ export const useClubStore = create<ClubState>()(
           ...group,
           teams: (group.teams ?? []).map((team) => ({
             ...team,
-            division: team.division && isDivision(team.division) ? team.division : undefined,
+            name: canonicalTeamName(team.name ?? ""),
+            division: canonicalDivision(team.division) ?? canonicalDivision(team.name),
           })),
         }));
         const players = (saved.players ?? current.players).map((player) => ({

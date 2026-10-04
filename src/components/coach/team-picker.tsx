@@ -25,38 +25,47 @@ export function TeamPicker() {
   const selected =
     ageGroups.find((group) => group.id === ageId) ??
     ageGroups.find((group) => group.teams.some((team) => team.id === coachTeamId)) ??
-    ageGroups[0];
+    null;
   const openTeam = selected?.teams.find((team) => team.id === coachTeamId);
   const divisionValue = openTeam?.division ?? "";
 
   return (
-    <div className="mb-4 rounded-xl bg-white p-4 ring-1 ring-slate-300">
-      <div className="flex flex-wrap items-end gap-3">
-        <label className="text-sm font-semibold text-slate-800">
-          Under
-          <select
-            value={selected?.id ?? ""}
-            data-field="age-group"
-            onChange={(event) => setAgeId(event.target.value)}
-            className="mt-1 block h-11 min-w-28 rounded-md border border-slate-300 bg-white px-2 text-base"
-          >
-            {ageGroups.map((group) => (
-              <option key={group.id} value={group.id}>
-                {ageLabel(group.name)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="text-sm font-semibold text-slate-800">
+    <div className="mb-4 rounded-xl bg-white p-4 ring-1 ring-slate-300" data-team-setup>
+      <p className="text-sm font-semibold text-slate-800">Age group</p>
+      <div
+        className="mt-2 flex flex-wrap gap-2"
+        data-age-order={ageGroups.map((group) => ageLabel(group.name)).join(" ")}
+      >
+        {ageGroups.map((group) => {
+          const label = ageLabel(group.name);
+          const active = group.id === selected?.id;
+          return (
+            <button
+              key={group.id}
+              type="button"
+              data-age-tile={label}
+              aria-pressed={active}
+              onClick={() => setAgeId(group.id)}
+              className={`min-h-11 min-w-16 rounded-xl px-4 text-base font-black ${
+                active ? "bg-primary text-primary-foreground" : "bg-slate-100 text-slate-950 ring-1 ring-slate-300"
+              }`}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+      {selected ? (
+        <label className="mt-4 block text-sm font-semibold text-slate-800">
           Division
           <select
             value={divisionValue}
             data-field="division"
             onChange={(event) => {
-              if (!selected || !isDivision(event.target.value)) return;
+              if (!isDivision(event.target.value)) return;
               openDivisionTeam(selected.id, event.target.value);
             }}
-            className="mt-1 block h-11 min-w-28 rounded-md border border-slate-300 bg-white px-2 text-base"
+            className="mt-1 block h-11 min-w-36 rounded-md border border-slate-300 bg-white px-2 text-base"
           >
             {divisionValue === "" ? (
               <option value="" hidden>
@@ -70,17 +79,16 @@ export function TeamPicker() {
             ))}
           </select>
         </label>
-      </div>
-      <p data-age-order className="mt-3 text-sm font-semibold text-slate-700">
-        {ageGroups.map((group) => ageLabel(group.name)).join("  ")}
-      </p>
+      ) : (
+        <p className="mt-3 text-sm font-medium text-slate-600">Tap an age group, then assign the division.</p>
+      )}
       {openTeam ? (
-        <p data-open-team={openTeam.id} className="mt-1 text-sm font-semibold text-slate-950">
+        <p data-open-team={openTeam.id} className="mt-3 text-sm font-semibold text-slate-950">
           Open team: {ageLabel(selected?.name ?? "")} · {openTeam.division}
         </p>
-      ) : (
-        <p className="mt-1 text-sm font-medium text-slate-600">Choose a division to open the team.</p>
-      )}
+      ) : selected ? (
+        <p className="mt-3 text-sm font-medium text-slate-600">Choose a division to open the team.</p>
+      ) : null}
     </div>
   );
 }
