@@ -58,7 +58,6 @@ function DrillBoardEditor({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draft, setDraft] = useState<PitchPoint[] | null>(null);
   const [playing, setPlaying] = useState(false);
-  const [playhead, setPlayhead] = useState(0);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dragId = useRef<string | null>(null);
   const idRef = useRef(1);
@@ -69,25 +68,17 @@ function DrillBoardEditor({
   }
 
   const frameCount = board.frames.length;
-  const safeIndex = Math.min(frameIndex, frameCount - 1);
-  const shown = playing ? frameBetween(board.frames, playhead) : board.frames[safeIndex];
+  const safeIndex = Math.min(frameIndex, Math.max(0, frameCount - 1));
+  const shown = board.frames[safeIndex] ?? board.frames[0] ?? { id: "empty", pieces: [], marks: [] };
   const windowBox = PITCH_WINDOW[board.view];
 
   useEffect(() => {
     if (!playing || frameCount < 2) return;
-    let frame = 0;
-    let last = performance.now();
-    const tick = (now: number) => {
-      const delta = (now - last) / 1000;
-      last = now;
-      setPlayhead((current) => {
-        const next = current + (delta * board.speed) / 1.4;
-        return next >= frameCount ? next % frameCount : next;
-      });
-      frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
+    const hold = Math.max(200, Math.round(900 / board.speed));
+    const timer = window.setInterval(() => {
+      setFrameIndex((current) => (Math.min(current, frameCount - 1) + 1) % frameCount);
+    }, hold);
+    return () => window.clearInterval(timer);
   }, [playing, frameCount, board.speed]);
 
   function commit(next: DrillBoardState) {
@@ -136,7 +127,13 @@ function DrillBoardEditor({
     const frames = [...board.frames, snapshot];
     commit({ ...board, frames });
     setFrameIndex(frames.length - 1);
-    setPlayhead(frames.length - 1);
+    setPlaying(false);
+  }
+
+  function clearSlide() {
+    if (shown.pieces.length === 0 && shown.marks.length === 0) return;
+    updateFrame([], []);
+    setSelectedId(null);
     setPlaying(false);
   }
 
@@ -208,8 +205,8 @@ function DrillBoardEditor({
           onPointerCancel={onPointerUp}
         >
           <defs>
-            <marker id={`arrow-${drillId}`} markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
-              <path d="M0 0 L5 2.5 L0 5 Z" fill="#f8fafc" />
+            <marker id={`arrow-${drillId}`} markerWidth="2.2" markerHeight="2.2" refX="1.8" refY="1.1" orient="auto">
+              <path d="M0 0 L2.2 1.1 L0 2.2 Z" fill="#f8fafc" />
             </marker>
           </defs>
           <PitchLines view={board.view} />
@@ -285,6 +282,9 @@ function DrillBoardEditor({
           <Chip active={false} onClick={recordFrame}>
             Record
           </Chip>
+          <Chip active={false} onClick={clearSlide}>
+            Clear
+          </Chip>
           <Chip
             active={playing}
             onClick={() => {
@@ -301,18 +301,16 @@ function DrillBoardEditor({
           ))}
         </ControlRow>
         <label className="block text-xs font-bold uppercase tracking-wide text-slate-600">
-          Frame {Math.min(frameCount, Math.floor(playing ? playhead : safeIndex) + 1)} / {frameCount}
+          Frame {safeIndex + 1} / {frameCount}
           <input
             type="range"
             min={0}
             max={Math.max(0, frameCount - 1)}
-            step={playing ? 0.01 : 1}
-            value={playing ? playhead : safeIndex}
+            step={1}
+            value={safeIndex}
             onChange={(event) => {
-              const value = Number(event.target.value);
               setPlaying(false);
-              setPlayhead(value);
-              setFrameIndex(Math.round(value));
+              setFrameIndex(Math.round(Number(event.target.value)));
             }}
             className="mt-2 block h-11 w-full accent-[#9a4a4f]"
           />
@@ -322,41 +320,7 @@ function DrillBoardEditor({
   );
 }
 
-export function frameBetween(frames: BoardFrame[], playhead: number): BoardFrame {
-  if (frames.length === 0) return { id: "empty", pieces: [], marks: [] };
-  const span = frames.length;
-  const raw = Number.isFinite(playhead) ? Math.floor(playhead) : 0;
-  const index = ((raw % span) + span) % span;
-  const nextIndex = (index + 1) % span;
-  const from = frames[index] ?? frames[0];
-  const to = frames[nextIndex] ?? from;
-  const mix = frames.length < 2 ? 0 : playhead - Math.floor(playhead);
-  const pieces = from.pieces.map((piece) => {
-    const target = to.pieces.find((item) => item.id === piece.id);
-    if (!target) return piece;
-    return {
-      ...piece,
-      x: piece.x + (target.x - piece.x) * mix,
-      y: piece.y + (target.y - piece.y) * mix,
-    };
-  });
-  const marks = from.marks.map((mark) => {
-    const target = to.marks.find((item) => item.id === mark.id);
-    if (!target) return mark;
-    return {
-      ...mark,
-      points: mark.points.map((point, index) => {
-        const end = target.points[index];
-        if (!end) return point;
-        return {
-          x: point.x + (end.x - point.x) * mix,
-          y: point.y + (end.y - point.y) * mix,
-        };
-      }),
-    };
-  });
-  return { ...from, pieces, marks };
-}
+export const DRAW_STROKE = 0.28;
 
 export function eventPoint(svg: SVGSVGElement | null, event: ReactPointerEvent): PitchPoint | null {
   if (!svg) return null;
@@ -394,7 +358,7 @@ export function MarkShape({ mark, markerId }: { mark: BoardMark; markerId: strin
   if (!start) return null;
   if (mark.kind === "marker") {
     return (
-      <g stroke="#fef08a" strokeWidth="0.7">
+      <g stroke="#fef08a" strokeWidth={DRAW_STROKE}>
         <line x1={start.x - 1.2} y1={start.y - 1.2} x2={start.x + 1.2} y2={start.y + 1.2} />
         <line x1={start.x - 1.2} y1={start.y + 1.2} x2={start.x + 1.2} y2={start.y - 1.2} />
       </g>
@@ -402,7 +366,7 @@ export function MarkShape({ mark, markerId }: { mark: BoardMark; markerId: strin
   }
   if (mark.kind === "press" && mark.points.length >= 4) {
     const points = mark.points.map((point) => `${point.x},${point.y}`).join(" ");
-    return <polygon points={points} fill="#f59e0b" fillOpacity="0.35" stroke="#fef3c7" strokeWidth="0.4" />;
+    return <polygon points={points} fill="#f59e0b" fillOpacity="0.35" stroke="#fef3c7" strokeWidth={DRAW_STROKE} />;
   }
   if (!end) return null;
   const dash = mark.kind === "run" ? "1.4 0.8" : mark.kind === "dribble" ? "0.3 0.8" : undefined;
@@ -413,7 +377,7 @@ export function MarkShape({ mark, markerId }: { mark: BoardMark; markerId: strin
       x2={end.x}
       y2={end.y}
       stroke={mark.kind === "dribble" ? "#e2e8f0" : "#f8fafc"}
-      strokeWidth="0.7"
+      strokeWidth={DRAW_STROKE}
       strokeDasharray={dash}
       markerEnd={`url(#${markerId})`}
     />

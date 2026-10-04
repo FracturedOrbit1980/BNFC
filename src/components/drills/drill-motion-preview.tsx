@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useState } from "react";
 
-import { frameBetween, MarkShape, PieceShape, PitchLines } from "@/components/drills/drill-board";
+import { MarkShape, PieceShape, PitchLines } from "@/components/drills/drill-board";
 import { boardColors, PITCH_WINDOW, type DrillBoard } from "@/lib/club/board";
 
 export function DrillMotionPreview({
@@ -15,26 +15,18 @@ export function DrillMotionPreview({
   const markerId = `preview-${useId().replace(/:/g, "")}`;
   const frames = board.frames.length > 0 ? board.frames : [{ id: "empty", pieces: [], marks: [] }];
   const moving = frames.length > 1;
-  const [playhead, setPlayhead] = useState(0);
+  const [slide, setSlide] = useState(0);
 
   useEffect(() => {
     if (!moving) return;
-    let frame = 0;
-    let last = performance.now();
-    const tick = (now: number) => {
-      const delta = (now - last) / 1000;
-      last = now;
-      setPlayhead((current) => {
-        const next = current + (delta * board.speed) / 1.4;
-        return next >= frames.length ? next % frames.length : next;
-      });
-      frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
+    const hold = Math.max(200, Math.round(900 / board.speed));
+    const timer = window.setInterval(() => {
+      setSlide((current) => (current + 1) % frames.length);
+    }, hold);
+    return () => window.clearInterval(timer);
   }, [board.speed, frames.length, moving]);
 
-  const shown = moving ? frameBetween(frames, playhead) : frames[Math.min(playhead, frames.length - 1)] ?? frames[0];
+  const shown = frames[Math.min(slide, frames.length - 1)] ?? frames[0];
   const windowBox = PITCH_WINDOW[board.view];
   const box = size === "sm" ? "h-16 w-24" : "h-28 w-44";
 
@@ -44,13 +36,14 @@ export function DrillMotionPreview({
       data-preview="drill"
       data-playing={moving ? "true" : "false"}
       data-frame-count={frames.length}
+      data-frame={Math.min(slide, frames.length - 1)}
       role="img"
       aria-hidden="true"
       className={`pointer-events-none shrink-0 rounded-lg bg-emerald-700 ${box}`}
     >
       <defs>
-        <marker id={markerId} markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
-          <path d="M0 0 L5 2.5 L0 5 Z" fill="#f8fafc" />
+        <marker id={markerId} markerWidth="2.2" markerHeight="2.2" refX="1.8" refY="1.1" orient="auto">
+          <path d="M0 0 L2.2 1.1 L0 2.2 Z" fill="#f8fafc" />
         </marker>
       </defs>
       <PitchLines view={board.view} />

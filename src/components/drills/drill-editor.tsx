@@ -32,7 +32,7 @@ import {
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState, type DragEvent as ReactDragEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 
-import { eventPoint, frameBetween, MarkShape, PieceShape, PitchLines } from "@/components/drills/drill-board";
+import { eventPoint, MarkShape, PieceShape, PitchLines } from "@/components/drills/drill-board";
 import { DrillVideo } from "@/components/drills/drill-video";
 import { DRILL_LEVELS, type DrillLevel } from "@/lib/club/catalog";
 import { isDrillLevel } from "@/stores/club-store";
@@ -178,7 +178,6 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draft, setDraft] = useState<PitchPoint[] | null>(null);
   const [playing, setPlaying] = useState((initial?.board.frames.length ?? 0) > 1);
-  const [playhead, setPlayhead] = useState(0);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dragId = useRef<string | null>(null);
   const dragRecorded = useRef(false);
@@ -193,24 +192,16 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
 
   const frameCount = board.frames.length;
   const safeIndex = Math.min(frameIndex, Math.max(0, frameCount - 1));
-  const shown = playing ? frameBetween(board.frames, playhead) : (board.frames[safeIndex] ?? board.frames[0]);
+  const shown = board.frames[safeIndex] ?? board.frames[0] ?? { id: "empty", pieces: [] as BoardPiece[], marks: [] as BoardMark[] };
   const windowBox = PITCH_WINDOW[board.view];
 
   useEffect(() => {
     if (!playing || frameCount < 2) return;
-    let frame = 0;
-    let last = performance.now();
-    const tick = (now: number) => {
-      const delta = (now - last) / 1000;
-      last = now;
-      setPlayhead((current) => {
-        const next = current + (delta * board.speed) / 1.4;
-        return next >= frameCount ? next % frameCount : next;
-      });
-      frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
+    const hold = Math.max(200, Math.round(900 / board.speed));
+    const timer = window.setInterval(() => {
+      setFrameIndex((current) => (Math.min(current, frameCount - 1) + 1) % frameCount);
+    }, hold);
+    return () => window.clearInterval(timer);
   }, [playing, frameCount, board.speed]);
 
   function nextId(prefix: string) {
@@ -317,7 +308,19 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
     const frames = [...board.frames, snapshot];
     setBoard({ ...board, frames });
     setFrameIndex(frames.length - 1);
-    setPlayhead(frames.length - 1);
+    setPlaying(false);
+  }
+
+  function clearSlide() {
+    if (shown.pieces.length === 0 && shown.marks.length === 0) return;
+    remember();
+    const index = safeIndex;
+    setBoard((current) => ({
+      ...current,
+      frames: current.frames.map((item, itemIndex) => (itemIndex === index ? { ...item, pieces: [], marks: [] } : item)),
+    }));
+    setSelectedId(null);
+    setDraft(null);
     setPlaying(false);
   }
 
@@ -400,7 +403,6 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
     setVideoName(drill.videoName ?? "");
     setBoard(stored);
     setFrameIndex(0);
-    setPlayhead(0);
     setPlaying(stored.frames.length > 1);
     setSelectedId(null);
     setNotice("");
@@ -578,7 +580,7 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
         <div className="flex flex-col gap-1" role="group" aria-label="Frames">
           <ToolButton
             label="Record frame"
-            description="Stores this layout as the next step."
+            description="Adds the next slide from this layout."
             descriptions={descriptions}
             onShow={showHint}
             onClick={recordFrame}
@@ -587,7 +589,7 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
           </ToolButton>
           <ToolButton
             label={playing ? "Pause" : "Play frames"}
-            description="Plays the frames you recorded."
+            description="Shows each recorded slide in order."
             active={playing}
             descriptions={descriptions}
             onShow={showHint}
@@ -641,6 +643,7 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
         <svg
           ref={svgRef}
           data-pitch="editor"
+          data-frame={safeIndex}
           viewBox={`${windowBox.x} ${windowBox.y} ${windowBox.width} ${windowBox.height}`}
           className="editor-pitch-svg h-auto w-full max-w-full touch-none rounded-lg bg-emerald-700"
           role="img"
@@ -653,8 +656,8 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
           onDrop={onDrop}
         >
           <defs>
-            <marker id="editor-arrow" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
-              <path d="M0 0 L5 2.5 L0 5 Z" fill="#f8fafc" />
+            <marker id="editor-arrow" markerWidth="2.2" markerHeight="2.2" refX="1.8" refY="1.1" orient="auto">
+              <path d="M0 0 L2.2 1.1 L0 2.2 Z" fill="#f8fafc" />
             </marker>
           </defs>
           <PitchLines view={board.view} />
@@ -697,24 +700,34 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
             </g>
           ))}
         </svg>
-        <label className="editor-frame-bar mt-2 block rounded-lg bg-white px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-600 ring-1 ring-slate-300" data-frame-bar>
-          Frame {Math.min(frameCount, Math.floor(playing ? playhead : safeIndex) + 1)} / {frameCount}
+        <div className="editor-frame-bar mt-2 rounded-lg bg-white px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-600 ring-1 ring-slate-300" data-frame-bar>
+          <div className="flex items-center justify-between gap-2">
+            <p>
+              Frame {safeIndex + 1} / {frameCount}
+            </p>
+            <button
+              type="button"
+              data-clear-slide
+              onClick={clearSlide}
+              className="min-h-11 rounded-md bg-slate-100 px-4 text-sm font-bold text-slate-950"
+            >
+              Clear
+            </button>
+          </div>
           <input
             type="range"
             aria-label="Scrub frames"
             min={0}
             max={Math.max(0, frameCount - 1)}
-            step={playing ? 0.01 : 1}
-            value={playing ? playhead : safeIndex}
+            step={1}
+            value={safeIndex}
             onChange={(event) => {
-              const value = Number(event.target.value);
               setPlaying(false);
-              setPlayhead(value);
-              setFrameIndex(Math.round(value));
+              setFrameIndex(Math.round(Number(event.target.value)));
             }}
             className="mt-1 block h-11 w-full accent-[#9a4a4f]"
           />
-        </label>
+        </div>
       </div>
       <div className="editor-descriptions">
         {descriptions ? (
