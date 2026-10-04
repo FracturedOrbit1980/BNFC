@@ -1,8 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, type DragEvent as ReactDragEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useRef, useState, type DragEvent as ReactDragEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 
 import { eventPoint, frameBetween, MarkShape, PieceShape, PitchLines } from "@/components/drills/drill-board";
+import { DrillVideo } from "@/components/drills/drill-video";
+import { DRILL_LEVELS, type DrillLevel } from "@/lib/club/catalog";
+import { isDrillLevel } from "@/stores/club-store";
 import {
   MARK_KINDS,
   PIECE_KINDS,
@@ -49,22 +53,48 @@ const MARK_NAME: Record<MarkKind, string> = {
 };
 
 export function DrillEditor() {
+  return (
+    <Suspense fallback={<p className="text-sm font-semibold text-slate-700">Loading the drill editor…</p>}>
+      <DrillEditorGate />
+    </Suspense>
+  );
+}
+
+function DrillEditorGate() {
+  const requestedId = useSearchParams().get("drill");
+  return <DrillEditorForm key={requestedId ?? "new"} requestedId={requestedId} />;
+}
+
+function readRequestedDrill(requestedId: string | null) {
+  if (!requestedId) return null;
+  const state = useClubStore.getState();
+  const drill = state.drills.find((item) => item.id === requestedId);
+  if (!drill) return null;
+  return { drill, board: state.boards[requestedId] ?? emptyDrillBoard() };
+}
+
+function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
   const drills = useClubStore((state) => state.drills);
   const saveEditorDrill = useClubStore((state) => state.saveEditorDrill);
+  const setDrillVideo = useClubStore((state) => state.setDrillVideo);
   const savedDrills = drills.filter((drill) => !drill.isClubOfficial);
-  const [drillId, setDrillId] = useState<string | null>(null);
-  const [title, setTitle] = useState("");
-  const [minutes, setMinutes] = useState(6);
-  const [seconds, setSeconds] = useState(0);
-  const [setup, setSetup] = useState("");
-  const [points, setPoints] = useState("");
+  const [initial] = useState(() => readRequestedDrill(requestedId));
+  const [drillId, setDrillId] = useState<string | null>(initial?.drill.id ?? null);
+  const [title, setTitle] = useState(initial?.drill.title ?? "");
+  const [minutes, setMinutes] = useState(initial ? Math.floor(initial.drill.durationSeconds / 60) : 6);
+  const [seconds, setSeconds] = useState(initial ? initial.drill.durationSeconds % 60 : 0);
+  const [setup, setSetup] = useState(initial?.drill.pitchSetup ?? "");
+  const [points, setPoints] = useState(initial ? initial.drill.coachingPoints.join("\n") : "");
+  const [level, setLevel] = useState<DrillLevel>(initial?.drill.level ?? "Beginner");
+  const [videoUrl, setVideoUrl] = useState(initial?.drill.videoUrl ?? "");
+  const [videoName, setVideoName] = useState(initial?.drill.videoName ?? "");
   const [notice, setNotice] = useState("");
-  const [board, setBoard] = useState<DrillBoard>(() => emptyDrillBoard());
+  const [board, setBoard] = useState<DrillBoard>(() => initial?.board ?? emptyDrillBoard());
   const [frameIndex, setFrameIndex] = useState(0);
   const [tool, setTool] = useState<MarkKind | "move">("move");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draft, setDraft] = useState<PitchPoint[] | null>(null);
-  const [playing, setPlaying] = useState(false);
+  const [playing, setPlaying] = useState((initial?.board.frames.length ?? 0) > 1);
   const [playhead, setPlayhead] = useState(0);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dragId = useRef<string | null>(null);
@@ -201,10 +231,13 @@ export function DrillEditor() {
     setSeconds(drill.durationSeconds % 60);
     setSetup(drill.pitchSetup);
     setPoints(drill.coachingPoints.join("\n"));
+    setLevel(drill.level);
+    setVideoUrl(drill.videoUrl ?? "");
+    setVideoName(drill.videoName ?? "");
     setBoard(stored);
     setFrameIndex(0);
     setPlayhead(0);
-    setPlaying(false);
+    setPlaying(stored.frames.length > 1);
     setSelectedId(null);
     setNotice("");
   }
@@ -222,7 +255,15 @@ export function DrillEditor() {
       .filter(Boolean);
     const id = saveEditorDrill(
       drillId,
-      { title: name, durationSeconds, pitchSetup: setup.trim(), coachingPoints },
+      {
+        title: name,
+        durationSeconds,
+        pitchSetup: setup.trim(),
+        coachingPoints,
+        level,
+        videoUrl,
+        videoName,
+      },
       board,
     );
     setDrillId(id);
@@ -351,6 +392,31 @@ export function DrillEditor() {
               className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-base"
             />
           </label>
+          <label className="mt-2 block text-sm font-semibold text-slate-800">
+            Level
+            <select
+              value={level}
+              data-field="level"
+              onChange={(event) => {
+                if (isDrillLevel(event.target.value)) setLevel(event.target.value);
+              }}
+              className="mt-1 block h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-base"
+            >
+              {DRILL_LEVELS.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+          </label>
+          <div className="mt-3">
+            <DrillVideo
+              videoUrl={videoUrl}
+              onAttach={(url, name) => {
+                setVideoUrl(url);
+                setVideoName(name);
+                if (drillId) setDrillVideo(drillId, url, name);
+              }}
+            />
+          </div>
           <ControlRow label="Pitch view">
             {PITCH_VIEWS.map((view) => (
               <Chip key={view} active={board.view === view} onClick={() => setBoard({ ...board, view })}>

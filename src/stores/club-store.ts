@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import { OBJECTIVE_CATEGORIES, type ObjectiveCategory, type SetupDiagram } from "@/lib/club/catalog";
+import { DRILL_LEVELS, OBJECTIVE_CATEGORIES, type DrillLevel, type ObjectiveCategory, type SetupDiagram } from "@/lib/club/catalog";
 import type { DrillBoard } from "@/lib/club/board";
 import { weekDates } from "@/lib/club/week";
 import {
@@ -25,6 +25,7 @@ export interface NewDrillInput {
   instructions: string;
   coachingPoints: string[];
   isClubOfficial: boolean;
+  level: DrillLevel;
 }
 
 export interface NewPlayerInput {
@@ -48,6 +49,7 @@ interface ClubState extends ClubData {
   setDrillDuration: (drillId: string, seconds: number) => void;
   addDrill: (input: NewDrillInput) => void;
   setDrillOfficial: (drillId: string, official: boolean) => void;
+  setDrillVideo: (drillId: string, videoUrl: string, videoName: string) => void;
   addAgeGroup: (name: string) => void;
   addTeam: (ageGroupId: string, name: string) => void;
   setCoachTeam: (teamId: string) => void;
@@ -65,7 +67,15 @@ interface ClubState extends ClubData {
   setDrillBoard: (drillId: string, board: DrillBoard) => void;
   saveEditorDrill: (
     drillId: string | null,
-    input: { title: string; durationSeconds: number; pitchSetup: string; coachingPoints: string[] },
+    input: {
+      title: string;
+      durationSeconds: number;
+      pitchSetup: string;
+      coachingPoints: string[];
+      level: DrillLevel;
+      videoUrl: string;
+      videoName: string;
+    },
     board: DrillBoard,
   ) => string;
   resetClub: () => void;
@@ -105,6 +115,9 @@ export const useClubStore = create<ClubState>()(
               coachingPoints: input.coachingPoints,
               defaultDurationSeconds: input.durationSeconds,
               durationSeconds: input.durationSeconds,
+              level: input.level,
+              videoUrl: "",
+              videoName: "",
             },
             ...state.drills,
           ],
@@ -113,6 +126,12 @@ export const useClubStore = create<ClubState>()(
         set((state) => ({
           drills: state.drills.map((drill) =>
             drill.id === drillId ? { ...drill, isClubOfficial: official } : drill,
+          ),
+        })),
+      setDrillVideo: (drillId, videoUrl, videoName) =>
+        set((state) => ({
+          drills: state.drills.map((drill) =>
+            drill.id === drillId ? { ...drill, videoUrl, videoName } : drill,
           ),
         })),
       addPlayer: (input) =>
@@ -297,6 +316,9 @@ export const useClubStore = create<ClubState>()(
             coachingPoints: input.coachingPoints,
             defaultDurationSeconds: existing?.defaultDurationSeconds ?? input.durationSeconds,
             durationSeconds: input.durationSeconds,
+            level: input.level,
+            videoUrl: input.videoUrl,
+            videoName: input.videoName,
           };
           return {
             drills: existing
@@ -333,6 +355,9 @@ export const useClubStore = create<ClubState>()(
           durationSeconds: drill.durationSeconds ?? drill.defaultDurationSeconds,
           coachingPoints: drill.coachingPoints ?? [],
           diagram: drill.diagram ?? "square",
+          level: isDrillLevel(drill.level) ? drill.level : "Beginner",
+          videoUrl: drill.videoUrl ?? "",
+          videoName: drill.videoName ?? "",
         }));
         return {
           ...current,
@@ -351,6 +376,10 @@ export const useClubStore = create<ClubState>()(
 
 export function isObjectiveCategory(value: string): value is ObjectiveCategory {
   return (OBJECTIVE_CATEGORIES as readonly string[]).includes(value);
+}
+
+export function isDrillLevel(value: string | undefined): value is DrillLevel {
+  return (DRILL_LEVELS as readonly string[]).includes(value ?? "");
 }
 
 export type { ClubDrill, EvaluationRecord, SessionPlan };

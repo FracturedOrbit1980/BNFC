@@ -4,6 +4,10 @@ export const OBJECTIVE_CATEGORIES = ["Technical", "Tactical", "Physical", "Set P
 
 export type ObjectiveCategory = (typeof OBJECTIVE_CATEGORIES)[number];
 
+export const DRILL_LEVELS = ["Beginner", "Intermediate", "Professional"] as const;
+
+export type DrillLevel = (typeof DRILL_LEVELS)[number];
+
 export const SETUP_DIAGRAMS = ["square", "channel", "rondo", "overlap", "press", "gates", "lanes", "corner"] as const;
 
 export type SetupDiagram = (typeof SETUP_DIAGRAMS)[number];
@@ -32,4 +36,7 @@ export interface DrillTemplate {
   instructions: string;
   coachingPoints: string[];
   defaultDurationSeconds: number;
+  level: DrillLevel;
+  videoUrl?: string;
+  videoName?: string;
 }

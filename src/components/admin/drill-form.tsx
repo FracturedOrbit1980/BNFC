@@ -3,8 +3,8 @@
 import { useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
-import { OBJECTIVE_CATEGORIES, SETUP_DIAGRAMS, type ObjectiveCategory, type SetupDiagram } from "@/lib/club/catalog";
-import { isObjectiveCategory, useClubStore } from "@/stores/club-store";
+import { DRILL_LEVELS, OBJECTIVE_CATEGORIES, SETUP_DIAGRAMS, type DrillLevel, type ObjectiveCategory, type SetupDiagram } from "@/lib/club/catalog";
+import { isDrillLevel, isObjectiveCategory, useClubStore } from "@/stores/club-store";
 
 export function DrillForm() {
   const ageGroups = useClubStore((state) => state.ageGroups);
@@ -18,6 +18,7 @@ export function DrillForm() {
   const [instructions, setInstructions] = useState("");
   const [points, setPoints] = useState("");
   const [official, setOfficial] = useState(true);
+  const [level, setLevel] = useState<DrillLevel>("Beginner");
   const [saved, setSaved] = useState(false);
 
   return (
@@ -39,6 +40,7 @@ export function DrillForm() {
             .map((point) => point.trim())
             .filter(Boolean),
           isClubOfficial: official,
+          level,
         });
         setTitle("");
         setDiagram("square");
@@ -52,6 +54,19 @@ export function DrillForm() {
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Title">
           <input value={title} onChange={(event) => setTitle(event.target.value)} className={inputClass} required />
+        </Field>
+        <Field label="Level">
+          <select
+            value={level}
+            onChange={(event) => {
+              if (isDrillLevel(event.target.value)) setLevel(event.target.value);
+            }}
+            className={inputClass}
+          >
+            {DRILL_LEVELS.map((item) => (
+              <option key={item}>{item}</option>
+            ))}
+          </select>
         </Field>
         <Field label="Category">
           <select

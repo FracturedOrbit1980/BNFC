@@ -1,4 +1,10 @@
-import type { DrillTemplate } from "@/lib/club/catalog";
+import type { DrillLevel, DrillTemplate } from "@/lib/club/catalog";
+
+function levelForAge(age: string): DrillLevel {
+  if (age === "Under 11") return "Beginner";
+  if (age === "Under 17") return "Professional";
+  return "Intermediate";
+}
 
 function drill(
   id: string,
@@ -22,6 +28,9 @@ function drill(
     instructions,
     coachingPoints,
     defaultDurationSeconds: minutes * 60,
+    level: levelForAge(age),
+    videoUrl: "",
+    videoName: "",
   };
 }
 

@@ -321,10 +321,12 @@ function DrillBoardEditor({
 
 export function frameBetween(frames: BoardFrame[], playhead: number): BoardFrame {
   if (frames.length === 0) return { id: "empty", pieces: [], marks: [] };
-  const index = Math.floor(playhead) % frames.length;
-  const nextIndex = (index + 1) % frames.length;
-  const from = frames[index];
-  const to = frames[nextIndex];
+  const span = frames.length;
+  const raw = Number.isFinite(playhead) ? Math.floor(playhead) : 0;
+  const index = ((raw % span) + span) % span;
+  const nextIndex = (index + 1) % span;
+  const from = frames[index] ?? frames[0];
+  const to = frames[nextIndex] ?? from;
   const mix = frames.length < 2 ? 0 : playhead - Math.floor(playhead);
   const pieces = from.pieces.map((piece) => {
     const target = to.pieces.find((item) => item.id === piece.id);
@@ -335,7 +337,22 @@ export function frameBetween(frames: BoardFrame[], playhead: number): BoardFrame
       y: piece.y + (target.y - piece.y) * mix,
     };
   });
-  return { ...from, pieces, marks: mix < 0.5 ? from.marks : to.marks };
+  const marks = from.marks.map((mark) => {
+    const target = to.marks.find((item) => item.id === mark.id);
+    if (!target) return mark;
+    return {
+      ...mark,
+      points: mark.points.map((point, index) => {
+        const end = target.points[index];
+        if (!end) return point;
+        return {
+          x: point.x + (end.x - point.x) * mix,
+          y: point.y + (end.y - point.y) * mix,
+        };
+      }),
+    };
+  });
+  return { ...from, pieces, marks };
 }
 
 export function eventPoint(svg: SVGSVGElement | null, event: ReactPointerEvent): PitchPoint | null {
