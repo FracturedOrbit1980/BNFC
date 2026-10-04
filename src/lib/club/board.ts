@@ -44,12 +44,18 @@ export interface PitchPoint {
   y: number;
 }
 
+export type PieceTeam = "player" | "opponent";
+
+export const DEFAULT_PLAYER_COLOR = "#d16b6f";
+export const DEFAULT_OPPONENT_COLOR = "#2563eb";
+
 export interface BoardPiece {
   id: string;
   kind: PieceKind;
   x: number;
   y: number;
   label: string;
+  team?: PieceTeam;
 }
 
 export interface BoardMark {
@@ -69,6 +75,15 @@ export interface DrillBoard {
   phase: SessionPhase;
   speed: number;
   frames: BoardFrame[];
+  playerColor?: string;
+  opponentColor?: string;
+}
+
+export function boardColors(board: DrillBoard) {
+  return {
+    player: board.playerColor || DEFAULT_PLAYER_COLOR,
+    opponent: board.opponentColor || DEFAULT_OPPONENT_COLOR,
+  };
 }
 
 export interface PitchWindow {
@@ -91,6 +106,8 @@ export function emptyDrillBoard(): DrillBoard {
     view: "full",
     phase: "Technical",
     speed: 1,
+    playerColor: DEFAULT_PLAYER_COLOR,
+    opponentColor: DEFAULT_OPPONENT_COLOR,
     frames: [{ id: "frame-1", pieces: [], marks: [] }],
   };
 }

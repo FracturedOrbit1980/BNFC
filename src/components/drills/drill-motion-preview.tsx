@@ -3,7 +3,7 @@
 import { useEffect, useId, useState } from "react";
 
 import { frameBetween, MarkShape, PieceShape, PitchLines } from "@/components/drills/drill-board";
-import { PITCH_WINDOW, type DrillBoard } from "@/lib/club/board";
+import { boardColors, PITCH_WINDOW, type DrillBoard } from "@/lib/club/board";
 
 export function DrillMotionPreview({
   board,
@@ -61,7 +61,12 @@ export function DrillMotionPreview({
       ))}
       {shown.pieces.map((piece) => (
         <g key={piece.id} data-piece-id={piece.id} transform={`translate(${piece.x} ${piece.y})`}>
-          <PieceShape piece={{ ...piece, x: 0, y: 0 }} selected={false} onPointerDown={() => undefined} />
+          <PieceShape
+            piece={{ ...piece, x: 0, y: 0 }}
+            colors={boardColors(board)}
+            selected={false}
+            onPointerDown={() => undefined}
+          />
         </g>
       ))}
     </svg>

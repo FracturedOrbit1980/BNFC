@@ -22,8 +22,11 @@ import {
   Shield,
   Square,
   SquareDashed,
+  Redo2,
   Trash,
+  Undo2,
   User,
+  UserRound,
   type LucideIcon,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
@@ -39,11 +42,13 @@ import {
   PITCH_VIEWS,
   PITCH_WINDOW,
   clampPoint,
+  boardColors,
   emptyDrillBoard,
   type BoardFrame,
   type BoardMark,
   type BoardPiece,
   type DrillBoard,
+  type PieceTeam,
   type MarkKind,
   type PieceKind,
   type PitchPoint,
@@ -96,7 +101,7 @@ const PIECE_ICON: Record<PieceKind, LucideIcon> = {
 };
 
 const PIECE_HINT: Record<PieceKind, string> = {
-  player: "Adds an outfield player.",
+  player: "Adds your player as a mannequin.",
   keeper: "Adds a goalkeeper.",
   cone: "Adds a cone.",
   mannequin: "Adds a mannequin.",
@@ -176,7 +181,15 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
   const [playhead, setPlayhead] = useState(0);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dragId = useRef<string | null>(null);
+  const dragRecorded = useRef(false);
+  const colorRecorded = useRef(false);
+  const colorTimer = useRef<number | null>(null);
+  const past = useRef<DrillBoard[]>([]);
+  const future = useRef<DrillBoard[]>([]);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
   const idRef = useRef(1);
+  const colors = boardColors(board);
 
   const frameCount = board.frames.length;
   const safeIndex = Math.min(frameIndex, Math.max(0, frameCount - 1));
@@ -205,7 +218,55 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
     return `${prefix}-e${idRef.current}`;
   }
 
-  function updateFrame(pieces: BoardPiece[], marks: BoardMark[]) {
+  function syncHistory() {
+    setCanUndo(past.current.length > 0);
+    setCanRedo(future.current.length > 0);
+  }
+
+  function remember() {
+    past.current.push(structuredClone(board));
+    if (past.current.length > 40) past.current.shift();
+    future.current = [];
+    colorRecorded.current = false;
+    syncHistory();
+  }
+
+  function undo() {
+    const previous = past.current.pop();
+    if (!previous) return;
+    future.current.push(structuredClone(board));
+    setBoard(previous);
+    setPlaying(false);
+    syncHistory();
+  }
+
+  function redo() {
+    const next = future.current.pop();
+    if (!next) return;
+    past.current.push(structuredClone(board));
+    setBoard(next);
+    setPlaying(false);
+    syncHistory();
+  }
+
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "z") return;
+      const target = event.target;
+      if (target instanceof HTMLElement) {
+        const tag = target.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || target.isContentEditable) return;
+      }
+      event.preventDefault();
+      if (event.shiftKey) redo();
+      else undo();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
+  function updateFrame(pieces: BoardPiece[], marks: BoardMark[], record = false) {
+    if (record) remember();
     setBoard((current) => ({
       ...current,
       frames: current.frames.map((item, index) => (index === safeIndex ? { ...item, pieces, marks } : item)),
@@ -213,22 +274,41 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
     setPlaying(false);
   }
 
-  function placeKind(kind: PieceKind, point?: PitchPoint) {
-    const count = shown.pieces.filter((piece) => piece.kind === kind).length + 1;
+  function placeKind(kind: PieceKind, point?: PitchPoint, team: PieceTeam = "player") {
+    const side: PieceTeam = kind === "player" ? team : "player";
+    const count =
+      shown.pieces.filter((piece) => piece.kind === kind && (piece.team ?? "player") === (kind === "player" ? side : "player")).length + 1;
     const piece: BoardPiece = {
       id: nextId("piece"),
       kind,
+      team: kind === "player" ? side : undefined,
       x: point?.x ?? windowBox.x + windowBox.width / 2,
       y: point?.y ?? windowBox.y + windowBox.height / 2,
       label: kind === "player" || kind === "keeper" ? String(count) : "",
     };
     const clamped = clampPoint(piece);
-    updateFrame([...shown.pieces, { ...piece, ...clamped }], shown.marks);
+    updateFrame([...shown.pieces, { ...piece, ...clamped }], shown.marks, true);
     setSelectedId(piece.id);
     setTool("move");
   }
 
+  function paintColor(field: "playerColor" | "opponentColor", value: string) {
+    if (!colorRecorded.current) {
+      past.current.push(structuredClone(board));
+      if (past.current.length > 40) past.current.shift();
+      future.current = [];
+      colorRecorded.current = true;
+      syncHistory();
+    }
+    setBoard((current) => ({ ...current, [field]: value }));
+    if (colorTimer.current) window.clearTimeout(colorTimer.current);
+    colorTimer.current = window.setTimeout(() => {
+      colorRecorded.current = false;
+    }, 400);
+  }
+
   function recordFrame() {
+    remember();
     const snapshot: BoardFrame = {
       id: nextId("frame"),
       pieces: shown.pieces.map((piece) => ({ ...piece })),
@@ -251,7 +331,7 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
       /* capture is optional when the pointer is already released */
     }
     if (tool === "marker") {
-      updateFrame(shown.pieces, [...shown.marks, { id: nextId("mark"), kind: "marker", points: [point] }]);
+      updateFrame(shown.pieces, [...shown.marks, { id: nextId("mark"), kind: "marker", points: [point] }], true);
       return;
     }
     setDraft([point]);
@@ -261,6 +341,10 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
     const point = eventPoint(svgRef.current, event);
     if (!point) return;
     if (dragId.current) {
+      if (!dragRecorded.current) {
+        remember();
+        dragRecorded.current = true;
+      }
       updateFrame(
         shown.pieces.map((piece) => (piece.id === dragId.current ? { ...piece, ...point } : piece)),
         shown.marks,
@@ -273,6 +357,7 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
 
   function onPointerUp() {
     dragId.current = null;
+    dragRecorded.current = false;
     if (!draft || draft.length < 2 || tool === "move" || tool === "marker") {
       setDraft(null);
       return;
@@ -286,7 +371,7 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
           ? [start, { x: end.x, y: start.y }, end, { x: start.x, y: end.y }]
           : [start, end],
     };
-    updateFrame(shown.pieces, [...shown.marks, mark]);
+    updateFrame(shown.pieces, [...shown.marks, mark], true);
     setDraft(null);
   }
 
@@ -296,7 +381,8 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
     if (!PIECE_KINDS.includes(kind as PieceKind)) return;
     const point = clientPoint(svgRef.current, event.clientX, event.clientY);
     if (!point) return;
-    placeKind(kind as PieceKind, point);
+    const team = event.dataTransfer.getData("text/team") === "opponent" ? "opponent" : "player";
+    placeKind(kind as PieceKind, point, team);
   }
 
   function openSaved(id: string) {
@@ -318,6 +404,9 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
     setPlaying(stored.frames.length > 1);
     setSelectedId(null);
     setNotice("");
+    past.current = [];
+    future.current = [];
+    syncHistory();
   }
 
   function save() {
@@ -358,6 +447,7 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
     updateFrame(
       shown.pieces.filter((piece) => piece.id !== selectedId),
       shown.marks,
+      true,
     );
     setSelectedId(null);
   }
@@ -371,6 +461,29 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
         data-descriptions={descriptions ? "on" : "off"}
         aria-label="Pitch tools"
       >
+        <div className="flex flex-col gap-1" role="group" aria-label="History">
+          <ToolButton
+            label="Undo"
+            description="Puts the pitch back one step."
+            descriptions={descriptions}
+            onShow={showHint}
+            disabled={!canUndo}
+            onClick={undo}
+          >
+            <Undo2 className="size-4" aria-hidden />
+          </ToolButton>
+          <ToolButton
+            label="Redo"
+            description="Brings back the step you undid."
+            descriptions={descriptions}
+            onShow={showHint}
+            disabled={!canRedo}
+            onClick={redo}
+          >
+            <Redo2 className="size-4" aria-hidden />
+          </ToolButton>
+        </div>
+        <div className="mx-auto h-px w-6 bg-slate-300" role="separator" />
         <div className="flex flex-col gap-1" role="group" aria-label="Pitch view">
           {PITCH_VIEWS.map((view) => {
             const Icon = VIEW_ICON[view];
@@ -382,7 +495,11 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
                 active={board.view === view}
                 descriptions={descriptions}
                 onShow={showHint}
-                onClick={() => setBoard({ ...board, view })}
+                onClick={() => {
+                  if (board.view === view) return;
+                  remember();
+                  setBoard({ ...board, view });
+                }}
               >
                 <Icon className="size-4" aria-hidden />
               </ToolButton>
@@ -403,6 +520,7 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
                 draggable
                 onDragStart={(event) => {
                   event.dataTransfer.setData("text/piece", kind);
+                  event.dataTransfer.setData("text/team", "player");
                   event.dataTransfer.effectAllowed = "copy";
                 }}
                 onClick={() => placeKind(kind)}
@@ -411,6 +529,21 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
               </ToolButton>
             );
           })}
+          <ToolButton
+            label="Opponent"
+            description="Adds an opponent mannequin."
+            descriptions={descriptions}
+            onShow={showHint}
+            draggable
+            onDragStart={(event) => {
+              event.dataTransfer.setData("text/piece", "player");
+              event.dataTransfer.setData("text/team", "opponent");
+              event.dataTransfer.effectAllowed = "copy";
+            }}
+            onClick={() => placeKind("player", undefined, "opponent")}
+          >
+            <UserRound className="size-4" aria-hidden />
+          </ToolButton>
         </div>
         <div className="mx-auto h-px w-6 bg-slate-300" role="separator" />
         <div className="flex flex-col gap-1" role="group" aria-label="Draw">
@@ -473,7 +606,11 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
               active={board.speed === speed}
               descriptions={descriptions}
               onShow={showHint}
-              onClick={() => setBoard({ ...board, speed })}
+              onClick={() => {
+                if (board.speed === speed) return;
+                remember();
+                setBoard({ ...board, speed });
+              }}
             >
               <span className="text-xs font-bold">{speed === 0.5 ? "½" : `${speed}×`}</span>
             </ToolButton>
@@ -540,9 +677,10 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
             />
           ) : null}
           {shown.pieces.map((piece) => (
-            <g key={piece.id} data-piece-id={piece.id} data-piece-kind={piece.kind}>
+            <g key={piece.id} data-piece-id={piece.id} data-piece-kind={piece.kind} data-piece-team={piece.team ?? "player"}>
               <PieceShape
                 piece={piece}
+                colors={colors}
                 selected={piece.id === selectedId}
                 onPointerDown={(event) => {
                   if (playing || tool !== "move") return;
@@ -568,6 +706,28 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
         ) : (
           <p className="min-w-0 flex-1 text-sm font-medium text-slate-500">Descriptions are off.</p>
         )}
+        <label className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-slate-950">
+          Player
+          <input
+            type="color"
+            aria-label="Player colour"
+            data-field="player-color"
+            value={colors.player}
+            onChange={(event) => paintColor("playerColor", event.target.value)}
+            className="size-11 cursor-pointer rounded-md border border-slate-300 bg-transparent p-0.5"
+          />
+        </label>
+        <label className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-slate-950">
+          Opponent
+          <input
+            type="color"
+            aria-label="Opponent colour"
+            data-field="opponent-color"
+            value={colors.opponent}
+            onChange={(event) => paintColor("opponentColor", event.target.value)}
+            className="size-11 cursor-pointer rounded-md border border-slate-300 bg-transparent p-0.5"
+          />
+        </label>
         <button
           type="button"
           data-field="descriptions"
@@ -738,6 +898,7 @@ function ToolButton({
   children,
   draggable,
   onDragStart,
+  disabled = false,
 }: {
   label: string;
   description: string;
@@ -748,22 +909,25 @@ function ToolButton({
   children: ReactNode;
   draggable?: boolean;
   onDragStart?: (event: ReactDragEvent<HTMLButtonElement>) => void;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       draggable={draggable}
       onDragStart={onDragStart}
+      disabled={disabled}
       aria-label={label}
       title={descriptions ? description : undefined}
       data-tool={label}
       onPointerEnter={() => onShow(description)}
       onFocus={() => onShow(description)}
       onClick={() => {
+        if (disabled) return;
         onShow(description);
         onClick();
       }}
-      className={`editor-tool flex size-11 shrink-0 items-center justify-center rounded-lg ${
+      className={`editor-tool flex size-11 shrink-0 items-center justify-center rounded-lg disabled:opacity-40 ${
         active ? "bg-emerald-600 text-white" : "bg-white text-slate-950 ring-1 ring-slate-300"
       }`}
     >

@@ -12,6 +12,7 @@ import {
   PITCH_WINDOW,
   SESSION_PHASES,
   clampPoint,
+  boardColors,
   emptyDrillBoard,
   type BoardFrame,
   type BoardMark,
@@ -231,6 +232,7 @@ function DrillBoardEditor({
             <PieceShape
               key={piece.id}
               piece={piece}
+              colors={boardColors(board)}
               selected={piece.id === selectedId}
               onPointerDown={(event) => {
                 if (playing || tool !== "move") return;
@@ -421,23 +423,29 @@ export function PieceShape({
   piece,
   selected,
   onPointerDown,
+  colors,
 }: {
   piece: BoardPiece;
   selected: boolean;
   onPointerDown: (event: ReactPointerEvent<SVGGElement>) => void;
+  colors?: { player: string; opponent: string };
 }) {
   const ring = selected ? "#fef08a" : "#ffffff";
+  const palette = colors ?? { player: "#d16b6f", opponent: "#2563eb" };
+  const person = piece.kind === "player" || piece.kind === "keeper" || piece.kind === "mannequin";
+  const fill =
+    piece.kind === "mannequin"
+      ? "#e2e8f0"
+      : piece.team === "opponent"
+        ? palette.opponent
+        : piece.kind === "keeper"
+          ? "#f59e0b"
+          : palette.player;
   return (
     <g transform={`translate(${piece.x} ${piece.y})`} onPointerDown={onPointerDown} className="cursor-grab">
-      {piece.kind === "player" ? <circle r="2.2" fill="#0f172a" stroke={ring} strokeWidth="0.45" /> : null}
-      {piece.kind === "keeper" ? <circle r="2.2" fill="#f59e0b" stroke={ring} strokeWidth="0.45" /> : null}
+      <circle r="2.6" fill="transparent" />
+      {person ? <MannequinFigure fill={fill} ring={ring} label={piece.kind === "mannequin" ? "" : piece.label} /> : null}
       {piece.kind === "cone" ? <polygon points="0,-2.2 -1.6,1.8 1.6,1.8" fill="#f97316" stroke={ring} strokeWidth="0.3" /> : null}
-      {piece.kind === "mannequin" ? (
-        <g>
-          <circle cy="-1.5" r="0.9" fill="#e2e8f0" />
-          <rect x="-1.1" y="-0.6" width="2.2" height="2.8" rx="0.4" fill="#cbd5e1" stroke={ring} strokeWidth="0.25" />
-        </g>
-      ) : null}
       {piece.kind === "goal" ? <path d="M-2.4 -1.4 h4.8 v3.2 h-4.8" fill="none" stroke={ring} strokeWidth="0.45" /> : null}
       {piece.kind === "pole" ? (
         <g stroke={ring} strokeWidth="0.45">
@@ -445,13 +453,45 @@ export function PieceShape({
           <circle cy="-2.4" r="0.45" fill="#f8fafc" />
         </g>
       ) : null}
-      {piece.label ? (
+      {piece.label && !person ? (
         <text y="0.7" textAnchor="middle" fontSize="2" fontWeight="700" fill="#ffffff">
           {piece.label}
         </text>
       ) : null}
     </g>
   );
+}
+
+function MannequinFigure({ fill, ring, label }: { fill: string; ring: string; label: string }) {
+  return (
+    <g data-figure="mannequin" data-fill={fill}>
+      <circle cy="-2.05" r="0.78" fill={fill} stroke={ring} strokeWidth="0.22" />
+      <path
+        d="M-0.95 -1.32 C-1.4 -0.15 -1.15 0.55 -0.72 0.72 L0.72 0.72 C1.15 0.55 1.4 -0.15 0.95 -1.32 Z"
+        fill={fill}
+        stroke={ring}
+        strokeWidth="0.22"
+      />
+      <path d="M-0.85 -0.9 L-2.05 0.25" fill="none" stroke={fill} strokeWidth="0.42" strokeLinecap="round" />
+      <path d="M0.85 -0.9 L2.05 0.25" fill="none" stroke={fill} strokeWidth="0.42" strokeLinecap="round" />
+      <path d="M-0.38 0.68 L-0.85 2.4" fill="none" stroke={fill} strokeWidth="0.48" strokeLinecap="round" />
+      <path d="M0.38 0.68 L0.85 2.4" fill="none" stroke={fill} strokeWidth="0.48" strokeLinecap="round" />
+      {label ? (
+        <text y="0.2" textAnchor="middle" fontSize="1.15" fontWeight="700" fill={inkOn(fill)} stroke="none">
+          {label}
+        </text>
+      ) : null}
+    </g>
+  );
+}
+
+function inkOn(hex: string) {
+  const raw = hex.replace("#", "");
+  if (raw.length !== 6) return "#ffffff";
+  const red = Number.parseInt(raw.slice(0, 2), 16);
+  const green = Number.parseInt(raw.slice(2, 4), 16);
+  const blue = Number.parseInt(raw.slice(4, 6), 16);
+  return (0.299 * red + 0.587 * green + 0.114 * blue) / 255 > 0.64 ? "#1e1d1b" : "#ffffff";
 }
 
 function ControlRow({ label, children }: { label: string; children: ReactNode }) {
