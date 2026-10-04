@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 
 import { OBJECTIVE_CATEGORIES, type ObjectiveCategory, type SetupDiagram } from "@/lib/club/catalog";
 import type { DrillBoard } from "@/lib/club/board";
+import { weekDates } from "@/lib/club/week";
 import {
   createSeed,
   type AttendanceRecord,
@@ -11,6 +12,7 @@ import {
   type EvaluationRecord,
   type SavedMatch,
   type SessionPlan,
+  type TrainingStatus,
 } from "@/lib/club/seed";
 
 export interface NewDrillInput {
@@ -55,6 +57,9 @@ interface ClubState extends ClubData {
   addCoach: (teamId: string, name: string) => void;
   addEvaluation: (input: NewEvaluationInput) => void;
   setHomework: (playerId: string, homework: string) => void;
+  setTeamGameDay: (teamId: string, gameDay: string) => void;
+  setTrainingAttendance: (playerId: string, date: string, present: boolean) => void;
+  saveWeeklyReport: (playerId: string, teamId: string, weekStart: string, gameFeedback: string) => void;
   saveSession: (teamId: string, title: string, drillIds: string[]) => void;
   saveMatch: (teamId: string, opponent: string, minutes: { playerId: string; minutesPlayed: number }[]) => void;
   setDrillBoard: (drillId: string, board: DrillBoard) => void;
@@ -140,6 +145,8 @@ export const useClubStore = create<ClubState>()(
       deletePlayer: (playerId) =>
         set((state) => ({
           players: state.players.filter((player) => player.id !== playerId),
+          trainingMarks: state.trainingMarks.filter((mark) => mark.playerId !== playerId),
+          weeklyReports: state.weeklyReports.filter((report) => report.playerId !== playerId),
         })),
       addCoach: (teamId, name) =>
         set((state) => ({
@@ -189,6 +196,48 @@ export const useClubStore = create<ClubState>()(
             player.id === playerId ? { ...player, homework } : player,
           ),
         })),
+      setTeamGameDay: (teamId, gameDay) =>
+        set((state) => ({
+          ageGroups: state.ageGroups.map((group) => ({
+            ...group,
+            teams: group.teams.map((team) => (team.id === teamId ? { ...team, gameDay } : team)),
+          })),
+        })),
+      setTrainingAttendance: (playerId, date, present) =>
+        set((state) => {
+          const existing = state.trainingMarks.some((mark) => mark.playerId === playerId && mark.date === date);
+          return {
+            trainingMarks: existing
+              ? state.trainingMarks.map((mark) =>
+                  mark.playerId === playerId && mark.date === date ? { ...mark, present } : mark,
+                )
+              : [...state.trainingMarks, { playerId, date, present }],
+          };
+        }),
+      saveWeeklyReport: (playerId, teamId, weekStart, gameFeedback) =>
+        set((state) => {
+          const attendance = weekDates(weekStart).map((date) => {
+            const mark = state.trainingMarks.find((item) => item.playerId === playerId && item.date === date);
+            const status: TrainingStatus = mark ? (mark.present ? "Present" : "Not present") : "Not marked";
+            return { date, status };
+          });
+          const gameDay = state.ageGroups.flatMap((group) => group.teams).find((team) => team.id === teamId)?.gameDay ?? "";
+          const next = {
+            id: `wr-${playerId}-${weekStart}`,
+            playerId,
+            teamId,
+            weekStart,
+            gameDay,
+            attendance,
+            gameFeedback: gameFeedback.trim(),
+          };
+          const exists = state.weeklyReports.some((report) => report.id === next.id);
+          return {
+            weeklyReports: exists
+              ? state.weeklyReports.map((report) => (report.id === next.id ? next : report))
+              : [next, ...state.weeklyReports],
+          };
+        }),
       saveSession: (teamId, title, drillIds) =>
         set((state) => ({
           sessions: [
@@ -270,6 +319,8 @@ export const useClubStore = create<ClubState>()(
         drills: state.drills,
         evaluations: state.evaluations,
         attendance: state.attendance,
+        trainingMarks: state.trainingMarks,
+        weeklyReports: state.weeklyReports,
         sessions: state.sessions,
         matches: state.matches,
         coachTeamId: state.coachTeamId,
@@ -289,6 +340,8 @@ export const useClubStore = create<ClubState>()(
           drills,
           coachTeamId: saved.coachTeamId ?? null,
           boards: saved.boards ?? {},
+          trainingMarks: saved.trainingMarks ?? [],
+          weeklyReports: saved.weeklyReports ?? [],
           hydrated: false,
         };
       },

@@ -41,6 +41,24 @@ export interface AttendanceRecord {
   status: "Present" | "Absent";
 }
 
+export interface TrainingMark {
+  playerId: string;
+  date: string;
+  present: boolean;
+}
+
+export type TrainingStatus = "Present" | "Not present" | "Not marked";
+
+export interface WeeklyReport {
+  id: string;
+  playerId: string;
+  teamId: string;
+  weekStart: string;
+  gameDay: string;
+  attendance: { date: string; status: TrainingStatus }[];
+  gameFeedback: string;
+}
+
 export interface SessionPlan {
   id: string;
   teamId: string;
@@ -64,6 +82,8 @@ export interface ClubData {
   drills: ClubDrill[];
   evaluations: EvaluationRecord[];
   attendance: AttendanceRecord[];
+  trainingMarks: TrainingMark[];
+  weeklyReports: WeeklyReport[];
   sessions: SessionPlan[];
   matches: SavedMatch[];
   coachTeamId: string | null;
@@ -82,6 +102,8 @@ export function createSeed(): ClubData {
     })),
     evaluations: [],
     attendance: [],
+    trainingMarks: [],
+    weeklyReports: [],
     sessions: [],
     matches: [],
     coachTeamId: null,

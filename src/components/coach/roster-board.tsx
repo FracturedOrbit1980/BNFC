@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useCoachTeam } from "@/components/coach/team-picker";
 import type { ClubPlayer } from "@/lib/club/seed";
+import { addDays, formatDay, mondayOf, sessionToday, weekDates } from "@/lib/club/week";
 import { useClubStore } from "@/stores/club-store";
 
 export function RosterBoard() {
@@ -28,6 +29,8 @@ export function RosterBoard() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const updatePlayer = useClubStore((state) => state.updatePlayer);
   const deletePlayer = useClubStore((state) => state.deletePlayer);
+  const [weekStart, setWeekStart] = useState(() => mondayOf(sessionToday()));
+  const dates = weekDates(weekStart);
   const loadedId = useRef(selected?.id ?? "");
   if ((selected?.id ?? "") !== loadedId.current) {
     loadedId.current = selected?.id ?? "";
@@ -55,6 +58,7 @@ export function RosterBoard() {
         <p className="rounded-lg bg-white px-4 py-3 font-semibold text-slate-800 ring-1 ring-slate-300">
           {team ? `${team.name} has no players yet.` : "Choose a team on the coach home page before adding players."}
         </p>
+        {team ? <GameDay teamId={team.id} teamName={team.name} gameDay={team.gameDay} /> : null}
         {team ? <ExportSquad teamName={team.name} players={[]} /> : null}
         {team ? <AddSquadPlayer teamId={team.id} /> : null}
       </div>
@@ -65,16 +69,31 @@ export function RosterBoard() {
 
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
-      <ul className="overflow-hidden rounded-xl bg-white ring-1 ring-slate-300">
+      {team ? <div className="lg:col-span-2"><GameDay teamId={team.id} teamName={team.name} gameDay={team.gameDay} /></div> : null}
+      <div className="min-w-0 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm font-bold uppercase tracking-wide text-slate-700">
+            Training week {formatDay(weekStart)}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" size="lg" variant="outline" className="h-11" onClick={() => setWeekStart(addDays(weekStart, -7))}>
+              Previous week
+            </Button>
+            <Button type="button" size="lg" variant="outline" className="h-11" onClick={() => setWeekStart(addDays(weekStart, 7))}>
+              Next week
+            </Button>
+          </div>
+        </div>
+      <ul className="min-w-0 space-y-3">
         {squad.map((player) => {
           const active = player.id === selected.id;
           return (
-            <li key={player.id}>
+            <li key={player.id} className="min-w-0 rounded-xl bg-white ring-1 ring-slate-300">
               <button
                 type="button"
                 onClick={() => selectPlayer(player.id)}
-                className={`flex w-full items-center gap-3 px-4 py-3 text-left ${
-                  active ? "bg-emerald-600 text-white" : "border-b border-slate-200 text-slate-950"
+                className={`flex w-full items-center gap-3 rounded-t-xl px-4 py-3 text-left ${
+                  active ? "bg-emerald-600 text-white" : "text-slate-950"
                 }`}
               >
                 <span className="w-8 text-lg font-black tabular-nums">{player.squadNumber}</span>
@@ -83,10 +102,13 @@ export function RosterBoard() {
                   <span className={`text-sm ${active ? "text-emerald-100" : "text-slate-600"}`}>{player.position}</span>
                 </span>
               </button>
+              <TrainingWeek playerId={player.id} dates={dates} />
+              <WeeklyReport key={`${player.id}:${weekStart}`} playerId={player.id} playerName={player.name} teamId={player.teamId} weekStart={weekStart} />
             </li>
           );
         })}
       </ul>
+      </div>
       <div className="space-y-4">
       <form
         className="rounded-xl bg-white p-4 ring-1 ring-slate-300"
@@ -211,6 +233,154 @@ export function RosterBoard() {
         {team ? <ExportSquad teamName={team.name} players={squad} /> : null}
         {team ? <AddSquadPlayer teamId={team.id} /> : null}
       </div>
+    </div>
+  );
+}
+
+function GameDay({ teamId, teamName, gameDay }: { teamId: string; teamName: string; gameDay?: string }) {
+  const setTeamGameDay = useClubStore((state) => state.setTeamGameDay);
+  return (
+    <form
+      className="rounded-xl bg-white p-4 ring-1 ring-slate-300"
+      onSubmit={(event) => event.preventDefault()}
+    >
+      <h2 className="text-sm font-bold uppercase tracking-wide text-slate-700">Game day</h2>
+      <label className="mt-2 block text-sm font-semibold text-slate-800">
+        Match day for {teamName}
+        <input
+          type="date"
+          data-field="game-day"
+          value={gameDay ?? ""}
+          onChange={(event) => setTeamGameDay(teamId, event.target.value)}
+          className="mt-1 block h-11 w-full max-w-xs rounded-md border border-slate-300 px-3 text-base"
+        />
+      </label>
+      <p className="mt-2 text-sm font-semibold text-slate-800">
+        {gameDay ? `Match day ${formatDay(gameDay)}.` : "No match day set yet."}
+      </p>
+    </form>
+  );
+}
+
+function TrainingWeek({ playerId, dates }: { playerId: string; dates: string[] }) {
+  const trainingMarks = useClubStore((state) => state.trainingMarks);
+  const setTrainingAttendance = useClubStore((state) => state.setTrainingAttendance);
+  return (
+    <div className="space-y-2 border-t border-slate-200 px-4 py-3">
+      <p className="text-xs font-bold uppercase tracking-wide text-slate-600">Training</p>
+      <ul className="space-y-2">
+        {dates.map((date) => {
+          const mark = trainingMarks.find((item) => item.playerId === playerId && item.date === date);
+          return (
+            <li key={date} className="flex flex-wrap items-center justify-between gap-2" data-training-date={date} data-player-id={playerId}>
+              <span className="text-sm font-semibold text-slate-900">{formatDay(date)}</span>
+              <span className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  aria-pressed={mark?.present === true}
+                  onClick={() => setTrainingAttendance(playerId, date, true)}
+                  className={`min-h-11 rounded-md px-3 text-sm font-bold ${
+                    mark?.present === true ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-950"
+                  }`}
+                >
+                  Present
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={mark?.present === false}
+                  onClick={() => setTrainingAttendance(playerId, date, false)}
+                  className={`min-h-11 rounded-md px-3 text-sm font-bold ${
+                    mark?.present === false ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-950"
+                  }`}
+                >
+                  Not present
+                </button>
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+function WeeklyReport({
+  playerId,
+  playerName,
+  teamId,
+  weekStart,
+}: {
+  playerId: string;
+  playerName: string;
+  teamId: string;
+  weekStart: string;
+}) {
+  const trainingMarks = useClubStore((state) => state.trainingMarks);
+  const weeklyReports = useClubStore((state) => state.weeklyReports);
+  const saveWeeklyReport = useClubStore((state) => state.saveWeeklyReport);
+  const saved = weeklyReports.find((report) => report.playerId === playerId && report.weekStart === weekStart);
+  const [open, setOpen] = useState(false);
+  const [feedback, setFeedback] = useState(saved?.gameFeedback ?? "");
+  const [notice, setNotice] = useState("");
+  const dates = weekDates(weekStart);
+
+  return (
+    <div className="border-t border-slate-200 px-4 py-3">
+      <Button
+        type="button"
+        size="lg"
+        variant="outline"
+        className="h-11"
+        onClick={() => {
+          setFeedback(saved?.gameFeedback ?? "");
+          setOpen(true);
+        }}
+      >
+        Weekly report
+      </Button>
+      {open ? (
+        <div className="mt-3 space-y-3">
+          <h3 className="text-sm font-bold uppercase tracking-wide text-slate-700">
+            Week of {formatDay(weekStart)}
+          </h3>
+          <ul className="space-y-1 text-sm font-semibold text-slate-800">
+            {dates.map((date) => {
+              const mark = trainingMarks.find((item) => item.playerId === playerId && item.date === date);
+              const status = mark ? (mark.present ? "Present" : "Not present") : "Not marked";
+              return (
+                <li key={date}>
+                  {formatDay(date)}: {status}
+                </li>
+              );
+            })}
+          </ul>
+          <label className="block text-sm font-semibold text-slate-800">
+            Game feedback for {playerName}
+            <textarea
+              value={feedback}
+              data-field="game-feedback"
+              onChange={(event) => setFeedback(event.target.value)}
+              className="mt-1 h-24 w-full rounded-md border border-slate-300 px-3 py-2 text-base"
+            />
+          </label>
+          <Button
+            type="button"
+            size="lg"
+            className="h-11"
+            onClick={() => {
+              if (!feedback.trim()) {
+                setNotice("Write the game feedback before saving.");
+                return;
+              }
+              saveWeeklyReport(playerId, teamId, weekStart, feedback);
+              setNotice("Weekly report saved.");
+            }}
+          >
+            Save weekly report
+          </Button>
+          {notice ? <p className="text-sm font-semibold text-slate-800">{notice}</p> : null}
+        </div>
+      ) : null}
     </div>
   );
 }

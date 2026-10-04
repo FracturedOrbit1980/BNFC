@@ -5,6 +5,7 @@ import { useState } from "react";
 import { PlayerRadar } from "@/components/dashboard/player-radar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatDay } from "@/lib/club/week";
 import { useClubStore } from "@/stores/club-store";
 
 export function PlayerHome() {
@@ -12,6 +13,7 @@ export function PlayerHome() {
   const ageGroups = useClubStore((state) => state.ageGroups);
   const evaluations = useClubStore((state) => state.evaluations);
   const attendance = useClubStore((state) => state.attendance);
+  const weeklyReports = useClubStore((state) => state.weeklyReports);
   const [playerId, setPlayerId] = useState("");
   const player = players.find((item) => item.id === playerId);
   const team = ageGroups
@@ -19,6 +21,10 @@ export function PlayerHome() {
     .find((item) => item.id === player?.teamId);
   const latest = evaluations.find((item) => item.playerId === player?.id);
   const mine = attendance.filter((item) => item.playerId === player?.id);
+  const reports = weeklyReports
+    .filter((report) => report.playerId === player?.id)
+    .slice()
+    .sort((a, b) => b.weekStart.localeCompare(a.weekStart));
 
   if (players.length === 0) {
     return (
@@ -82,6 +88,40 @@ export function PlayerHome() {
               Coach note: {latest.notes}
             </p>
           ) : null}
+          <section className="space-y-3" data-weekly="player">
+            <h2 className="text-lg font-bold text-slate-950">Weekly report</h2>
+            {reports.length === 0 ? (
+              <p className="rounded-lg bg-white px-4 py-3 text-sm font-semibold text-slate-800 ring-1 ring-slate-300">
+                No weekly report yet.
+              </p>
+            ) : (
+              reports.map((report) => (
+                <Card key={report.id}>
+                  <CardHeader>
+                    <CardTitle>Week of {formatDay(report.weekStart)}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <p className="text-sm font-semibold text-slate-800">
+                      Game day: {report.gameDay ? formatDay(report.gameDay) : "Not set"}
+                    </p>
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wide text-slate-600">Training attendance</p>
+                      <ul className="mt-1 space-y-1 text-sm font-semibold text-slate-900">
+                        {report.attendance.map((day) => (
+                          <li key={day.date}>
+                            {formatDay(day.date)}: {day.status}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <p className="rounded-lg bg-slate-100 px-3 py-3 text-sm font-medium text-slate-900" data-game-feedback>
+                      {report.gameFeedback}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </section>
           <Card>
             <CardHeader>
               <CardTitle>Attendance</CardTitle>

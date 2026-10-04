@@ -8,7 +8,7 @@ export default function PlayerPage() {
     <div>
       <PageHeader
         title="My game"
-        description="Open your name once you are on a squad. Scores appear only after a coach saves them."
+        description="Open your name once you are on a squad. Scores and the weekly report appear after a coach saves them."
       />
       <PlayerHome />
     </div>

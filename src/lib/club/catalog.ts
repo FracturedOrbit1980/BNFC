@@ -11,6 +11,7 @@ export type SetupDiagram = (typeof SETUP_DIAGRAMS)[number];
 export interface ClubTeam {
   id: string;
   name: string;
+  gameDay?: string;
 }
 
 export interface ClubAgeGroup {

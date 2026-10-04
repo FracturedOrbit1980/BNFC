@@ -8,7 +8,7 @@ export default function RosterPage() {
     <div>
       <PageHeader
         title="Squad"
-        description="Add players to the team you chose, then export, edit, or remove them. Ratings and homework stay on this page."
+        description="Set the match day, mark who was at training, and save each player’s weekly report. Export, edit, and remove stay on this page."
       />
       <RosterBoard />
     </div>
