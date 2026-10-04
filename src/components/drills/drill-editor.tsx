@@ -1,5 +1,31 @@
 "use client";
 
+import {
+  ArrowRight,
+  Circle,
+  Columns3,
+  Cone,
+  Flag,
+  Footprints,
+  Goal,
+  LandPlot,
+  MapPin,
+  MessageSquareText,
+  Move,
+  PanelTop,
+  Pause,
+  PersonStanding,
+  Play,
+  RectangleVertical,
+  Route,
+  Save,
+  Shield,
+  Square,
+  SquareDashed,
+  Trash,
+  User,
+  type LucideIcon,
+} from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState, type DragEvent as ReactDragEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 
@@ -28,11 +54,27 @@ import { useClubStore } from "@/stores/club-store";
 const SPEEDS = [0.5, 1, 2];
 
 const VIEW_LABEL: Record<PitchView, string> = {
-  full: "Full",
-  half: "Half",
+  full: "Full pitch",
+  half: "Half pitch",
   box: "Penalty box",
   thirds: "Thirds",
   channel: "Channel",
+};
+
+const VIEW_ICON: Record<PitchView, LucideIcon> = {
+  full: LandPlot,
+  half: PanelTop,
+  box: Square,
+  thirds: Columns3,
+  channel: RectangleVertical,
+};
+
+const VIEW_HINT: Record<PitchView, string> = {
+  full: "Shows the whole pitch.",
+  half: "Shows one half of the pitch.",
+  box: "Zooms to the penalty box.",
+  thirds: "Splits the pitch into thirds.",
+  channel: "Shows a wide channel.",
 };
 
 const PIECE_NAME: Record<PieceKind, string> = {
@@ -42,6 +84,40 @@ const PIECE_NAME: Record<PieceKind, string> = {
   mannequin: "Mannequin",
   goal: "Goal",
   pole: "Pole",
+};
+
+const PIECE_ICON: Record<PieceKind, LucideIcon> = {
+  player: User,
+  keeper: Shield,
+  cone: Cone,
+  mannequin: PersonStanding,
+  goal: Goal,
+  pole: Flag,
+};
+
+const PIECE_HINT: Record<PieceKind, string> = {
+  player: "Adds an outfield player.",
+  keeper: "Adds a goalkeeper.",
+  cone: "Adds a cone.",
+  mannequin: "Adds a mannequin.",
+  goal: "Adds a small goal.",
+  pole: "Adds a pole.",
+};
+
+const MARK_ICON: Record<MarkKind, LucideIcon> = {
+  pass: ArrowRight,
+  run: Footprints,
+  dribble: Route,
+  press: SquareDashed,
+  marker: MapPin,
+};
+
+const MARK_HINT: Record<MarkKind, string> = {
+  pass: "Draws a pass.",
+  run: "Draws a run.",
+  dribble: "Draws a dribble.",
+  press: "Draws a pressing zone.",
+  marker: "Drops a marker.",
 };
 
 const MARK_NAME: Record<MarkKind, string> = {
@@ -89,6 +165,8 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
   const [videoUrl, setVideoUrl] = useState(initial?.drill.videoUrl ?? "");
   const [videoName, setVideoName] = useState(initial?.drill.videoName ?? "");
   const [notice, setNotice] = useState("");
+  const [descriptions, setDescriptions] = useState(true);
+  const [hint, setHint] = useState("");
   const [board, setBoard] = useState<DrillBoard>(() => initial?.board ?? emptyDrillBoard());
   const [frameIndex, setFrameIndex] = useState(0);
   const [tool, setTool] = useState<MarkKind | "move">("move");
@@ -270,8 +348,158 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
     setNotice("Saved. The layout and animation stay with this drill.");
   }
 
+  function showHint(text: string) {
+    if (!descriptions) return;
+    setHint(text);
+  }
+
+  function removeSelected() {
+    if (!selectedId) return;
+    updateFrame(
+      shown.pieces.filter((piece) => piece.id !== selectedId),
+      shown.marks,
+    );
+    setSelectedId(null);
+  }
+
   return (
     <div className="editor-stage min-w-0 max-w-full" data-frame-count={frameCount} data-playing={playing ? "true" : "false"}>
+      <div className="editor-workspace min-w-0">
+      <div
+        className="editor-toolbar"
+        data-editor-toolbar
+        data-descriptions={descriptions ? "on" : "off"}
+        aria-label="Pitch tools"
+      >
+        <div className="flex flex-col gap-1" role="group" aria-label="Pitch view">
+          {PITCH_VIEWS.map((view) => {
+            const Icon = VIEW_ICON[view];
+            return (
+              <ToolButton
+                key={view}
+                label={VIEW_LABEL[view]}
+                description={VIEW_HINT[view]}
+                active={board.view === view}
+                descriptions={descriptions}
+                onShow={showHint}
+                onClick={() => setBoard({ ...board, view })}
+              >
+                <Icon className="size-4" aria-hidden />
+              </ToolButton>
+            );
+          })}
+        </div>
+        <div className="mx-auto h-px w-6 bg-slate-300" role="separator" />
+        <div className="flex flex-col gap-1" role="group" aria-label="Pieces">
+          {PIECE_KINDS.map((kind) => {
+            const Icon = PIECE_ICON[kind];
+            return (
+              <ToolButton
+                key={kind}
+                label={PIECE_NAME[kind]}
+                description={PIECE_HINT[kind]}
+                descriptions={descriptions}
+                onShow={showHint}
+                draggable
+                onDragStart={(event) => {
+                  event.dataTransfer.setData("text/piece", kind);
+                  event.dataTransfer.effectAllowed = "copy";
+                }}
+                onClick={() => placeKind(kind)}
+              >
+                <Icon className="size-4" aria-hidden />
+              </ToolButton>
+            );
+          })}
+        </div>
+        <div className="mx-auto h-px w-6 bg-slate-300" role="separator" />
+        <div className="flex flex-col gap-1" role="group" aria-label="Draw">
+          <ToolButton
+            label="Move"
+            description="Drags pieces around the pitch."
+            active={tool === "move"}
+            descriptions={descriptions}
+            onShow={showHint}
+            onClick={() => setTool("move")}
+          >
+            <Move className="size-4" aria-hidden />
+          </ToolButton>
+          {MARK_KINDS.map((kind) => {
+            const Icon = MARK_ICON[kind];
+            return (
+              <ToolButton
+                key={kind}
+                label={MARK_NAME[kind]}
+                description={MARK_HINT[kind]}
+                active={tool === kind}
+                descriptions={descriptions}
+                onShow={showHint}
+                onClick={() => setTool(kind)}
+              >
+                <Icon className="size-4" aria-hidden />
+              </ToolButton>
+            );
+          })}
+        </div>
+        <div className="mx-auto h-px w-6 bg-slate-300" role="separator" />
+        <div className="flex flex-col gap-1" role="group" aria-label="Frames">
+          <ToolButton
+            label="Record frame"
+            description="Stores this layout as the next step."
+            descriptions={descriptions}
+            onShow={showHint}
+            onClick={recordFrame}
+          >
+            <Circle className="size-4" aria-hidden />
+          </ToolButton>
+          <ToolButton
+            label={playing ? "Pause" : "Play frames"}
+            description="Plays the frames you recorded."
+            active={playing}
+            descriptions={descriptions}
+            onShow={showHint}
+            onClick={() => {
+              if (frameCount < 2) return;
+              setPlaying((current) => !current);
+            }}
+          >
+            {playing ? <Pause className="size-4" aria-hidden /> : <Play className="size-4" aria-hidden />}
+          </ToolButton>
+          {SPEEDS.map((speed) => (
+            <ToolButton
+              key={speed}
+              label={`${speed} times`}
+              description={speed === 1 ? "Plays at normal speed." : speed < 1 ? "Plays at half speed." : "Plays at double speed."}
+              active={board.speed === speed}
+              descriptions={descriptions}
+              onShow={showHint}
+              onClick={() => setBoard({ ...board, speed })}
+            >
+              <span className="text-xs font-bold">{speed === 0.5 ? "½" : `${speed}×`}</span>
+            </ToolButton>
+          ))}
+        </div>
+        <div className="mx-auto h-px w-6 bg-slate-300" role="separator" />
+        <ToolButton
+          label="Remove piece"
+          description="Takes the selected piece off this frame."
+          descriptions={descriptions}
+          onShow={showHint}
+          onClick={removeSelected}
+        >
+          <Trash className="size-4" aria-hidden />
+        </ToolButton>
+        <ToolButton
+          label="Save drill"
+          description="Keeps the layout, frames, level, and video."
+          active
+          descriptions={descriptions}
+          onShow={showHint}
+          onClick={save}
+        >
+          <Save className="size-4" aria-hidden />
+        </ToolButton>
+      </div>
       <div className="editor-pitch min-w-0">
         <svg
           ref={svgRef}
@@ -331,6 +559,31 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
             </g>
           ))}
         </svg>
+      </div>
+      <div className="editor-descriptions">
+        {descriptions ? (
+          <p className="min-w-0 flex-1 text-sm font-medium text-slate-800" data-description-line>
+            {hint || "Point at an icon to read it."}
+          </p>
+        ) : (
+          <p className="min-w-0 flex-1 text-sm font-medium text-slate-500">Descriptions are off.</p>
+        )}
+        <button
+          type="button"
+          data-field="descriptions"
+          aria-pressed={descriptions}
+          onClick={() => {
+            setDescriptions((current) => !current);
+            setHint("");
+          }}
+          className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg px-3 text-sm font-bold ${
+            descriptions ? "bg-emerald-600 text-white" : "bg-white text-slate-950 ring-1 ring-slate-300"
+          }`}
+        >
+          <MessageSquareText className="size-4" aria-hidden />
+          Descriptions {descriptions ? "on" : "off"}
+        </button>
+      </div>
       </div>
 
       <div className="editor-panel mt-3 min-w-0 space-y-3">
@@ -417,74 +670,8 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
               }}
             />
           </div>
-          <ControlRow label="Pitch view">
-            {PITCH_VIEWS.map((view) => (
-              <Chip key={view} active={board.view === view} onClick={() => setBoard({ ...board, view })}>
-                {VIEW_LABEL[view]}
-              </Chip>
-            ))}
-          </ControlRow>
-          <ControlRow label="Pieces">
-            {PIECE_KINDS.map((kind) => (
-              <Chip
-                key={kind}
-                active={false}
-                draggable
-                onDragStart={(event) => {
-                  event.dataTransfer.setData("text/piece", kind);
-                  event.dataTransfer.effectAllowed = "copy";
-                }}
-                onClick={() => placeKind(kind)}
-              >
-                {PIECE_NAME[kind]}
-              </Chip>
-            ))}
-            <DetailAction
-              title="Remove piece"
-              detail="Takes the selected player or cone off this frame."
-              onClick={() => {
-                if (!selectedId) return;
-                updateFrame(
-                  shown.pieces.filter((piece) => piece.id !== selectedId),
-                  shown.marks,
-                );
-                setSelectedId(null);
-              }}
-            />
-          </ControlRow>
-          <p className="mt-2 text-xs font-medium text-slate-600">Drag a piece on the pitch, or drop a new one from the list.</p>
-        </section>
-
-        <section className="rounded-xl bg-white p-3 ring-1 ring-slate-300" aria-label="Animator toolkit">
-          <h2 className="text-sm font-bold uppercase tracking-wide text-slate-800">Animator toolkit</h2>
-          <ControlRow label="Draw">
-            <Chip active={tool === "move"} onClick={() => setTool("move")}>
-              Move
-            </Chip>
-            {MARK_KINDS.map((kind) => (
-              <Chip key={kind} active={tool === kind} onClick={() => setTool(kind)}>
-                {MARK_NAME[kind]}
-              </Chip>
-            ))}
-          </ControlRow>
-          <ControlRow label="Frames">
-            <DetailAction title="Record frame" detail="Stores this layout as the next step in the drill." onClick={recordFrame} />
-            <DetailAction
-              title={playing ? "Pause" : "Play frames"}
-              detail="Moves the pieces between the frames you recorded."
-              active={playing}
-              onClick={() => {
-                if (frameCount < 2) return;
-                setPlaying((current) => !current);
-              }}
-            />
-            {SPEEDS.map((speed) => (
-              <Chip key={speed} active={board.speed === speed} onClick={() => setBoard({ ...board, speed })}>
-                {speed}x
-              </Chip>
-            ))}
-          </ControlRow>
-          <label className="mt-2 block text-xs font-bold uppercase tracking-wide text-slate-600">
+          <p className="mt-2 text-xs font-medium text-slate-600">Drag a piece on the pitch, or tap an icon to drop one in the middle.</p>
+          <label className="mt-3 block text-xs font-bold uppercase tracking-wide text-slate-600">
             Scrub · frame {Math.min(frameCount, Math.floor(playing ? playhead : safeIndex) + 1)} / {frameCount}
             <input
               type="range"
@@ -503,13 +690,6 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
             />
           </label>
         </section>
-
-        <DetailAction
-          title="Save drill"
-          detail="Keeps the layout, frames, level, and video with this drill."
-          onClick={save}
-          active
-        />
         {notice ? <p className="text-sm font-semibold text-slate-800">{notice}</p> : null}
         {savedDrills.length > 0 ? (
           <div className="min-w-0">
@@ -548,48 +728,22 @@ function clientPoint(svg: SVGSVGElement | null, clientX: number, clientY: number
   return clampPoint(raw.matrixTransform(matrix.inverse()));
 }
 
-function DetailAction({
-  title,
-  detail,
-  onClick,
+function ToolButton({
+  label,
+  description,
   active = false,
-}: {
-  title: string;
-  detail: string;
-  onClick: () => void;
-  active?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`min-h-11 min-w-36 flex-1 rounded-xl px-3 py-2 text-left ${
-        active ? "bg-emerald-600 text-white" : "bg-white text-slate-950 ring-1 ring-slate-300"
-      }`}
-    >
-      <span className="block text-sm font-bold">{title}</span>
-      <span className={`mt-0.5 block text-xs font-medium ${active ? "text-emerald-50" : "text-slate-600"}`}>{detail}</span>
-    </button>
-  );
-}
-
-function ControlRow({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="mt-2 min-w-0">
-      <p className="text-[10px] font-bold uppercase tracking-wide text-slate-600">{label}</p>
-      <div className="mt-1 flex flex-wrap gap-1">{children}</div>
-    </div>
-  );
-}
-
-function Chip({
-  active,
+  descriptions,
+  onShow,
   onClick,
   children,
   draggable,
   onDragStart,
 }: {
-  active: boolean;
+  label: string;
+  description: string;
+  active?: boolean;
+  descriptions: boolean;
+  onShow: (text: string) => void;
   onClick: () => void;
   children: ReactNode;
   draggable?: boolean;
@@ -600,12 +754,21 @@ function Chip({
       type="button"
       draggable={draggable}
       onDragStart={onDragStart}
-      onClick={onClick}
-      className={`min-h-11 rounded-md px-3 text-sm font-bold ${
-        active ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-950"
+      aria-label={label}
+      title={descriptions ? description : undefined}
+      data-tool={label}
+      onPointerEnter={() => onShow(description)}
+      onFocus={() => onShow(description)}
+      onClick={() => {
+        onShow(description);
+        onClick();
+      }}
+      className={`editor-tool flex size-11 shrink-0 items-center justify-center rounded-lg ${
+        active ? "bg-emerald-600 text-white" : "bg-white text-slate-950 ring-1 ring-slate-300"
       }`}
     >
       {children}
+      {descriptions ? <span className="editor-tool-tip">{description}</span> : null}
     </button>
   );
 }

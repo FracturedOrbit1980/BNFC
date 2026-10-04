@@ -9,7 +9,7 @@ export default function DrillEditorPage() {
       <PageHeader
         className="editor-title"
         title="Drill editor and animator toolkit"
-        description="Name the drill, set the pitch, then record the animation. Saving keeps the layout with that drill."
+        description="The tools sit to the left of the pitch. Point at an icon for a short description, and turn descriptions on or off at the bottom."
       />
       <DrillEditor />
     </div>
