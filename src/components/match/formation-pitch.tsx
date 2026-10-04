@@ -73,10 +73,10 @@ export function FormationPitch({
   const placed = placeOnPitch(players, formation);
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-col [@media(orientation:landscape)_and_(max-height:520px)]:h-full">
+    <div className="flex min-w-0 flex-col">
       <svg
         viewBox="0 0 100 64"
-        className="h-auto w-full max-w-full rounded-lg bg-emerald-700 [@media(orientation:landscape)_and_(max-height:520px)]:h-full [@media(orientation:landscape)_and_(max-height:520px)]:max-h-full [@media(orientation:landscape)_and_(max-height:520px)]:w-auto"
+        className="match-pitch-svg h-auto w-full max-w-full rounded-lg bg-emerald-700"
         role="img"
         aria-label={`${formation} formation`}
         data-formation={formation}

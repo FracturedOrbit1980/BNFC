@@ -97,7 +97,7 @@ export function LiveMatchTracker() {
   return (
     <div className="min-w-0 max-w-full space-y-4 overflow-x-hidden">
       <TeamPicker />
-      <div className="match-stage min-w-0 [@media(orientation:landscape)_and_(max-height:520px)]:grid [@media(orientation:landscape)_and_(max-height:520px)]:grid-cols-[minmax(0,1fr)_17rem] [@media(orientation:landscape)_and_(max-height:520px)]:items-stretch [@media(orientation:landscape)_and_(max-height:520px)]:gap-3">
+      <div className="match-stage min-w-0">
         <div className="flex min-h-0 min-w-0 flex-col">
           <div className="mb-2 flex shrink-0 flex-wrap gap-1">
             {FORMATIONS.map((name) => (
@@ -105,7 +105,7 @@ export function LiveMatchTracker() {
                 key={name}
                 type="button"
                 onClick={() => setFormation(name)}
-                className={`h-9 rounded-md px-3 text-sm font-bold ${
+                className={`min-h-11 rounded-md px-3 text-sm font-bold ${
                   formation === name ? "bg-emerald-600 text-white" : "bg-white text-slate-950 ring-1 ring-slate-300"
                 }`}
               >
@@ -117,14 +117,14 @@ export function LiveMatchTracker() {
             <FormationPitch formation={formation} players={players} emptyMessage={emptyMessage} />
           </div>
         </div>
-      <section className="mt-4 min-w-0 rounded-xl bg-slate-900 p-4 text-white shadow-lg [@media(orientation:landscape)_and_(max-height:520px)]:mt-0 [@media(orientation:landscape)_and_(max-height:520px)]:overflow-y-auto [@media(orientation:landscape)_and_(max-height:520px)]:p-3">
+      <section className="match-clock mt-4 min-w-0 rounded-xl bg-slate-900 p-4 text-white shadow-lg">
         <div className="flex items-start justify-between gap-3">
           <p className="text-sm font-semibold uppercase tracking-wide text-emerald-300">{teamName}</p>
           <p className="rounded-full bg-emerald-500 px-3 py-1 text-sm font-bold text-slate-950">
             {isClockRunning ? "LIVE" : "READY"}
           </p>
         </div>
-        <p className="my-4 text-center font-mono text-5xl tracking-wider text-emerald-400 [@media(orientation:landscape)_and_(max-height:520px)]:my-2 [@media(orientation:landscape)_and_(max-height:520px)]:text-4xl">
+        <p className="my-4 text-center font-mono text-5xl tracking-wider text-emerald-400">
           {formatClock(matchTimeSeconds)}
         </p>
         <label className="mb-3 block text-sm font-semibold text-emerald-100">
@@ -136,7 +136,7 @@ export function LiveMatchTracker() {
               setSaved(false);
             }}
             placeholder="Opposition"
-            className="mt-1 block h-11 w-full max-w-full rounded-md border border-slate-600 bg-slate-800 px-3 text-base text-white [@media(orientation:landscape)_and_(max-height:520px)]:h-9"
+            className="mt-1 block h-11 w-full max-w-full rounded-md border border-slate-600 bg-slate-800 px-3 text-base text-white"
           />
         </label>
         <div className="flex flex-wrap justify-center gap-3">

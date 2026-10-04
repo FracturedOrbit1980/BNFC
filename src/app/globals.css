@@ -140,51 +140,40 @@
   }
 }
 
-@media (orientation: landscape) and (max-height: 520px) {
-  .match-stage {
-    height: min(16rem, calc(100dvh - 12rem));
+@media (max-width: 767px) {
+  html {
+    scroll-padding-top: 4.5rem;
+    scroll-padding-bottom: 6.5rem;
+  }
+  .editor-pitch-svg,
+  .match-pitch-svg {
+    max-height: 34vh;
   }
 }
 
-@media (orientation: landscape) and (max-height: 520px) and (max-width: 767px) {
-  .match-title {
-    display: none;
-  }
+@media (orientation: landscape) and (max-height: 520px) and (min-width: 768px) {
+  .editor-stage,
   .match-stage {
-    height: calc(100dvh - 14.5rem);
-  }
-}
-
-@media (orientation: landscape) and (max-height: 520px) {
-  .editor-stage {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 16.5rem;
-    align-items: stretch;
-    gap: 0.5rem;
-    height: min(22rem, calc(100dvh - 11rem));
-  }
-  .editor-pitch,
-  .editor-panel {
-    min-width: 0;
-    min-height: 0;
-  }
-  .editor-panel {
-    margin-top: 0;
-    overflow-x: hidden;
-    overflow-y: auto;
-  }
-  .editor-pitch-svg {
-    height: 100%;
-    width: auto;
-    max-width: 100%;
-  }
-}
-
-@media (orientation: landscape) and (max-height: 520px) and (max-width: 767px) {
-  .editor-title {
-    display: none;
+    align-items: start;
+    gap: 0.75rem;
+    height: auto;
   }
   .editor-stage {
-    height: calc(100dvh - 14.5rem);
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem);
+  }
+  .match-stage {
+    grid-template-columns: minmax(0, 1fr) minmax(17rem, 22rem);
+  }
+  .editor-panel,
+  .match-clock {
+    margin-top: 0;
+    overflow: visible;
+  }
+  .editor-pitch-svg,
+  .match-pitch-svg {
+    width: 100%;
+    height: auto;
+    max-height: min(18rem, 62vh);
   }
 }

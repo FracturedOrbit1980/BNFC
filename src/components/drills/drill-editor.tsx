@@ -292,7 +292,7 @@ export function DrillEditor() {
         </svg>
       </div>
 
-      <div className="editor-panel mt-3 min-w-0 space-y-3 [@media(orientation:landscape)_and_(max-height:520px)]:mt-0">
+      <div className="editor-panel mt-3 min-w-0 space-y-3">
         <section className="rounded-xl bg-white p-3 ring-1 ring-slate-300" aria-label="Drill editor">
           <h2 className="text-sm font-bold uppercase tracking-wide text-slate-800">Drill editor</h2>
           <label className="mt-2 block text-sm font-semibold text-slate-800">
@@ -436,7 +436,7 @@ export function DrillEditor() {
                 setPlayhead(value);
                 setFrameIndex(Math.round(value));
               }}
-              className="mt-1 block w-full"
+              className="mt-2 block h-11 w-full accent-[#9a4a4f]"
             />
           </label>
         </section>
@@ -511,7 +511,7 @@ function Chip({
       draggable={draggable}
       onDragStart={onDragStart}
       onClick={onClick}
-      className={`h-8 rounded-md px-2 text-xs font-bold ${
+      className={`min-h-11 rounded-md px-3 text-sm font-bold ${
         active ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-950"
       }`}
     >

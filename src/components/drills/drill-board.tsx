@@ -189,7 +189,7 @@ function DrillBoardEditor({
   const minutes = Math.round(durationSeconds / 60);
 
   return (
-    <section className="w-full min-w-0 max-w-full overflow-x-hidden rounded-xl bg-white p-2 ring-1 ring-slate-300 [@media(orientation:landscape)_and_(max-height:520px)]:grid [@media(orientation:landscape)_and_(max-height:520px)]:h-[calc(100dvh-8.5rem)] [@media(orientation:landscape)_and_(max-height:520px)]:grid-cols-[minmax(0,1fr)_12.25rem] [@media(orientation:landscape)_and_(max-height:520px)]:gap-2">
+    <section className="w-full min-w-0 max-w-full rounded-xl bg-white p-3 ring-1 ring-slate-300">
       <div className="min-w-0">
         <p className="mb-1 truncate text-sm font-semibold text-slate-800">
           {board.phase} · {minutes} min · {setup}
@@ -197,7 +197,7 @@ function DrillBoardEditor({
         <svg
           ref={svgRef}
           viewBox={`${windowBox.x} ${windowBox.y} ${windowBox.width} ${windowBox.height}`}
-          className="h-auto w-full max-w-full touch-none rounded-lg bg-emerald-700 [@media(orientation:landscape)_and_(max-height:520px)]:h-full"
+          className="editor-pitch-svg h-auto w-full max-w-full touch-none rounded-lg bg-emerald-700"
           role="img"
           aria-label="Drill pitch"
           onPointerDown={onPointerDown}
@@ -243,7 +243,7 @@ function DrillBoardEditor({
           ))}
         </svg>
       </div>
-      <div className="mt-2 min-w-0 space-y-2 overflow-x-hidden [@media(orientation:landscape)_and_(max-height:520px)]:mt-0 [@media(orientation:landscape)_and_(max-height:520px)]:overflow-y-auto">
+      <div className="mt-3 min-w-0 space-y-3">
         <ControlRow label="View">
           {PITCH_VIEWS.map((view) => (
             <Chip key={view} active={board.view === view} onClick={() => commit({ ...board, view })}>
@@ -311,7 +311,7 @@ function DrillBoardEditor({
               setPlayhead(value);
               setFrameIndex(Math.round(value));
             }}
-            className="mt-1 block w-full"
+            className="mt-2 block h-11 w-full accent-[#9a4a4f]"
           />
         </label>
       </div>
@@ -459,7 +459,7 @@ function Chip({
     <button
       type="button"
       onClick={onClick}
-      className={`h-8 rounded-md px-2 text-xs font-bold ${
+      className={`min-h-11 rounded-md px-3 text-sm font-bold ${
         active ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-950"
       }`}
     >
