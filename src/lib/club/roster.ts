@@ -5,23 +5,21 @@ export const SQUAD_TEAM_ID = "tm-u12-2015";
 export interface RosterRow {
   name: string;
   squadNumber: number;
-  dateOfBirth?: string;
 }
 
-/** Born in 2015, so they are the U12 squad for the 2026 season. */
 export const U12_SQUAD: RosterRow[] = [
-  { name: "HUDSON ANTHONY MINNIE", dateOfBirth: "2015-05-22", squadNumber: 4 },
-  { name: "LUNGELO MNQOBI MLUNGWANE", dateOfBirth: "2015-06-02", squadNumber: 12 },
-  { name: "KAYDEN METZER", dateOfBirth: "2015-03-08", squadNumber: 41 },
-  { name: "FABIO DE ABREU", dateOfBirth: "2015-05-28", squadNumber: 17 },
-  { name: "JOSHUA JORDAN HELENA", dateOfBirth: "2015-10-08", squadNumber: 8 },
-  { name: "DIEGO FERDINAND MASSYN", dateOfBirth: "2015-07-02", squadNumber: 9 },
-  { name: "MPHO QUINTON MALATJI", dateOfBirth: "2015-04-28", squadNumber: 11 },
-  { name: "RILEY MACKINLAY", dateOfBirth: "2015-06-16", squadNumber: 33 },
-  { name: "CARTER SEVIRON DORMEHL", dateOfBirth: "2015-02-25", squadNumber: 1 },
-  { name: "NOAH LEE EL SAMRANI", dateOfBirth: "2015-01-28", squadNumber: 7 },
-  { name: "ETHAN DELPORT", dateOfBirth: "2015-06-12", squadNumber: 10 },
-  { name: "MASUNGULO TLAKA", dateOfBirth: "2015-06-05", squadNumber: 5 },
+  { name: "HUDSON ANTHONY MINNIE", squadNumber: 4 },
+  { name: "LUNGELO MNQOBI MLUNGWANE", squadNumber: 12 },
+  { name: "KAYDEN METZER", squadNumber: 41 },
+  { name: "FABIO DE ABREU", squadNumber: 17 },
+  { name: "JOSHUA JORDAN HELENA", squadNumber: 8 },
+  { name: "DIEGO FERDINAND MASSYN", squadNumber: 9 },
+  { name: "MPHO QUINTON MALATJI", squadNumber: 11 },
+  { name: "RILEY MACKINLAY", squadNumber: 33 },
+  { name: "CARTER SEVIRON DORMEHL", squadNumber: 1 },
+  { name: "NOAH LEE EL SAMRANI", squadNumber: 7 },
+  { name: "ETHAN DELPORT", squadNumber: 10 },
+  { name: "MASUNGULO TLAKA", squadNumber: 5 },
 ];
 
 export function playerId(name: string) {
@@ -31,13 +29,6 @@ export function playerId(name: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
   return `p-${slug || "player"}`;
-}
-
-export function formatDateOfBirth(iso?: string) {
-  if (!iso) return "";
-  const [year, month, day] = iso.split("-");
-  if (!year || !month || !day) return iso;
-  return `${day}/${month}/${year}`;
 }
 
 type PremTeam = { id: string; name: string; division?: string };
@@ -127,29 +118,24 @@ function interpretRow(cells: string[]): RosterRow | { error: string } {
   const filled = cells.map((cell) => cell.trim()).filter(Boolean);
   if (filled.length === 1) {
     const dated = filled[0].match(/^(.+?)\s+(\d{1,2}\/\d{1,2}\/\d{4})\s+(\d{1,2})$/);
-    if (dated) return rowFrom(dated[1], dated[3], dated[2]);
+    if (dated) return rowFrom(dated[1], dated[3]);
     const numbered = filled[0].match(/^(.+?)\s+(\d{1,2})$/);
     if (numbered) return rowFrom(numbered[1], numbered[2]);
     return { error: "Add the player name and shirt number." };
   }
   const [name, second, third] = filled;
   if (!name) return { error: "Add the player name." };
-  if (isDate(second) && third && isShirt(third)) return rowFrom(name, third, second);
-  if (isShirt(second) && third && isDate(third)) return rowFrom(name, second, third);
+  if (isDate(second) && third && isShirt(third)) return rowFrom(name, third);
   if (isShirt(second)) return rowFrom(name, second);
-  if (isDate(second) && third && isShirt(third)) return rowFrom(name, third, second);
-  return { error: "Use the player name, date of birth, and shirt number." };
+  return { error: "Use the player name and shirt number." };
 }
 
-function rowFrom(name: string, shirt: string, date?: string): RosterRow | { error: string } {
+function rowFrom(name: string, shirt: string): RosterRow | { error: string } {
   const squadNumber = Number(shirt);
   if (!isShirt(shirt)) return { error: "Shirt number must be from 1 to 99." };
   const trimmed = name.trim().replace(/\s+/g, " ");
   if (!trimmed) return { error: "Add the player name." };
-  if (!date) return { name: trimmed, squadNumber };
-  const dateOfBirth = toIsoDate(date);
-  if (!dateOfBirth) return { error: "Date of birth must be DD/MM/YYYY." };
-  return { name: trimmed, squadNumber, dateOfBirth };
+  return { name: trimmed, squadNumber };
 }
 
 function isShirt(value: string) {
@@ -158,16 +144,4 @@ function isShirt(value: string) {
 
 function isDate(value: string) {
   return /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(value.trim());
-}
-
-function toIsoDate(value: string) {
-  const match = value.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (!match) return "";
-  const day = Number(match[1]);
-  const month = Number(match[2]);
-  const year = Number(match[3]);
-  if (month < 1 || month > 12 || day < 1 || day > 31 || year < 1990 || year > 2100) return "";
-  const date = new Date(year, month - 1, day);
-  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return "";
-  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }

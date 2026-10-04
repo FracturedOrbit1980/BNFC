@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ageLabel, sortByAge } from "@/lib/club/age";
 import { formatPosition } from "@/lib/club/positions";
-import { formatDateOfBirth } from "@/lib/club/roster";
 import { formatDay } from "@/lib/club/week";
 import { useClubStore } from "@/stores/club-store";
 
@@ -67,7 +66,6 @@ export function PlayerHome() {
             </CardHeader>
             <CardContent className="grid gap-3 sm:grid-cols-4">
               <Fact label="Squad" value={String(player.squadNumber)} />
-              <Fact label="Born" value={player.dateOfBirth ? formatDateOfBirth(player.dateOfBirth) : "Not recorded"} />
               <Fact label="Position" value={formatPosition(player)} />
               <Fact label="Team" value={team?.name ?? "Squad"} />
               <Fact label="Age group" value={team?.ageGroup ?? "Youth"} />

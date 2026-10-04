@@ -8,7 +8,6 @@ export interface ClubPlayer {
   id: string;
   name: string;
   squadNumber: number;
-  dateOfBirth?: string;
   position: string;
   positions?: string[];
   teamId: string;
@@ -101,7 +100,6 @@ export function createSeed(): ClubData {
       id: playerId(player.name),
       name: player.name,
       squadNumber: player.squadNumber,
-      dateOfBirth: player.dateOfBirth,
       position: "Central midfielder",
       positions: [] as string[],
       teamId: SQUAD_TEAM_ID,

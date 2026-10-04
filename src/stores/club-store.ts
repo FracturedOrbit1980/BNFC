@@ -61,7 +61,7 @@ interface ClubState extends ClubData {
   setCoachTeam: (teamId: string) => void;
   addPlayer: (input: NewPlayerInput) => void;
   importPlayers: (rows: RosterRow[]) => { added: number; updated: number };
-  updatePlayer: (playerId: string, input: { name: string; squadNumber: number; position: string; positions?: string[]; dateOfBirth?: string }) => void;
+  updatePlayer: (playerId: string, input: { name: string; squadNumber: number; position: string; positions?: string[] }) => void;
   deletePlayer: (playerId: string) => void;
   addCoach: (teamId: string, name: string) => void;
   addEvaluation: (input: NewEvaluationInput) => void;
@@ -169,7 +169,6 @@ export const useClubStore = create<ClubState>()(
               ...players[index],
               name,
               squadNumber: row.squadNumber,
-              dateOfBirth: row.dateOfBirth ?? players[index].dateOfBirth,
               teamId: placed.teamId,
             };
             updated += 1;
@@ -179,7 +178,6 @@ export const useClubStore = create<ClubState>()(
               id: players.some((player) => player.id === id) ? `${id}-${placed.teamId}` : id,
               name,
               squadNumber: row.squadNumber,
-              dateOfBirth: row.dateOfBirth,
               position: "Central midfielder",
               positions: [],
               teamId: placed.teamId,
@@ -199,7 +197,6 @@ export const useClubStore = create<ClubState>()(
                   ...player,
                   name: input.name,
                   squadNumber: input.squadNumber,
-                  dateOfBirth: input.dateOfBirth || undefined,
                   ...normalizePositions(input.position, input.positions),
                 }
               : player,
@@ -456,10 +453,14 @@ export const useClubStore = create<ClubState>()(
             division: canonicalDivision(team.division) ?? canonicalDivision(team.name),
           })),
         }));
-        const players = (useSquad ? current.players : savedPlayers).map((player) => ({
-          ...player,
-          ...normalizePositions(player.position, player.positions),
-        }));
+        const players = (useSquad ? current.players : savedPlayers).map((player) => {
+          const next = { ...player } as typeof player & { dateOfBirth?: string };
+          delete next.dateOfBirth;
+          return {
+            ...next,
+            ...normalizePositions(player.position, player.positions),
+          };
+        });
         const placed = placeOnU12Prem(ageGroups, players);
         const previousTeam = saved.coachTeamId ?? null;
         const previousGroup = placed.ageGroups.find((group) => group.teams.some((team) => team.id === previousTeam));

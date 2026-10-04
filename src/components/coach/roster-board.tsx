@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { useCoachTeam } from "@/components/coach/team-picker";
 import { PlayerUpload } from "@/components/coach/player-upload";
 import { formatPosition, normalizePositions, type PositionChoice, type StandardPosition } from "@/lib/club/positions";
-import { formatDateOfBirth } from "@/lib/club/roster";
 import type { ClubPlayer } from "@/lib/club/seed";
 import { addDays, formatDay, mondayOf, sessionToday, weekDates } from "@/lib/club/week";
 import { useClubStore } from "@/stores/club-store";
@@ -30,7 +29,6 @@ export function RosterBoard() {
   const initialPosition = normalizePositions(selected?.position ?? "Central midfielder", selected?.positions);
   const [editName, setEditName] = useState(selected?.name ?? "");
   const [editNumber, setEditNumber] = useState(selected?.squadNumber ?? 1);
-  const [editBorn, setEditBorn] = useState(selected?.dateOfBirth ?? "");
   const [editRole, setEditRole] = useState<PositionChoice>(initialPosition.position);
   const [editRoles, setEditRoles] = useState<StandardPosition[]>(initialPosition.positions);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -44,7 +42,6 @@ export function RosterBoard() {
     const nextPosition = normalizePositions(selected?.position ?? "Central midfielder", selected?.positions);
     setEditName(selected?.name ?? "");
     setEditNumber(selected?.squadNumber ?? 1);
-    setEditBorn(selected?.dateOfBirth ?? "");
     setEditRole(nextPosition.position);
     setEditRoles(nextPosition.positions);
     setHomeworkText(selected?.homework ?? "");
@@ -58,7 +55,6 @@ export function RosterBoard() {
     const nextPosition = normalizePositions(player?.position ?? "Central midfielder", player?.positions);
     setEditName(player?.name ?? "");
     setEditNumber(player?.squadNumber ?? 1);
-    setEditBorn(player?.dateOfBirth ?? "");
     setEditRole(nextPosition.position);
     setEditRoles(nextPosition.positions);
     setConfirmDelete(false);
@@ -115,7 +111,6 @@ export function RosterBoard() {
                   <span className="block truncate font-semibold">{player.name}</span>
                   <span className={`text-sm ${active ? "text-emerald-100" : "text-slate-600"}`}>
                     {formatPosition(player)}
-                    {player.dateOfBirth ? ` · Born ${formatDateOfBirth(player.dateOfBirth)}` : ""}
                   </span>
                 </span>
               </button>
@@ -171,7 +166,6 @@ export function RosterBoard() {
             updatePlayer(selected.id, {
               name: editName.trim(),
               squadNumber: Math.min(99, Math.max(1, editNumber || 1)),
-              dateOfBirth: editBorn,
               position: editRole,
               positions: editRoles,
             });
@@ -180,7 +174,7 @@ export function RosterBoard() {
           }}
         >
           <h3 className="text-sm font-bold uppercase tracking-wide text-slate-700">Edit player</h3>
-          <p className="text-sm font-medium text-slate-700">Change the name, shirt number, date of birth, or position, then save.</p>
+          <p className="text-sm font-medium text-slate-700">Change the name, shirt number, or position, then save.</p>
           <label className="block text-sm font-semibold text-slate-800">
             Name
             <input
@@ -189,16 +183,6 @@ export function RosterBoard() {
               onChange={(event) => setEditName(event.target.value)}
               className="mt-1 block h-11 w-full rounded-md border border-slate-300 px-3 text-base"
               required
-            />
-          </label>
-          <label className="block text-sm font-semibold text-slate-800">
-            Date of birth
-            <input
-              type="date"
-              value={editBorn}
-              data-field="edit-born"
-              onChange={(event) => setEditBorn(event.target.value)}
-              className="mt-1 block h-11 w-full rounded-md border border-slate-300 px-3 text-base"
             />
           </label>
           <label className="block text-sm font-semibold text-slate-800">
@@ -243,7 +227,6 @@ export function RosterBoard() {
                   const nextPosition = normalizePositions(remaining[0]?.position ?? "Central midfielder", remaining[0]?.positions);
                   setEditName(remaining[0]?.name ?? "");
                   setEditNumber(remaining[0]?.squadNumber ?? 1);
-                  setEditBorn(remaining[0]?.dateOfBirth ?? "");
                   setEditRole(nextPosition.position);
                   setEditRoles(nextPosition.positions);
                   setConfirmDelete(false);
@@ -423,8 +406,8 @@ function WeeklyReport({
 function ExportSquad({ teamName, players }: { teamName: string; players: ClubPlayer[] }) {
   function download() {
     const rows = [
-      ["name", "date of birth", "squad number", "position"],
-      ...players.map((player) => [player.name, formatDateOfBirth(player.dateOfBirth), String(player.squadNumber), formatPosition(player)]),
+      ["name", "squad number", "position"],
+      ...players.map((player) => [player.name, String(player.squadNumber), formatPosition(player)]),
     ];
     const csv = rows.map((row) => row.map(csvCell).join(",")).join("\n");
     const file = new Blob([csv], { type: "text/csv" });

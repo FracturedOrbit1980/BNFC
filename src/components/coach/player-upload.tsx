@@ -23,7 +23,7 @@ export function PlayerUpload() {
       result.updated ? `Updated ${result.updated} ${result.updated === 1 ? "player" : "players"}` : "",
     ].filter(Boolean);
     const skipped = errors.length ? ` Skipped ${errors.length} ${errors.length === 1 ? "line" : "lines"}.` : "";
-    setNotice(`${summary.join(". ")} on U12 Prem. Tap a player to edit the name, shirt number, date of birth, or position.${skipped}`);
+    setNotice(`${summary.join(". ")} on U12 Prem. Tap a player to edit the name, shirt number, or position.${skipped}`);
   }
 
   return (
@@ -36,13 +36,13 @@ export function PlayerUpload() {
     >
       <h2 className="text-sm font-bold uppercase tracking-wide text-slate-700">Upload players</h2>
       <p className="text-sm font-medium text-slate-700">
-        Paste a list or choose a file. Players are saved on U12 Prem, and you can edit each one after upload.
+        Paste a list or choose a file. Each line is the player name and shirt number. Players are saved on U12 Prem, and you can edit each one after upload.
       </p>
       <textarea
         value={text}
         data-field="player-upload"
         onChange={(event) => setText(event.target.value)}
-        placeholder={"HUDSON ANTHONY MINNIE\t22/05/2015\t4"}
+        placeholder={"HUDSON ANTHONY MINNIE\t4"}
         className="h-28 w-full rounded-md border border-slate-300 px-3 py-2 text-base"
       />
       <div className="flex flex-wrap items-center gap-3">
