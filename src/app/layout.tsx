@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 
 import { RoleProvider } from "@/components/auth/role-session";
 import { ClubProvider } from "@/components/club/club-provider";
+import { ClubTheme } from "@/components/club/club-theme";
 import { AppShell } from "@/components/layout/app-shell";
 import { CLUB_NAME } from "@/lib/club/catalog";
 
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full">
         <RoleProvider>
+          <ClubTheme />
           <AppShell>
             <ClubProvider>{children}</ClubProvider>
           </AppShell>

@@ -79,6 +79,7 @@ export interface SavedMatch {
 }
 
 export interface ClubData {
+  clubKind: "bnfc" | "custom";
   ageGroups: ClubAgeGroup[];
   coaches: ClubCoach[];
   players: ClubPlayer[];
@@ -107,6 +108,7 @@ export function createSeed(): ClubData {
     })),
   );
   return {
+    clubKind: "bnfc",
     ageGroups: placed.ageGroups,
     coaches: [],
     players: placed.players,
@@ -122,6 +124,28 @@ export function createSeed(): ClubData {
     sessions: [],
     matches: [],
     coachTeamId: placed.teamId,
+    boards: {},
+  };
+}
+
+export function createEmptyClub(): ClubData {
+  return {
+    clubKind: "custom",
+    ageGroups: ensureYouthAges([]),
+    coaches: [],
+    players: [],
+    drills: clubLibrary.map((drill) => ({
+      ...drill,
+      coachingPoints: [...drill.coachingPoints],
+      durationSeconds: drill.defaultDurationSeconds,
+    })),
+    evaluations: [],
+    attendance: [],
+    trainingMarks: [],
+    weeklyReports: [],
+    sessions: [],
+    matches: [],
+    coachTeamId: null,
     boards: {},
   };
 }

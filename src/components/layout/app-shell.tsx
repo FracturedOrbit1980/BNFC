@@ -15,7 +15,8 @@ import type { ReactNode } from "react";
 import { useRole } from "@/components/auth/role-session";
 import { SignOutButton } from "@/components/layout/sign-out-button";
 import { ROLE_HOME, ROLE_LABEL, type UserRole } from "@/lib/auth/roles";
-import { CLUB_NAME } from "@/lib/club/catalog";
+import { BNFC_CLUB_ID } from "@/lib/club/registry";
+import { activeClub, useClubLibrary } from "@/stores/club-library";
 
 const NAV: Record<UserRole, { href: string; label: string; icon: typeof Users }[]> = {
   SUPER_ADMIN: [
@@ -50,22 +51,27 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { role } = useRole();
   const items = role ? NAV[role] : [];
+  const club = activeClub(
+    useClubLibrary((state) => state.clubs),
+    useClubLibrary((state) => state.activeId),
+  );
+  const clubName = club?.name ?? "Load a club";
 
   return (
     <div className="min-h-full bg-slate-100 text-slate-950">
       <header className="fixed inset-x-0 top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-slate-800 bg-slate-950 px-4 text-white md:hidden">
-        <Link href={role ? ROLE_HOME[role] : "/"} className="flex items-center gap-2 font-bold">
-          <ClubMark />
-          <span>BNFC</span>
+        <Link href="/" className="flex min-w-0 items-center gap-2 font-bold">
+          <ClubMark club={club} />
+          <span className="truncate">{clubName}</span>
         </Link>
         {role ? <SignOutButton /> : null}
       </header>
 
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 flex-col bg-slate-950 text-white md:flex">
-        <Link href={role ? ROLE_HOME[role] : "/"} className="flex items-center gap-3 px-5 py-5">
-          <ClubMark />
+        <Link href="/" className="flex items-center gap-3 px-5 py-5">
+          <ClubMark club={club} />
           <span>
-            <span className="block text-sm font-bold leading-tight">{CLUB_NAME}</span>
+            <span className="block text-sm font-bold leading-tight">{clubName}</span>
             <span className="text-xs font-medium text-emerald-300">Club platform</span>
           </span>
         </Link>
@@ -88,6 +94,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           })}
         </nav>
         <div className="space-y-3 border-t border-slate-800 p-4">
+          <Link href="/" className="flex min-h-11 items-center text-sm font-bold text-emerald-300">
+            Clubs
+          </Link>
           {role ? <p className="text-sm font-semibold text-slate-200">{ROLE_LABEL[role]}</p> : null}
           {role ? <SignOutButton /> : null}
         </div>
@@ -121,15 +130,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 }
 
-function ClubMark() {
+function ClubMark({ club }: { club: ReturnType<typeof activeClub> }) {
   const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-  return (
-    <img
-      src={`${base}/icons/bnfc-logo.jpg`}
-      alt="Benoni Northerns FC"
-      width={40}
-      height={40}
-      className="size-10 rounded-full bg-white object-contain"
-    />
-  );
+  const src = club?.logo || (club?.id === BNFC_CLUB_ID ? `${base}/icons/bnfc-logo.jpg` : "");
+  if (!src) {
+    return (
+      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-emerald-500 text-xs font-black text-slate-950">
+        {(club?.name ?? "C").slice(0, 1).toUpperCase()}
+      </span>
+    );
+  }
+  return <img src={src} alt="" width={40} height={40} className="size-10 shrink-0 rounded-full bg-white object-contain" />;
 }

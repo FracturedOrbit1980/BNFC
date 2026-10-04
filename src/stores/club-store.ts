@@ -7,7 +7,9 @@ import { canonicalDivision, canonicalTeamName, DRILL_LEVELS, OBJECTIVE_CATEGORIE
 import type { DrillBoard } from "@/lib/club/board";
 import { placeOnU12Prem, playerId, SQUAD_TEAM_ID, type RosterRow } from "@/lib/club/roster";
 import { weekDates } from "@/lib/club/week";
+import { clubDataKey } from "@/lib/club/registry";
 import {
+  createEmptyClub,
   createSeed,
   type AttendanceRecord,
   type ClubData,
@@ -427,12 +429,13 @@ export const useClubStore = create<ClubState>()(
         });
         return savedId;
       },
-      resetClub: () => set({ hydrated: true, ...createSeed() }),
+      resetClub: () => set({ hydrated: true, ...(get().clubKind === "custom" ? createEmptyClub() : createSeed()) }),
     }),
     {
       name: "bnfc-club-v3",
       skipHydration: true,
       partialize: (state) => ({
+        clubKind: state.clubKind,
         ageGroups: state.ageGroups,
         coaches: state.coaches,
         players: state.players,
@@ -448,9 +451,11 @@ export const useClubStore = create<ClubState>()(
       }),
       merge: (persisted, current) => {
         const saved = (persisted ?? {}) as Partial<ClubData>;
+        const kind = saved.clubKind === "custom" ? "custom" : "bnfc";
+        const baseline = kind === "custom" ? createEmptyClub() : createSeed();
         const savedPlayers = saved.players ?? [];
-        const useSquad = savedPlayers.length === 0;
-        const ageGroups = ensureYouthAges(saved.ageGroups ?? current.ageGroups).map((group) => ({
+        const useSquad = kind === "bnfc" && savedPlayers.length === 0;
+        const ageGroups = ensureYouthAges(saved.ageGroups ?? baseline.ageGroups).map((group) => ({
           ...group,
           teams: (group.teams ?? []).map((team) => ({
             ...team,
@@ -458,7 +463,7 @@ export const useClubStore = create<ClubState>()(
             division: canonicalDivision(team.division) ?? canonicalDivision(team.name),
           })),
         }));
-        const players = (useSquad ? current.players : savedPlayers).map((player) => {
+        const players = (useSquad ? baseline.players : savedPlayers).map((player) => {
           const next = { ...player } as typeof player & { dateOfBirth?: string };
           delete next.dateOfBirth;
           return {
@@ -470,11 +475,12 @@ export const useClubStore = create<ClubState>()(
         const previousTeam = saved.coachTeamId ?? null;
         const previousGroup = placed.ageGroups.find((group) => group.teams.some((team) => team.id === previousTeam));
         const openPrem =
-          !previousTeam ||
-          previousTeam === SQUAD_TEAM_ID ||
-          previousTeam === placed.teamId ||
-          (previousGroup ? ageNumber(previousGroup.name) === 12 : true);
-        const drills = (saved.drills ?? current.drills).map((drill) => ({
+          kind === "bnfc" &&
+          (!previousTeam ||
+            previousTeam === SQUAD_TEAM_ID ||
+            previousTeam === placed.teamId ||
+            (previousGroup ? ageNumber(previousGroup.name) === 12 : true));
+        const drills = (saved.drills ?? baseline.drills).map((drill) => ({
           ...drill,
           durationSeconds: drill.durationSeconds ?? drill.defaultDurationSeconds,
           coachingPoints: drill.coachingPoints ?? [],
@@ -486,19 +492,36 @@ export const useClubStore = create<ClubState>()(
         return {
           ...current,
           ...saved,
-          ageGroups: placed.ageGroups,
-          players: placed.players,
+          clubKind: kind,
+          ageGroups: kind === "custom" ? ageGroups : placed.ageGroups,
+          players: kind === "custom" ? players : placed.players,
           drills,
-          coachTeamId: openPrem ? placed.teamId : previousTeam,
+          coachTeamId: kind === "custom" ? previousTeam : openPrem ? placed.teamId : previousTeam,
           boards: saved.boards ?? {},
+          coaches: saved.coaches ?? [],
+          evaluations: saved.evaluations ?? [],
+          attendance: saved.attendance ?? [],
           trainingMarks: saved.trainingMarks ?? [],
           weeklyReports: saved.weeklyReports ?? [],
+          sessions: saved.sessions ?? [],
+          matches: saved.matches ?? [],
           hydrated: false,
         };
       },
     },
   ),
 );
+
+export async function loadClubData(id: string, kind: "bnfc" | "custom") {
+  const name = clubDataKey(id);
+  useClubStore.persist.setOptions({ name });
+  if (typeof window === "undefined" || !localStorage.getItem(name)) {
+    useClubStore.setState({ hydrated: true, ...(kind === "bnfc" ? createSeed() : createEmptyClub()) });
+    return;
+  }
+  await useClubStore.persist.rehydrate();
+  useClubStore.setState({ hydrated: true });
+}
 
 export function isObjectiveCategory(value: string): value is ObjectiveCategory {
   return (OBJECTIVE_CATEGORIES as readonly string[]).includes(value);
