@@ -9,7 +9,7 @@ export default function AdminDrillsPage() {
     <div>
       <PageHeader
         title="Official drill library"
-        description="Add drills, mark them official, and set the block time. The small diagram shows the setup."
+        description="Pick an age and a skill level. Add drills, mark them official, and set the block time."
       />
       <DrillForm />
       <DrillLibrary manageMode showStopwatch />

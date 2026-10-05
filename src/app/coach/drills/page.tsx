@@ -8,7 +8,7 @@ export default function CoachDrillsPage() {
     <div>
       <PageHeader
         title="Session drills"
-        description="Filter by the moment of the game and the drill type. Names follow type, focus, player setup, and constraint."
+        description="Pick an age group, then a skill level. Read what the players do before you open the drill."
       />
       <DrillLibrary />
     </div>

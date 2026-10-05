@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 
 import {
   MARK_KINDS,
@@ -15,6 +15,7 @@ import {
   boardColors,
   pitchFill,
   emptyDrillBoard,
+  blendFrames,
   type BoardFrame,
   type BoardMark,
   type BoardPiece,
@@ -25,6 +26,7 @@ import {
   type PitchView,
 } from "@/lib/club/board";
 import { MannequinFigure } from "@/components/pitch/mannequin-figure";
+import { useSlideTravel } from "@/components/drills/slide-motion";
 import { useClubStore } from "@/stores/club-store";
 
 const SPEEDS = [0.5, 1, 2];
@@ -71,16 +73,12 @@ function DrillBoardEditor({
   const frameCount = board.frames.length;
   const safeIndex = Math.min(frameIndex, Math.max(0, frameCount - 1));
   const shown = board.frames[safeIndex] ?? board.frames[0] ?? { id: "empty", pieces: [], marks: [] };
+  const travel = useSlideTravel(playing && frameCount > 1, board.speed, () => {
+    setFrameIndex((current) => (Math.min(current, frameCount - 1) + 1) % frameCount);
+  });
+  const nextFrame = board.frames[(safeIndex + 1) % Math.max(frameCount, 1)] ?? shown;
+  const visual = playing && frameCount > 1 ? blendFrames(shown, nextFrame, travel) : shown;
   const windowBox = PITCH_WINDOW[board.view];
-
-  useEffect(() => {
-    if (!playing || frameCount < 2) return;
-    const hold = Math.max(200, Math.round(900 / board.speed));
-    const timer = window.setInterval(() => {
-      setFrameIndex((current) => (Math.min(current, frameCount - 1) + 1) % frameCount);
-    }, hold);
-    return () => window.clearInterval(timer);
-  }, [playing, frameCount, board.speed]);
 
   function commit(next: DrillBoardState) {
     setBoard(next);
@@ -214,7 +212,7 @@ function DrillBoardEditor({
             </marker>
           </defs>
           <PitchLines view={board.view} />
-          {shown.marks.map((mark) => (
+          {visual.marks.map((mark) => (
             <MarkShape key={mark.id} mark={mark} markerId={`arrow-${drillId}`} />
           ))}
           {draft && draft.length === 2 && tool !== "move" ? (
@@ -230,7 +228,7 @@ function DrillBoardEditor({
               }}
             />
           ) : null}
-          {shown.pieces.map((piece) => (
+          {visual.pieces.map((piece) => (
             <PieceShape
               key={piece.id}
               piece={piece}

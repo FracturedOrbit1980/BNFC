@@ -33,6 +33,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState, type DragEvent as ReactDragEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 
 import { eventPoint, MarkShape, PieceShape, PitchLines } from "@/components/drills/drill-board";
+import { useSlideTravel } from "@/components/drills/slide-motion";
 import { DrillVideo } from "@/components/drills/drill-video";
 import { DrillRecordFields, commasFrom, draftFromDrill, emptyDraft, linesFrom, type DrillRecordDraft } from "@/components/drills/drill-record-fields";
 import {
@@ -44,6 +45,7 @@ import {
   boardColors,
   pitchFill,
   emptyDrillBoard,
+  blendFrames,
   type BoardFrame,
   type BoardMark,
   type BoardPiece,
@@ -194,16 +196,12 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
   const frameCount = board.frames.length;
   const safeIndex = Math.min(frameIndex, Math.max(0, frameCount - 1));
   const shown = board.frames[safeIndex] ?? board.frames[0] ?? { id: "empty", pieces: [] as BoardPiece[], marks: [] as BoardMark[] };
+  const travel = useSlideTravel(playing && frameCount > 1, board.speed, () => {
+    setFrameIndex((current) => (Math.min(current, frameCount - 1) + 1) % frameCount);
+  });
+  const nextFrame = board.frames[(safeIndex + 1) % Math.max(frameCount, 1)] ?? shown;
+  const visual = playing && frameCount > 1 ? blendFrames(shown, nextFrame, travel) : shown;
   const windowBox = PITCH_WINDOW[board.view];
-
-  useEffect(() => {
-    if (!playing || frameCount < 2) return;
-    const hold = Math.max(200, Math.round(900 / board.speed));
-    const timer = window.setInterval(() => {
-      setFrameIndex((current) => (Math.min(current, frameCount - 1) + 1) % frameCount);
-    }, hold);
-    return () => window.clearInterval(timer);
-  }, [playing, frameCount, board.speed]);
 
   function nextId(prefix: string) {
     idRef.current += 1;
@@ -682,7 +680,7 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
             </marker>
           </defs>
           <PitchLines view={board.view} />
-          {shown.marks.map((mark) => (
+          {visual.marks.map((mark) => (
             <g key={mark.id} data-mark-kind={mark.kind}>
               <MarkShape mark={mark} markerId="editor-arrow" />
             </g>
@@ -700,7 +698,7 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
               }}
             />
           ) : null}
-          {shown.pieces.map((piece) => (
+          {visual.pieces.map((piece) => (
             <g key={piece.id} data-piece-id={piece.id} data-piece-kind={piece.kind} data-piece-team={piece.team ?? "player"}>
               <PieceShape
                 piece={piece}

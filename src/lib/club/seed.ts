@@ -1,6 +1,7 @@
 import { ensureYouthAges } from "@/lib/club/age";
 import type { ClubAgeGroup, DrillTemplate, SetupDiagram } from "@/lib/club/catalog";
 import { DEFAULT_PITCH_COLOR, type DrillBoard } from "@/lib/club/board";
+import { mergeLibraryBoards } from "@/lib/club/library-boards";
 import { clubLibrary } from "@/lib/club/library";
 import { placeOnU12Prem, playerId, SQUAD_TEAM_ID, U12_SQUAD } from "@/lib/club/roster";
 
@@ -135,7 +136,7 @@ export function createSeed(): ClubData {
     sessions: [],
     matches: [],
     coachTeamId: placed.teamId,
-    boards: {},
+    boards: mergeLibraryBoards({}),
     matchPitchColor: DEFAULT_PITCH_COLOR,
   };
 }
@@ -159,7 +160,7 @@ export function createEmptyClub(): ClubData {
     sessions: [],
     matches: [],
     coachTeamId: null,
-    boards: {},
+    boards: mergeLibraryBoards({}),
     matchPitchColor: DEFAULT_PITCH_COLOR,
   };
 }

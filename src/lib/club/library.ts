@@ -7,6 +7,7 @@ import {
   type MomentOfGame,
   type PlayerCount,
   type SetupDiagram,
+  type SkillLevel,
 } from "@/lib/club/catalog";
 
 type AgeBand = "U8-U10" | "U11-U13" | "U14-U16" | "senior";
@@ -43,7 +44,37 @@ function levelFor(ageBand: AgeBand, license: LicenseLevel): DrillLevel {
   return "Youth U9-12";
 }
 
+/** One library drill for each age from U6 to U13, in each skill. Content stays the UEFA record. */
+const PLACEMENT: Record<string, { youthAge: number; skillLevel: SkillLevel }> = {
+  drill_uefa_ip_wu: { youthAge: 6, skillLevel: "Beginner" },
+  drill_uefa_t2d_wu: { youthAge: 7, skillLevel: "Beginner" },
+  drill_uefa_t2a_wu: { youthAge: 8, skillLevel: "Beginner" },
+  drill_uefa_oop_tp: { youthAge: 9, skillLevel: "Beginner" },
+  drill_uefa_t2a_tp: { youthAge: 10, skillLevel: "Beginner" },
+  drill_uefa_oop_wu: { youthAge: 11, skillLevel: "Beginner" },
+  drill_uefa_ip_tp: { youthAge: 12, skillLevel: "Beginner" },
+  drill_uefa_t2d_tp: { youthAge: 13, skillLevel: "Beginner" },
+  drill_uefa_att_094: { youthAge: 6, skillLevel: "Intermediate" },
+  drill_uefa_ip_sp: { youthAge: 7, skillLevel: "Intermediate" },
+  drill_uefa_t2a_sp: { youthAge: 8, skillLevel: "Intermediate" },
+  drill_uefa_oop_sp: { youthAge: 9, skillLevel: "Intermediate" },
+  drill_uefa_t2a_ssg: { youthAge: 10, skillLevel: "Intermediate" },
+  drill_uefa_oop_ssg: { youthAge: 11, skillLevel: "Intermediate" },
+  drill_uefa_t2d_ssg: { youthAge: 12, skillLevel: "Intermediate" },
+  drill_uefa_ip_ssg: { youthAge: 13, skillLevel: "Intermediate" },
+  drill_uefa_t2a_pop: { youthAge: 6, skillLevel: "Professional" },
+  drill_uefa_oop_pop: { youthAge: 7, skillLevel: "Professional" },
+  drill_uefa_ip_pop: { youthAge: 8, skillLevel: "Professional" },
+  drill_uefa_t2d_pop: { youthAge: 9, skillLevel: "Professional" },
+  drill_uefa_oop_11: { youthAge: 10, skillLevel: "Professional" },
+  drill_uefa_ip_11: { youthAge: 11, skillLevel: "Professional" },
+  drill_uefa_t2a_11: { youthAge: 12, skillLevel: "Professional" },
+  drill_uefa_t2d_11: { youthAge: 13, skillLevel: "Professional" },
+};
+
 function drill(input: DrillInput): DrillTemplate {
+  const place = PLACEMENT[input.id];
+  if (!place) throw new Error(`Missing age and skill for ${input.id}`);
   const outfield = input.players.attackers + input.players.defenders + input.players.neutrals;
   return {
     id: input.id,
@@ -69,6 +100,8 @@ function drill(input: DrillInput): DrillTemplate {
     tags: input.tags,
     licenseLevel: input.license,
     ageBand: input.ageBand,
+    youthAge: place.youthAge,
+    skillLevel: place.skillLevel,
     minPlayers: outfield,
     maxPlayers: outfield,
     pitchLengthM: input.length,

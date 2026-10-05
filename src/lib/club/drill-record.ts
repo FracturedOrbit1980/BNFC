@@ -2,15 +2,18 @@ import {
   DRILL_LEVELS,
   DRILL_TYPES,
   MOMENTS_OF_GAME,
+  SKILL_LEVELS,
   type DrillLevel,
   type DrillTemplate,
   type DrillType,
   type MomentOfGame,
   type LicenseLevel,
   type PlayerCount,
+  type SkillLevel,
 } from "@/lib/club/catalog";
 
 export { drillTitle } from "@/lib/club/catalog";
+import { ageNumber } from "@/lib/club/age";
 import { clubLibrary } from "@/lib/club/library";
 import type { ClubDrill } from "@/lib/club/seed";
 
@@ -38,6 +41,25 @@ export function isDrillType(value: string | undefined): value is DrillType {
 
 export function isDrillLevel(value: string | undefined): value is DrillLevel {
   return (DRILL_LEVELS as readonly string[]).includes(value ?? "");
+}
+
+export function isSkillLevel(value: string | undefined): value is SkillLevel {
+  return (SKILL_LEVELS as readonly string[]).includes(value ?? "");
+}
+
+export function youthAgeOf(drill: { youthAge?: number; targetAgeGroup?: string; ageBand?: string }) {
+  const direct = Number(drill.youthAge);
+  if (direct >= 6 && direct <= 13) return direct;
+  const named = ageNumber(drill.targetAgeGroup ?? "") ?? ageNumber(drill.ageBand ?? "");
+  if (named !== null && named >= 6 && named <= 13) return named;
+  return 13;
+}
+
+export function skillOf(drill: { skillLevel?: string; level?: string }): SkillLevel {
+  if (isSkillLevel(drill.skillLevel)) return drill.skillLevel;
+  if (drill.level === "Youth U13-16") return "Intermediate";
+  if (drill.level === "Senior Amateur" || drill.level === "Pro") return "Professional";
+  return "Beginner";
 }
 
 export function playerCountLine(players: PlayerCount) {
@@ -130,6 +152,8 @@ function normalizeCustomDrill(raw: Partial<ClubDrill> & { objectiveCategory?: st
     tags: textList(raw.tags),
     licenseLevel: licenseOf(raw.licenseLevel),
     ageBand: raw.ageBand || raw.targetAgeGroup || "All ages",
+    youthAge: youthAgeOf(raw),
+    skillLevel: skillOf(raw),
     minPlayers: count(raw.minPlayers) || count(players.attackers) + count(players.defenders) + count(players.neutrals),
     maxPlayers: count(raw.maxPlayers) || count(players.attackers) + count(players.defenders) + count(players.neutrals),
     pitchLengthM: meters(raw.pitchLengthM),

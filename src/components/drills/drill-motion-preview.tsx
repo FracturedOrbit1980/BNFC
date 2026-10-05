@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
 
 import { MarkShape, PieceShape, PitchLines } from "@/components/drills/drill-board";
-import { boardColors, pitchFill, PITCH_WINDOW, type DrillBoard } from "@/lib/club/board";
+import { useSlideTravel } from "@/components/drills/slide-motion";
+import { blendFrames, boardColors, pitchFill, PITCH_WINDOW, type DrillBoard } from "@/lib/club/board";
 
 export function DrillMotionPreview({
   board,
@@ -16,17 +17,14 @@ export function DrillMotionPreview({
   const frames = board.frames.length > 0 ? board.frames : [{ id: "empty", pieces: [], marks: [] }];
   const moving = frames.length > 1;
   const [slide, setSlide] = useState(0);
+  const travel = useSlideTravel(moving, board.speed, () => {
+    setSlide((current) => (current + 1) % frames.length);
+  });
 
-  useEffect(() => {
-    if (!moving) return;
-    const hold = Math.max(200, Math.round(900 / board.speed));
-    const timer = window.setInterval(() => {
-      setSlide((current) => (current + 1) % frames.length);
-    }, hold);
-    return () => window.clearInterval(timer);
-  }, [board.speed, frames.length, moving]);
-
-  const shown = frames[Math.min(slide, frames.length - 1)] ?? frames[0];
+  const index = Math.min(slide, frames.length - 1);
+  const from = frames[index] ?? frames[0];
+  const to = frames[(index + 1) % frames.length] ?? from;
+  const shown = moving ? blendFrames(from, to, travel) : from;
   const windowBox = PITCH_WINDOW[board.view];
   const box = size === "sm" ? "h-16 w-24" : "h-28 w-44";
 
@@ -36,7 +34,7 @@ export function DrillMotionPreview({
       data-preview="drill"
       data-playing={moving ? "true" : "false"}
       data-frame-count={frames.length}
-      data-frame={Math.min(slide, frames.length - 1)}
+      data-frame={index}
       role="img"
       aria-hidden="true"
       className={`pointer-events-none shrink-0 rounded-lg ${box}`}

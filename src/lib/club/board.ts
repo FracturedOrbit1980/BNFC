@@ -119,6 +119,61 @@ export function emptyDrillBoard(): DrillBoard {
   };
 }
 
+export function boardHasPattern(board: DrillBoard | undefined | null) {
+  if (!board?.frames?.length) return false;
+  return board.frames.some((frame) => frame.pieces.length > 0 || frame.marks.length > 0);
+}
+
+function easeStop(amount: number) {
+  const t = Math.min(1, Math.max(0, amount));
+  return t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2;
+}
+
+function mix(start: number, end: number, amount: number) {
+  return start + (end - start) * amount;
+}
+
+/** Move players and thin lines from one slide toward the next. */
+export function blendFrames(from: BoardFrame, to: BoardFrame, amount: number): BoardFrame {
+  const t = easeStop(amount);
+  const fromPieces = new Map(from.pieces.map((piece) => [piece.id, piece]));
+  const toPieces = new Map(to.pieces.map((piece) => [piece.id, piece]));
+  const pieceIds = [
+    ...from.pieces.map((piece) => piece.id),
+    ...to.pieces.filter((piece) => !fromPieces.has(piece.id)).map((piece) => piece.id),
+  ];
+  const pieces = pieceIds.flatMap((id) => {
+    const start = fromPieces.get(id);
+    const end = toPieces.get(id);
+    if (start && end) return [{ ...end, x: mix(start.x, end.x, t), y: mix(start.y, end.y, t) }];
+    const kept = t < 0.5 ? start : end;
+    return kept ? [kept] : [];
+  });
+  const fromMarks = new Map(from.marks.map((mark) => [mark.id, mark]));
+  const toMarks = new Map(to.marks.map((mark) => [mark.id, mark]));
+  const markIds = [
+    ...from.marks.map((mark) => mark.id),
+    ...to.marks.filter((mark) => !fromMarks.has(mark.id)).map((mark) => mark.id),
+  ];
+  const marks = markIds.flatMap((id) => {
+    const start = fromMarks.get(id);
+    const end = toMarks.get(id);
+    if (start && end) {
+      const count = Math.max(start.points.length, end.points.length);
+      const points = Array.from({ length: count }, (_, index) => {
+        const left = start.points[Math.min(index, start.points.length - 1)];
+        const right = end.points[Math.min(index, end.points.length - 1)];
+        if (!left || !right) return left ?? right;
+        return { x: mix(left.x, right.x, t), y: mix(left.y, right.y, t) };
+      }).filter((point): point is PitchPoint => Boolean(point));
+      return [{ ...end, points }];
+    }
+    const kept = t < 0.5 ? start : end;
+    return kept ? [kept] : [];
+  });
+  return { id: from.id, pieces, marks };
+}
+
 export function clampPoint(point: PitchPoint): PitchPoint {
   return {
     x: Math.min(100, Math.max(0, point.x)),

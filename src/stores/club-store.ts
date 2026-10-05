@@ -4,8 +4,9 @@ import { persist } from "zustand/middleware";
 import { ageNumber, ensureYouthAges, sortByAge } from "@/lib/club/age";
 import { normalizePositions } from "@/lib/club/positions";
 import { canonicalDivision, canonicalTeamName, type Division, type DrillLevel, type DrillType, type MomentOfGame, type PlayerCount, type SetupDiagram } from "@/lib/club/catalog";
-import { isDrillLevel, isDrillType, isMoment, withUefaDrills } from "@/lib/club/drill-record";
+import { isDrillLevel, isDrillType, isMoment, skillOf, withUefaDrills, youthAgeOf } from "@/lib/club/drill-record";
 import { DEFAULT_PITCH_COLOR, type DrillBoard } from "@/lib/club/board";
+import { mergeLibraryBoards } from "@/lib/club/library-boards";
 import { placeOnU12Prem, playerId, SQUAD_TEAM_ID, type RosterRow } from "@/lib/club/roster";
 import { weekDates } from "@/lib/club/week";
 import { clubDataKey } from "@/lib/club/registry";
@@ -160,6 +161,8 @@ export const useClubStore = create<ClubState>()(
               tags: [],
               licenseLevel: "Grassroots",
               ageBand: input.targetAgeGroup,
+              youthAge: youthAgeOf({ targetAgeGroup: input.targetAgeGroup }),
+              skillLevel: skillOf({ level: input.level }),
               minPlayers: input.players.attackers + input.players.defenders + input.players.neutrals,
               maxPlayers: input.players.attackers + input.players.defenders + input.players.neutrals,
               pitchLengthM: 0,
@@ -491,6 +494,8 @@ export const useClubStore = create<ClubState>()(
             tags: existing?.tags ?? [],
             licenseLevel: existing?.licenseLevel ?? "Grassroots",
             ageBand: existing?.ageBand ?? existing?.targetAgeGroup ?? "All ages",
+            youthAge: existing?.youthAge ?? youthAgeOf({ targetAgeGroup: existing?.targetAgeGroup, ageBand: existing?.ageBand }),
+            skillLevel: existing?.skillLevel ?? skillOf({ level: input.level }),
             minPlayers: existing?.minPlayers ?? input.players.attackers + input.players.defenders + input.players.neutrals,
             maxPlayers: existing?.maxPlayers ?? input.players.attackers + input.players.defenders + input.players.neutrals,
             pitchLengthM: existing?.pitchLengthM ?? 0,
@@ -577,7 +582,7 @@ export const useClubStore = create<ClubState>()(
           players: kind === "custom" ? players : placed.players,
           drills,
           coachTeamId: kind === "custom" ? previousTeam : openPrem ? placed.teamId : previousTeam,
-          boards: saved.boards ?? {},
+          boards: mergeLibraryBoards(saved.boards),
           coaches: saved.coaches ?? [],
           evaluations: saved.evaluations ?? [],
           attendance: saved.attendance ?? [],

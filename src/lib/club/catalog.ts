@@ -26,6 +26,10 @@ export const DRILL_LEVELS = ["Grassroots", "Youth U9-12", "Youth U13-16", "Senio
 
 export type DrillLevel = (typeof DRILL_LEVELS)[number];
 
+export const SKILL_LEVELS = ["Beginner", "Intermediate", "Professional"] as const;
+
+export type SkillLevel = (typeof SKILL_LEVELS)[number];
+
 export const LICENSE_LEVELS = ["Grassroots", "UEFA C", "UEFA B", "UEFA A", "UEFA Pro"] as const;
 
 export type LicenseLevel = (typeof LICENSE_LEVELS)[number];
@@ -110,6 +114,8 @@ export interface DrillTemplate {
   tags: string[];
   licenseLevel: LicenseLevel;
   ageBand: string;
+  youthAge: number;
+  skillLevel: SkillLevel;
   minPlayers: number;
   maxPlayers: number;
   pitchLengthM: number;
