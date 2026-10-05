@@ -8,7 +8,7 @@ export default function CoachDrillsPage() {
     <div>
       <PageHeader
         title="Session drills"
-        description="Search by level, open a saved drill from its image, and attach a short video. Then set the block time and run the stopwatch."
+        description="Filter by the moment of the game and the drill type. Names follow type, focus, player setup, and constraint."
       />
       <DrillLibrary />
     </div>

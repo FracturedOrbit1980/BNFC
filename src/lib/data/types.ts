@@ -22,7 +22,8 @@ export interface DrillView {
   title: string;
   isClubOfficial: boolean;
   targetAgeGroup: string;
-  objectiveCategory: string;
+  moment: string;
+  drillType: string;
   pitchSetup: string;
   instructions: string;
   coachingPoints: string[];

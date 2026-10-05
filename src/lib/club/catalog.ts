@@ -1,12 +1,37 @@
 export const CLUB_NAME = "Sportfica";
 
-export const OBJECTIVE_CATEGORIES = ["Technical", "Tactical", "Physical", "Set Piece"] as const;
+export const MOMENTS_OF_GAME = [
+  { id: "IP", label: "In possession" },
+  { id: "OOP", label: "Out of possession" },
+  { id: "T2A", label: "Transition to attack" },
+  { id: "T2D", label: "Transition to defence" },
+] as const;
 
-export type ObjectiveCategory = (typeof OBJECTIVE_CATEGORIES)[number];
+export type MomentOfGame = (typeof MOMENTS_OF_GAME)[number]["id"];
 
-export const DRILL_LEVELS = ["Beginner", "Intermediate", "Professional"] as const;
+export const DRILL_TYPES = [
+  { id: "WU", label: "Warm-up" },
+  { id: "TP", label: "Technical" },
+  { id: "SP", label: "Skill" },
+  { id: "Rondo", label: "Rondo" },
+  { id: "PoP", label: "Phase of play" },
+  { id: "SSG", label: "Small-sided game" },
+  { id: "11v11", label: "11v11" },
+  { id: "Physical", label: "Physical" },
+] as const;
+
+export type DrillType = (typeof DRILL_TYPES)[number]["id"];
+
+export const DRILL_LEVELS = ["Grassroots", "Youth U9-12", "Youth U13-16", "Senior Amateur", "Pro"] as const;
 
 export type DrillLevel = (typeof DRILL_LEVELS)[number];
+
+export interface PlayerCount {
+  attackers: number;
+  defenders: number;
+  neutrals: number;
+  goalkeepers: number;
+}
 
 export const SETUP_DIAGRAMS = ["square", "channel", "rondo", "overlap", "press", "gates", "lanes", "corner"] as const;
 
@@ -35,6 +60,14 @@ export function canonicalTeamName(name: string) {
   return PREVIOUS_DIVISION[name] ?? name;
 }
 
+export function drillTitle(type: string, focus: string, setup: string, constraint: string) {
+  return [type, focus, setup, constraint]
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join(" - ")
+    .slice(0, 60);
+}
+
 export interface ClubTeam {
   id: string;
   name: string;
@@ -54,13 +87,23 @@ export interface DrillTemplate {
   title: string;
   isClubOfficial: boolean;
   targetAgeGroup: string;
-  objectiveCategory: ObjectiveCategory;
+  moment: MomentOfGame;
+  drillType: DrillType;
+  level: DrillLevel;
+  focus: string;
+  playerSetup: string;
+  constraint: string;
+  dimensions: string;
+  workRest: string;
+  repetitions: number;
+  players: PlayerCount;
+  equipment: string[];
   diagram: SetupDiagram;
   pitchSetup: string;
   instructions: string;
   coachingPoints: string[];
+  progressions: string[];
   defaultDurationSeconds: number;
-  level: DrillLevel;
   videoUrl?: string;
   videoName?: string;
 }

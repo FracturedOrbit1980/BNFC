@@ -15,7 +15,7 @@ export default function CoachPage() {
       <TeamPicker />
       <div className="mb-6 flex flex-wrap gap-3">
         <ActionCard href="/coach/roster" title="Squad" detail="Open one player for their rating, details, and training week." />
-        <ActionCard href="/coach/drills" title="Run a drill" detail="Search the library, filter by level, and start the session clock." />
+        <ActionCard href="/coach/drills" title="Run a drill" detail="Filter by the moment of the game, then start the session clock." />
         <ActionCard href="/coach/editor" title="Drill editor" detail="Lay out the practice, record frames, and save the animation." />
         <ActionCard href="/coach/match" title="Live match" detail="Place the allocated squad and keep the clock for players on the pitch." />
       </div>

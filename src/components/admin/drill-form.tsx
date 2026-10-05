@@ -2,16 +2,17 @@
 
 import { useState, type ReactNode } from "react";
 
+import { DrillRecordFields, commasFrom, emptyDraft, linesFrom, type DrillRecordDraft } from "@/components/drills/drill-record-fields";
 import { Button } from "@/components/ui/button";
 import { ageLabel, ageNumber, sortByAge } from "@/lib/club/age";
-import { DRILL_LEVELS, OBJECTIVE_CATEGORIES, SETUP_DIAGRAMS, type DrillLevel, type ObjectiveCategory, type SetupDiagram } from "@/lib/club/catalog";
-import { isDrillLevel, isObjectiveCategory, useClubStore } from "@/stores/club-store";
+import { SETUP_DIAGRAMS, type SetupDiagram } from "@/lib/club/catalog";
+import { useClubStore } from "@/stores/club-store";
 
 export function DrillForm() {
   const ageGroups = sortByAge(useClubStore((state) => state.ageGroups));
   const addDrill = useClubStore((state) => state.addDrill);
-  const [title, setTitle] = useState("");
-  const [category, setCategory] = useState<ObjectiveCategory>("Technical");
+  const [draft, setDraft] = useState<DrillRecordDraft>(emptyDraft);
+  const [titleTouched, setTitleTouched] = useState(false);
   const [age, setAge] = useState("All ages");
   const [minutes, setMinutes] = useState(5);
   const [diagram, setDiagram] = useState<SetupDiagram>("square");
@@ -19,7 +20,6 @@ export function DrillForm() {
   const [instructions, setInstructions] = useState("");
   const [points, setPoints] = useState("");
   const [official, setOfficial] = useState(true);
-  const [level, setLevel] = useState<DrillLevel>("Beginner");
   const [saved, setSaved] = useState(false);
 
   return (
@@ -27,10 +27,26 @@ export function DrillForm() {
       className="mb-6 grid gap-3 rounded-xl bg-white p-4 ring-1 ring-slate-300"
       onSubmit={(event) => {
         event.preventDefault();
-        if (!title.trim() || !pitchSetup.trim()) return;
+        if (!draft.title.trim() || !pitchSetup.trim()) return;
         addDrill({
-          title: title.trim(),
-          objectiveCategory: category,
+          title: draft.title.trim(),
+          moment: draft.moment,
+          drillType: draft.drillType,
+          level: draft.level,
+          focus: draft.focus.trim(),
+          playerSetup: draft.playerSetup.trim(),
+          constraint: draft.constraint.trim(),
+          dimensions: draft.dimensions.trim(),
+          workRest: draft.workRest.trim(),
+          repetitions: draft.repetitions,
+          players: {
+            attackers: draft.attackers,
+            defenders: draft.defenders,
+            neutrals: draft.neutrals,
+            goalkeepers: draft.goalkeepers,
+          },
+          equipment: commasFrom(draft.equipment),
+          progressions: linesFrom(draft.progressions),
           targetAgeGroup: age,
           durationSeconds: Math.min(30, Math.max(1, minutes)) * 60,
           diagram,
@@ -41,9 +57,9 @@ export function DrillForm() {
             .map((point) => point.trim())
             .filter(Boolean),
           isClubOfficial: official,
-          level,
         });
-        setTitle("");
+        setDraft(emptyDraft());
+        setTitleTouched(false);
         setDiagram("square");
         setPitchSetup("");
         setInstructions("");
@@ -52,36 +68,19 @@ export function DrillForm() {
       }}
     >
       <h2 className="text-lg font-bold text-slate-950">Add a club drill</h2>
+      <DrillRecordFields
+        draft={draft}
+        titleTouched={titleTouched}
+        onChange={(next, touched) => {
+          setDraft(next);
+          setTitleTouched(touched);
+        }}
+        onTitle={(title) => {
+          setTitleTouched(true);
+          setDraft((current) => ({ ...current, title }));
+        }}
+      />
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Title">
-          <input value={title} onChange={(event) => setTitle(event.target.value)} className={inputClass} required />
-        </Field>
-        <Field label="Level">
-          <select
-            value={level}
-            onChange={(event) => {
-              if (isDrillLevel(event.target.value)) setLevel(event.target.value);
-            }}
-            className={inputClass}
-          >
-            {DRILL_LEVELS.map((item) => (
-              <option key={item}>{item}</option>
-            ))}
-          </select>
-        </Field>
-        <Field label="Category">
-          <select
-            value={category}
-            onChange={(event) => {
-              if (isObjectiveCategory(event.target.value)) setCategory(event.target.value);
-            }}
-            className={inputClass}
-          >
-            {OBJECTIVE_CATEGORIES.map((item) => (
-              <option key={item}>{item}</option>
-            ))}
-          </select>
-        </Field>
         <Field label="Under">
           <select value={age} data-field="drill-age" onChange={(event) => setAge(event.target.value)} className={inputClass}>
             <option value="All ages">All ages</option>
@@ -93,11 +92,7 @@ export function DrillForm() {
           </select>
         </Field>
         <Field label="Setup diagram">
-          <select
-            value={diagram}
-            onChange={(event) => setDiagram(event.target.value as SetupDiagram)}
-            className={inputClass}
-          >
+          <select value={diagram} onChange={(event) => setDiagram(event.target.value as SetupDiagram)} className={inputClass}>
             {SETUP_DIAGRAMS.map((item) => (
               <option key={item} value={item}>
                 {item}
@@ -139,7 +134,7 @@ export function DrillForm() {
   );
 }
 
-const inputClass = "mt-1 h-11 w-full rounded-md border border-slate-300 px-3 text-base text-slate-950";
+const inputClass = "mt-1 h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950";
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (

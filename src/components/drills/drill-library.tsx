@@ -12,7 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DrillVideo } from "@/components/drills/drill-video";
 import { emptyDrillBoard, type DrillBoard as DrillBoardState } from "@/lib/club/board";
-import { DRILL_LEVELS, OBJECTIVE_CATEGORIES, type DrillLevel, type ObjectiveCategory } from "@/lib/club/catalog";
+import { DRILL_LEVELS, DRILL_TYPES, MOMENTS_OF_GAME, type DrillLevel, type DrillType, type MomentOfGame } from "@/lib/club/catalog";
+import { drillTypeLabel, momentLabel, playerCountLine } from "@/lib/club/drill-record";
 import type { ClubDrill } from "@/lib/club/seed";
 import { useClubStore } from "@/stores/club-store";
 
@@ -28,17 +29,19 @@ export function DrillLibrary({
   const setDrillDuration = useClubStore((state) => state.setDrillDuration);
   const setDrillOfficial = useClubStore((state) => state.setDrillOfficial);
   const setDrillVideo = useClubStore((state) => state.setDrillVideo);
-  const [category, setCategory] = useState<ObjectiveCategory | "All">("All");
+  const [moment, setMoment] = useState<MomentOfGame | "All">("All");
+  const [drillType, setDrillType] = useState<DrillType | "All">("All");
   const [level, setLevel] = useState<DrillLevel | "All">("All");
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState(drills[0]?.id ?? "");
   const query = search.trim().toLowerCase();
 
   const visible = drills.filter((drill) => {
+    const momentOk = moment === "All" || drill.moment === moment;
+    const typeOk = drillType === "All" || drill.drillType === drillType;
     const levelOk = level === "All" || drill.level === level;
-    const categoryOk = category === "All" || drill.objectiveCategory === category;
-    const text = `${drill.title} ${drill.level} ${drill.pitchSetup} ${drill.objectiveCategory}`.toLowerCase();
-    return levelOk && categoryOk && (!query || text.includes(query));
+    const text = `${drill.title} ${drill.focus} ${drill.playerSetup} ${drill.constraint} ${momentLabel(drill.moment)} ${drillTypeLabel(drill.drillType)} ${drill.level}`.toLowerCase();
+    return momentOk && typeOk && levelOk && (!query || text.includes(query));
   });
   const selected = visible.find((drill) => drill.id === selectedId) ?? visible[0];
 
@@ -51,26 +54,36 @@ export function DrillLibrary({
             value={search}
             data-field="drill-search"
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Name or level"
+            placeholder="Name, moment, or setup"
             className="mt-1 block h-11 w-full max-w-md rounded-md border border-slate-300 px-3 text-base"
           />
         </label>
-        <div className="flex flex-wrap gap-2" aria-label="Level">
+        <div className="flex flex-wrap gap-2" aria-label="Moment of the game">
+          <FilterChip active={moment === "All"} onClick={() => setMoment("All")}>
+            All moments
+          </FilterChip>
+          {MOMENTS_OF_GAME.map((item) => (
+            <FilterChip key={item.id} active={moment === item.id} onClick={() => setMoment(item.id)}>
+              {item.label}
+            </FilterChip>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-2" aria-label="Drill type">
+          <FilterChip active={drillType === "All"} onClick={() => setDrillType("All")}>
+            All types
+          </FilterChip>
+          {DRILL_TYPES.map((item) => (
+            <FilterChip key={item.id} active={drillType === item.id} onClick={() => setDrillType(item.id)}>
+              {item.label}
+            </FilterChip>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-2" aria-label="Difficulty">
           <FilterChip active={level === "All"} onClick={() => setLevel("All")}>
             All levels
           </FilterChip>
           {DRILL_LEVELS.map((item) => (
             <FilterChip key={item} active={level === item} onClick={() => setLevel(item)}>
-              {item}
-            </FilterChip>
-          ))}
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <FilterChip active={category === "All"} onClick={() => setCategory("All")}>
-            All
-          </FilterChip>
-          {OBJECTIVE_CATEGORIES.map((item) => (
-            <FilterChip key={item} active={category === item} onClick={() => setCategory(item)}>
               {item}
             </FilterChip>
           ))}
@@ -86,6 +99,8 @@ export function DrillLibrary({
               <div
                 key={drill.id}
                 data-drill-level={drill.level}
+                data-moment={drill.moment}
+                data-drill-type={drill.drillType}
                 className={`rounded-xl text-left ring-1 transition ${
                   active
                     ? "bg-emerald-50 ring-emerald-600"
@@ -102,7 +117,7 @@ export function DrillLibrary({
                         </Badge>
                       </div>
                       <CardDescription className="text-slate-700">
-                        {drill.level} · {drill.objectiveCategory} · {drill.targetAgeGroup}
+                        {momentLabel(drill.moment)} · {drillTypeLabel(drill.drillType)} · {drill.level}
                       </CardDescription>
                     </CardHeader>
                   </Card>
@@ -115,7 +130,7 @@ export function DrillLibrary({
                     size="sm"
                   />
                   <button type="button" onClick={() => setSelectedId(drill.id)} className="min-w-0 text-left">
-                    {formatBlock(drill.durationSeconds)} · {drill.pitchSetup}
+                    {formatBlock(drill.durationSeconds)} · {drill.dimensions || drill.playerSetup}
                   </button>
                 </div>
               </div>
@@ -137,8 +152,14 @@ export function DrillLibrary({
                 manageMode={manageMode}
                 size="md"
               />
-              <div>
-                <p className="text-sm font-semibold text-slate-950">{selected.pitchSetup}</p>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-slate-950">{momentLabel(selected.moment)} · {drillTypeLabel(selected.drillType)} · {selected.level}</p>
+                <p className="mt-1 text-sm font-medium text-slate-800">{playerCountLine(selected.players)}</p>
+                <p className="mt-1 text-sm font-medium text-slate-800">
+                  {selected.dimensions || "Pitch size not set"} · {selected.workRest || "Work and rest not set"} · {selected.repetitions} reps
+                </p>
+                <p className="mt-1 text-sm font-medium text-slate-800">{selected.equipment.length ? selected.equipment.join(", ") : "No equipment listed"}</p>
+                <p className="mt-2 text-sm font-semibold text-slate-950">{selected.pitchSetup}</p>
                 {manageMode ? (
                   <Button
                     type="button"
@@ -183,10 +204,24 @@ export function DrillLibrary({
               </ul>
             </CardContent>
           </Card>
+          {selected.progressions.length > 0 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Progressions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="list-disc space-y-1 pl-5 text-sm text-slate-800">
+                  {selected.progressions.map((point) => (
+                    <li key={point}>{point}</li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          ) : null}
         </div>
       ) : (
         <p className="rounded-lg bg-white px-4 py-3 font-semibold text-slate-800 ring-1 ring-slate-300">
-          No drills at this level.
+          No drills for this moment.
         </p>
       )}
     </div>

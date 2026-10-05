@@ -3,7 +3,8 @@ import { persist } from "zustand/middleware";
 
 import { ageNumber, ensureYouthAges, sortByAge } from "@/lib/club/age";
 import { normalizePositions } from "@/lib/club/positions";
-import { canonicalDivision, canonicalTeamName, DRILL_LEVELS, OBJECTIVE_CATEGORIES, type Division, type DrillLevel, type ObjectiveCategory, type SetupDiagram } from "@/lib/club/catalog";
+import { canonicalDivision, canonicalTeamName, type Division, type DrillLevel, type DrillType, type MomentOfGame, type PlayerCount, type SetupDiagram } from "@/lib/club/catalog";
+import { isDrillLevel, isDrillType, isMoment, withUefaDrills } from "@/lib/club/drill-record";
 import { DEFAULT_PITCH_COLOR, type DrillBoard } from "@/lib/club/board";
 import { placeOnU12Prem, playerId, SQUAD_TEAM_ID, type RosterRow } from "@/lib/club/roster";
 import { weekDates } from "@/lib/club/week";
@@ -22,7 +23,18 @@ import {
 
 export interface NewDrillInput {
   title: string;
-  objectiveCategory: ObjectiveCategory;
+  moment: MomentOfGame;
+  drillType: DrillType;
+  level: DrillLevel;
+  focus: string;
+  playerSetup: string;
+  constraint: string;
+  dimensions: string;
+  workRest: string;
+  repetitions: number;
+  players: PlayerCount;
+  equipment: string[];
+  progressions: string[];
   targetAgeGroup: string;
   durationSeconds: number;
   diagram: SetupDiagram;
@@ -30,7 +42,6 @@ export interface NewDrillInput {
   instructions: string;
   coachingPoints: string[];
   isClubOfficial: boolean;
-  level: DrillLevel;
 }
 
 export interface NewPlayerInput {
@@ -86,7 +97,19 @@ interface ClubState extends ClubData {
       durationSeconds: number;
       pitchSetup: string;
       coachingPoints: string[];
+      moment: MomentOfGame;
+      drillType: DrillType;
       level: DrillLevel;
+      focus: string;
+      playerSetup: string;
+      constraint: string;
+      dimensions: string;
+      workRest: string;
+      repetitions: number;
+      players: PlayerCount;
+      equipment: string[];
+      progressions: string[];
+      instructions: string;
       videoUrl: string;
       videoName: string;
     },
@@ -119,17 +142,27 @@ export const useClubStore = create<ClubState>()(
           drills: [
             {
               id: `dr-${Date.now()}`,
-              title: input.title,
+              title: input.title.slice(0, 60),
               isClubOfficial: input.isClubOfficial,
               targetAgeGroup: input.targetAgeGroup,
-              objectiveCategory: input.objectiveCategory,
+              moment: input.moment,
+              drillType: input.drillType,
+              level: input.level,
+              focus: input.focus,
+              playerSetup: input.playerSetup,
+              constraint: input.constraint,
+              dimensions: input.dimensions,
+              workRest: input.workRest,
+              repetitions: input.repetitions,
+              players: input.players,
+              equipment: input.equipment,
+              progressions: input.progressions,
               diagram: input.diagram,
               pitchSetup: input.pitchSetup,
               instructions: input.instructions,
               coachingPoints: input.coachingPoints,
               defaultDurationSeconds: input.durationSeconds,
               durationSeconds: input.durationSeconds,
-              level: input.level,
               videoUrl: "",
               videoName: "",
             },
@@ -433,17 +466,27 @@ export const useClubStore = create<ClubState>()(
           const existing = state.drills.find((drill) => drill.id === savedId);
           const next = {
             id: savedId,
-            title: input.title,
+            title: input.title.slice(0, 60),
             isClubOfficial: false,
             targetAgeGroup: existing?.targetAgeGroup ?? "All ages",
-            objectiveCategory: existing?.objectiveCategory ?? "Technical",
+            moment: input.moment,
+            drillType: input.drillType,
+            level: input.level,
+            focus: input.focus,
+            playerSetup: input.playerSetup,
+            constraint: input.constraint,
+            dimensions: input.dimensions,
+            workRest: input.workRest,
+            repetitions: input.repetitions,
+            players: input.players,
+            equipment: input.equipment,
+            progressions: input.progressions,
             diagram: existing?.diagram ?? "square",
             pitchSetup: input.pitchSetup,
-            instructions: existing?.instructions || input.pitchSetup || "Lay out on the pitch.",
+            instructions: input.instructions || input.pitchSetup || "Lay out on the pitch.",
             coachingPoints: input.coachingPoints,
             defaultDurationSeconds: existing?.defaultDurationSeconds ?? input.durationSeconds,
             durationSeconds: input.durationSeconds,
-            level: input.level,
             videoUrl: input.videoUrl,
             videoName: input.videoName,
           };
@@ -510,15 +553,7 @@ export const useClubStore = create<ClubState>()(
             previousTeam === SQUAD_TEAM_ID ||
             previousTeam === placed.teamId ||
             (previousGroup ? ageNumber(previousGroup.name) === 12 : true));
-        const drills = (saved.drills ?? baseline.drills).map((drill) => ({
-          ...drill,
-          durationSeconds: drill.durationSeconds ?? drill.defaultDurationSeconds,
-          coachingPoints: drill.coachingPoints ?? [],
-          diagram: drill.diagram ?? "square",
-          level: isDrillLevel(drill.level) ? drill.level : "Beginner",
-          videoUrl: drill.videoUrl ?? "",
-          videoName: drill.videoName ?? "",
-        }));
+        const drills = withUefaDrills(saved.drills, baseline.drills);
         return {
           ...current,
           ...saved,
@@ -555,12 +590,6 @@ export async function loadClubData(id: string, kind: "bnfc" | "custom") {
   useClubStore.setState({ hydrated: true });
 }
 
-export function isObjectiveCategory(value: string): value is ObjectiveCategory {
-  return (OBJECTIVE_CATEGORIES as readonly string[]).includes(value);
-}
-
-export function isDrillLevel(value: string | undefined): value is DrillLevel {
-  return (DRILL_LEVELS as readonly string[]).includes(value ?? "");
-}
+export { isDrillLevel, isDrillType, isMoment };
 
 export type { ClubDrill, EvaluationRecord, SessionPlan };

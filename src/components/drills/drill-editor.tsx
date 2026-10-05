@@ -34,8 +34,7 @@ import { Suspense, useEffect, useRef, useState, type DragEvent as ReactDragEvent
 
 import { eventPoint, MarkShape, PieceShape, PitchLines } from "@/components/drills/drill-board";
 import { DrillVideo } from "@/components/drills/drill-video";
-import { DRILL_LEVELS, type DrillLevel } from "@/lib/club/catalog";
-import { isDrillLevel } from "@/stores/club-store";
+import { DrillRecordFields, commasFrom, draftFromDrill, emptyDraft, linesFrom, type DrillRecordDraft } from "@/components/drills/drill-record-fields";
 import {
   MARK_KINDS,
   PIECE_KINDS,
@@ -162,12 +161,13 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
   const savedDrills = drills.filter((drill) => !drill.isClubOfficial);
   const [initial] = useState(() => readRequestedDrill(requestedId));
   const [drillId, setDrillId] = useState<string | null>(initial?.drill.id ?? null);
-  const [title, setTitle] = useState(initial?.drill.title ?? "");
+  const [record, setRecord] = useState<DrillRecordDraft>(() => (initial ? draftFromDrill(initial.drill) : emptyDraft()));
+  const [titleTouched, setTitleTouched] = useState(Boolean(initial?.drill.title));
   const [minutes, setMinutes] = useState(initial ? Math.floor(initial.drill.durationSeconds / 60) : 6);
   const [seconds, setSeconds] = useState(initial ? initial.drill.durationSeconds % 60 : 0);
   const [setup, setSetup] = useState(initial?.drill.pitchSetup ?? "");
   const [points, setPoints] = useState(initial ? initial.drill.coachingPoints.join("\n") : "");
-  const [level, setLevel] = useState<DrillLevel>(initial?.drill.level ?? "Beginner");
+  const [instructions, setInstructions] = useState(initial?.drill.instructions ?? "");
   const [videoUrl, setVideoUrl] = useState(initial?.drill.videoUrl ?? "");
   const [videoName, setVideoName] = useState(initial?.drill.videoName ?? "");
   const [notice, setNotice] = useState("");
@@ -394,12 +394,13 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
     if (!drill) return;
     const stored = useClubStore.getState().boards[id] ?? emptyDrillBoard();
     setDrillId(id);
-    setTitle(drill.title);
+    setRecord(draftFromDrill(drill));
+    setTitleTouched(true);
     setMinutes(Math.floor(drill.durationSeconds / 60));
     setSeconds(drill.durationSeconds % 60);
     setSetup(drill.pitchSetup);
     setPoints(drill.coachingPoints.join("\n"));
-    setLevel(drill.level);
+    setInstructions(drill.instructions);
     setVideoUrl(drill.videoUrl ?? "");
     setVideoName(drill.videoName ?? "");
     setBoard(stored);
@@ -413,7 +414,7 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
   }
 
   function save() {
-    const name = title.trim();
+    const name = record.title.trim().slice(0, 60);
     if (!name) {
       setNotice("Name the drill before saving.");
       return;
@@ -430,7 +431,24 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
         durationSeconds,
         pitchSetup: setup.trim(),
         coachingPoints,
-        level,
+        moment: record.moment,
+        drillType: record.drillType,
+        level: record.level,
+        focus: record.focus.trim(),
+        playerSetup: record.playerSetup.trim(),
+        constraint: record.constraint.trim(),
+        dimensions: record.dimensions.trim(),
+        workRest: record.workRest.trim(),
+        repetitions: record.repetitions,
+        players: {
+          attackers: record.attackers,
+          defenders: record.defenders,
+          neutrals: record.neutrals,
+          goalkeepers: record.goalkeepers,
+        },
+        equipment: commasFrom(record.equipment),
+        progressions: linesFrom(record.progressions),
+        instructions: instructions.trim(),
         videoUrl,
         videoName,
       },
@@ -794,15 +812,20 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
       <div className="editor-panel mt-3 min-w-0 space-y-3">
         <section className="rounded-xl bg-white p-3 ring-1 ring-slate-300" aria-label="Drill editor">
           <h2 className="text-sm font-bold uppercase tracking-wide text-slate-800">Drill editor</h2>
-          <label className="mt-2 block text-sm font-semibold text-slate-800">
-            Name
-            <input
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              data-field="name"
-              className="mt-1 block h-11 w-full rounded-md border border-slate-300 px-3 text-base"
+          <div className="mt-2">
+            <DrillRecordFields
+              draft={record}
+              titleTouched={titleTouched}
+              onChange={(next, touched) => {
+                setRecord(next);
+                setTitleTouched(touched);
+              }}
+              onTitle={(title) => {
+                setTitleTouched(true);
+                setRecord((current) => ({ ...current, title }));
+              }}
             />
-          </label>
+          </div>
           <div className="mt-2 grid grid-cols-2 gap-2">
             <label className="text-sm font-semibold text-slate-800">
               Minutes
@@ -851,19 +874,14 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
             />
           </label>
           <label className="mt-2 block text-sm font-semibold text-slate-800">
-            Level
-            <select
-              value={level}
-              data-field="level"
-              onChange={(event) => {
-                if (isDrillLevel(event.target.value)) setLevel(event.target.value);
-              }}
-              className="mt-1 block h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-base"
-            >
-              {DRILL_LEVELS.map((item) => (
-                <option key={item}>{item}</option>
-              ))}
-            </select>
+            Instructions
+            <textarea
+              value={instructions}
+              onChange={(event) => setInstructions(event.target.value)}
+              data-field="instructions"
+              rows={2}
+              className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-base"
+            />
           </label>
           <div className="mt-3">
             <DrillVideo
