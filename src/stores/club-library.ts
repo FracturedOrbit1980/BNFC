@@ -4,7 +4,7 @@ import { create } from "zustand";
 
 import { readRegistry, writeRegistry, type ClubProfile } from "@/lib/club/registry";
 import type { ClubThemeId } from "@/lib/club/themes";
-import { useClubStore } from "@/stores/club-store";
+import { loadClubData, useClubStore } from "@/stores/club-store";
 
 interface LibraryState {
   clubs: ClubProfile[];
@@ -31,6 +31,10 @@ export const useClubLibrary = create<LibraryState>((set, get) => ({
   load: async (id) => {
     const club = get().clubs.find((item) => item.id === id);
     if (!club) return;
+    if (get().activeId === id) {
+      if (!useClubStore.getState().hydrated) void loadClubData(id, club.kind);
+      return;
+    }
     useClubStore.setState({ hydrated: false });
     save(get().clubs, id);
     set({ activeId: id });

@@ -26,7 +26,7 @@ const NAV: Record<UserRole, { href: string; label: string; icon: typeof Users }[
   ],
   HEAD_COACH: [
     { href: "/coach", label: "Home", icon: LayoutDashboard },
-    { href: "/coach/roster", label: "Roster", icon: Users },
+    { href: "/coach/roster", label: "Squad", icon: Users },
     { href: "/coach/drills", label: "Drills", icon: ClipboardList },
     { href: "/coach/editor", label: "Editor", icon: Pencil },
     { href: "/coach/match", label: "Match", icon: Timer },

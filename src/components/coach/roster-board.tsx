@@ -79,14 +79,12 @@ export function RosterBoard() {
                 <button
                   type="button"
                   onClick={() => selectPlayer(player.id)}
-                  className="flex min-h-11 w-full items-center gap-3 rounded-xl bg-white px-4 py-3 text-left ring-1 ring-slate-300"
+                  className="grid min-h-11 w-full grid-cols-[2.75rem_minmax(0,1fr)_auto] items-center gap-x-3 rounded-xl bg-white px-4 py-3 text-left ring-1 ring-slate-300"
                 >
-                  <span className="w-8 text-lg font-black tabular-nums text-slate-950">{player.squadNumber}</span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-semibold text-slate-950">{player.name}</span>
-                    <span className="text-sm text-slate-600">{formatPosition(player)}</span>
-                  </span>
+                  <span className="row-span-2 text-lg font-black tabular-nums text-slate-950">{player.squadNumber}</span>
+                  <span className="min-w-0 truncate font-semibold text-slate-950">{player.name}</span>
                   <span className="text-sm font-bold text-slate-700">Open</span>
+                  <span className="col-start-2 truncate text-sm text-slate-600">{formatPosition(player)}</span>
                 </button>
               </li>
             ))}
@@ -514,7 +512,7 @@ function ScoreRow({
             key={score}
             type="button"
             onClick={() => onChange(score)}
-            className={`h-9 w-9 rounded-md text-sm font-bold ${
+            className={`size-11 rounded-md text-sm font-bold ${
               score === value ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-950"
             }`}
           >

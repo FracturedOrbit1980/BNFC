@@ -1,7 +1,7 @@
 import { RosterBoard } from "@/components/coach/roster-board";
 import { PageHeader } from "@/components/layout/page-header";
 
-export const metadata = { title: "Roster" };
+export const metadata = { title: "Squad" };
 
 export default function RosterPage() {
   return (

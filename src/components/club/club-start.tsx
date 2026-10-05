@@ -23,37 +23,39 @@ export function ClubStart() {
   return (
     <div>
       <p className="text-sm font-bold uppercase tracking-widest text-emerald-700">Club</p>
-      <h1 className="mt-1 text-4xl font-black tracking-tight text-slate-950">{current ? current.name : "Load a club"}</h1>
+      <h1 className="mt-1 break-words text-3xl font-black leading-tight tracking-tight text-slate-950 sm:text-4xl">{current ? current.name : "Load a club"}</h1>
       <p className="mt-3 max-w-2xl text-lg text-slate-700">
         Choose a club to open. Players, teams, drills, attendance, and the colours stay with that club.
       </p>
       <div className="mt-6 grid gap-3" data-club-list>
         {clubs.map((club) => (
-          <article key={club.id} className="rounded-xl bg-white p-3 ring-1 ring-slate-300" data-club={club.id}>
+          <article key={club.id} className="rounded-xl bg-white p-4 ring-1 ring-slate-300" data-club={club.id}>
             <div className="flex flex-wrap items-center gap-3">
               <ClubLogo club={club} />
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 flex-1 basis-40">
                 <h2 className="truncate text-lg font-black text-slate-950">{club.name}</h2>
                 <p className="text-sm font-semibold text-slate-600">{themeName(club.theme)}</p>
               </div>
-              <button
-                type="button"
-                data-load-club={club.id}
-                onClick={() => void load(club.id)}
-                className={`min-h-11 rounded-lg px-4 text-sm font-bold ${
-                  club.id === activeId ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-950"
-                }`}
-              >
-                {club.id === activeId ? "Loaded" : "Load"}
-              </button>
-              <button
-                type="button"
-                data-edit-club={club.id}
-                onClick={() => setEditingId(editingId === club.id ? null : club.id)}
-                className="min-h-11 rounded-lg bg-white px-4 text-sm font-bold text-slate-950 ring-1 ring-slate-300"
-              >
-                Edit
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  data-load-club={club.id}
+                  onClick={() => void load(club.id)}
+                  className={`min-h-11 shrink-0 rounded-lg px-4 text-sm font-bold ${
+                    club.id === activeId ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-950"
+                  }`}
+                >
+                  {club.id === activeId ? "Loaded" : "Load"}
+                </button>
+                <button
+                  type="button"
+                  data-edit-club={club.id}
+                  onClick={() => setEditingId(editingId === club.id ? null : club.id)}
+                  className="min-h-11 shrink-0 rounded-lg bg-white px-4 text-sm font-bold text-slate-950 ring-1 ring-slate-300"
+                >
+                  Edit
+                </button>
+              </div>
             </div>
             {editingId === club.id ? (
               <ClubForm
@@ -68,7 +70,18 @@ export function ClubStart() {
           </article>
         ))}
       </div>
-      <section className="mt-6 rounded-xl bg-white p-3 ring-1 ring-slate-300" aria-label="Add a club">
+      {current ? (
+        <div className="mt-8">
+          <h2 className="text-lg font-black text-slate-950">Open {current.name}</h2>
+          <p className="mt-1 text-sm font-medium text-slate-600">Register players as club admin, then coach the squad.</p>
+          <div className="mt-3">
+            <RolePicker />
+          </div>
+        </div>
+      ) : (
+        <p className="mt-6 text-base font-semibold text-slate-700">Load {CLUB_NAME}, or add a club, before you open a role.</p>
+      )}
+      <section className="mt-8 rounded-xl bg-white p-4 ring-1 ring-slate-300" aria-label="Add a club">
         <h2 className="text-lg font-black text-slate-950">Add a club</h2>
         <ClubForm
           submitLabel="Add club"
@@ -77,16 +90,6 @@ export function ClubStart() {
           }}
         />
       </section>
-      {current ? (
-        <div className="mt-8">
-          <h2 className="text-lg font-black text-slate-950">Open {current.name}</h2>
-          <div className="mt-3">
-            <RolePicker />
-          </div>
-        </div>
-      ) : (
-        <p className="mt-6 text-base font-semibold text-slate-700">Load {CLUB_NAME}, or add a club, before you open a role.</p>
-      )}
     </div>
   );
 }
@@ -138,7 +141,7 @@ function ClubForm({
           type="file"
           accept="image/*"
           data-field={initial ? "edit-club-logo" : "new-club-logo"}
-          className="mt-1 block w-full text-base file:mr-3 file:h-11 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:font-bold"
+          className="mt-1 block w-full max-w-full text-base file:mr-3 file:h-11 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:font-bold"
           onChange={(event) => {
             const file = event.target.files?.[0];
             if (!file) return;

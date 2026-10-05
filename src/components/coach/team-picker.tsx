@@ -65,7 +65,7 @@ export function TeamPicker() {
               if (!isDivision(event.target.value)) return;
               openDivisionTeam(selected.id, event.target.value);
             }}
-            className="mt-1 block h-11 min-w-36 rounded-md border border-slate-300 bg-white px-2 text-base"
+            className="mt-1 block h-11 w-full max-w-xs rounded-md border border-slate-300 bg-white px-3 text-base"
           >
             {divisionValue === "" ? (
               <option value="" hidden>

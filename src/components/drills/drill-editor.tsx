@@ -786,7 +786,7 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               data-field="name"
-              className="mt-1 block h-10 w-full rounded-md border border-slate-300 px-3 text-base"
+              className="mt-1 block h-11 w-full rounded-md border border-slate-300 px-3 text-base"
             />
           </label>
           <div className="mt-2 grid grid-cols-2 gap-2">
@@ -799,7 +799,7 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
                 value={minutes}
                 onChange={(event) => setMinutes(Number(event.target.value))}
                 data-field="minutes"
-                className="mt-1 block h-10 w-full rounded-md border border-slate-300 px-3 text-base"
+                className="mt-1 block h-11 w-full rounded-md border border-slate-300 px-3 text-base"
               />
             </label>
             <label className="text-sm font-semibold text-slate-800">
@@ -811,7 +811,7 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
                 value={seconds}
                 onChange={(event) => setSeconds(Number(event.target.value))}
                 data-field="seconds"
-                className="mt-1 block h-10 w-full rounded-md border border-slate-300 px-3 text-base"
+                className="mt-1 block h-11 w-full rounded-md border border-slate-300 px-3 text-base"
               />
             </label>
           </div>

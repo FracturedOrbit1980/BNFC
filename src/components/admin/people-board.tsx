@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { PositionFields } from "@/components/club/position-fields";
 import { TeamPicker } from "@/components/coach/team-picker";
 import { ageLabel, ensureYouthAges } from "@/lib/club/age";
+import { DIVISIONS, isDivision } from "@/lib/club/catalog";
 import { formatPosition, normalizePositions, type PositionChoice, type StandardPosition } from "@/lib/club/positions";
 import type { ClubPlayer } from "@/lib/club/seed";
 import { useClubStore } from "@/stores/club-store";
@@ -36,15 +37,6 @@ export function PeopleBoard() {
           addPlayer(input);
         }}
       />
-      <section className="rounded-xl bg-white p-4 ring-1 ring-slate-300">
-        <h2 className="text-lg font-bold text-slate-950">Open a league</h2>
-        <p className="mt-1 text-sm font-medium text-slate-600">
-          Tap an age, then Prem, Div 1, Div 2, Div 3, or Div 4. That team can then take players.
-        </p>
-        <div className="mt-3">
-          <TeamPicker />
-        </div>
-      </section>
       <PlayerList
         title="Waiting to be allocated"
         empty="Registered players who are not on a team yet appear here."
@@ -62,6 +54,15 @@ export function PeopleBoard() {
         onAssign={assignPlayer}
       />
       <CoachAssign teams={teams} coaches={coaches} onAssign={addCoach} />
+      <section className="rounded-xl bg-white p-4 ring-1 ring-slate-300">
+        <h2 className="text-lg font-bold text-slate-950">Open a team</h2>
+        <p className="mt-1 text-sm font-medium text-slate-600">
+          After players are allocated, tap an age, then Prem, Div 1, Div 2, Div 3, or Div 4. That is the team the coach opens.
+        </p>
+        <div className="mt-3">
+          <TeamPicker />
+        </div>
+      </section>
     </div>
   );
 }
@@ -80,7 +81,7 @@ function CoachAssign({
   if (teams.length === 0) return null;
   return (
     <form
-      className="flex flex-wrap items-end gap-3 rounded-xl bg-white p-4 ring-1 ring-slate-300"
+      className="grid gap-3 rounded-xl bg-white p-4 ring-1 ring-slate-300 sm:grid-cols-2"
       onSubmit={(event) => {
         event.preventDefault();
         if (!name.trim() || !teamId) return;
@@ -88,17 +89,17 @@ function CoachAssign({
         setName("");
       }}
     >
-      <div className="w-full">
+      <div className="sm:col-span-2">
         <h2 className="text-lg font-bold text-slate-950">Coach for the team</h2>
         <p className="mt-1 text-sm font-medium text-slate-600">The named coach runs drills and attendance after players are allocated.</p>
       </div>
-      <label className="text-sm font-semibold text-slate-800">
+      <label className="block text-sm font-semibold text-slate-800">
         Coach
-        <input value={name} onChange={(event) => setName(event.target.value)} className="mt-1 block h-11 rounded-md border border-slate-300 px-3 text-base" required />
+        <input value={name} onChange={(event) => setName(event.target.value)} className="mt-1 block h-11 w-full rounded-md border border-slate-300 px-3 text-base" required />
       </label>
-      <label className="text-sm font-semibold text-slate-800">
+      <label className="block min-w-0 text-sm font-semibold text-slate-800">
         Team and league
-        <select value={teamId} onChange={(event) => setTeamId(event.target.value)} className="mt-1 block h-11 rounded-md border border-slate-300 bg-white px-2 text-base">
+        <select value={teamId} onChange={(event) => setTeamId(event.target.value)} className="mt-1 block h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-base">
           {teams.map((team) => (
             <option key={team.id} value={team.id}>
               {team.ageGroup} · {team.division ?? team.name}
@@ -107,7 +108,7 @@ function CoachAssign({
           ))}
         </select>
       </label>
-      <Button type="submit" size="lg" className="h-11">
+      <Button type="submit" size="lg" className="h-11 sm:col-span-2 sm:w-fit">
         Assign coach
       </Button>
     </form>
@@ -232,6 +233,63 @@ function PlayerList({
   );
 }
 
+function AllocateFields({ onAssign }: { onAssign: (teamId: string) => void }) {
+  const ageGroups = ensureYouthAges(useClubStore((state) => state.ageGroups));
+  const openDivisionTeam = useClubStore((state) => state.openDivisionTeam);
+  const [ageId, setAgeId] = useState("");
+  const selected = ageGroups.find((group) => group.id === ageId) ?? null;
+
+  return (
+    <div className="mt-3">
+      <p className="text-sm font-semibold text-slate-800">Age group</p>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {ageGroups.map((group) => {
+          const label = ageLabel(group.name);
+          const active = group.id === selected?.id;
+          return (
+            <button
+              key={group.id}
+              type="button"
+              data-age-tile={label}
+              aria-pressed={active}
+              onClick={() => setAgeId(group.id)}
+              className={`min-h-11 min-w-16 rounded-xl px-4 text-base font-black ${
+                active ? "bg-primary text-primary-foreground" : "bg-slate-100 text-slate-950 ring-1 ring-slate-300"
+              }`}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+      {selected ? (
+        <label className="mt-3 block text-sm font-semibold text-slate-800">
+          Division
+          <select
+            value=""
+            data-field="allocate"
+            onChange={(event) => {
+              if (!isDivision(event.target.value)) return;
+              const teamId = openDivisionTeam(selected.id, event.target.value);
+              if (teamId) onAssign(teamId);
+            }}
+            className="mt-1 block h-11 w-full max-w-xs rounded-md border border-slate-300 bg-white px-3 text-base"
+          >
+            <option value="">Choose a division</option>
+            {DIVISIONS.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : (
+        <p className="mt-2 text-sm font-medium text-slate-600">Tap an age group, then choose Prem, Div 1, Div 2, Div 3, or Div 4.</p>
+      )}
+    </div>
+  );
+}
+
 function PlayerRow({
   player,
   teams,
@@ -253,8 +311,8 @@ function PlayerRow({
 
   return (
     <li className="rounded-xl bg-white p-4 ring-1 ring-slate-300" data-player={player.name}>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <p className="text-base font-bold text-slate-950">
             {player.squadNumber} {player.name}
           </p>
@@ -266,28 +324,32 @@ function PlayerRow({
         <button
           type="button"
           onClick={() => setOpen((current) => !current)}
-          className="min-h-11 rounded-xl bg-slate-100 px-3 py-2 text-left ring-1 ring-slate-300"
+          className="min-h-11 w-full shrink-0 rounded-xl bg-slate-100 px-3 py-2 text-left ring-1 ring-slate-300 sm:w-auto"
         >
           <span className="block text-sm font-bold text-slate-950">{open ? "Close editor" : "Edit player"}</span>
           <span className="mt-0.5 block text-xs font-medium text-slate-600">Change the name, number, or position.</span>
         </button>
       </div>
-      <label className="mt-3 block text-sm font-semibold text-slate-800">
-        Team and league
-        <select
-          value={player.teamId}
-          data-field="allocate"
-          onChange={(event) => onAssign(player.id, event.target.value)}
-          className="mt-1 block h-11 w-full max-w-md rounded-md border border-slate-300 bg-white px-2 text-base"
-        >
-          <option value="">Not on a team yet</option>
-          {teams.map((team) => (
-            <option key={team.id} value={team.id}>
-              {team.ageGroup} · {team.division ?? team.name}
-            </option>
-          ))}
-        </select>
-      </label>
+      {player.teamId ? (
+        <label className="mt-3 block text-sm font-semibold text-slate-800">
+          Team and league
+          <select
+            value={player.teamId}
+            data-field="allocate"
+            onChange={(event) => onAssign(player.id, event.target.value)}
+            className="mt-1 block h-11 w-full max-w-md rounded-md border border-slate-300 bg-white px-3 text-base"
+          >
+            <option value="">Not on a team yet</option>
+            {teams.map((team) => (
+              <option key={team.id} value={team.id}>
+                {team.ageGroup} · {team.division ?? team.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : (
+        <AllocateFields onAssign={(nextTeamId) => onAssign(player.id, nextTeamId)} />
+      )}
       {open ? (
         <form
           className="mt-3 space-y-3 border-t border-slate-200 pt-3"
