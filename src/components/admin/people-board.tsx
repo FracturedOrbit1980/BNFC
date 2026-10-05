@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { PlayerPhotoField, PlayerPortrait } from "@/components/club/player-photo";
 import { PositionFields } from "@/components/club/position-fields";
 import { TeamPicker } from "@/components/coach/team-picker";
 import { ageLabel, ensureYouthAges } from "@/lib/club/age";
@@ -128,12 +129,13 @@ function Step({ n, title, detail }: { n: string; title: string; detail: string }
 function RegisterForm({
   onSave,
 }: {
-  onSave: (input: { name: string; squadNumber: number; position: string; positions: string[]; teamId: string }) => void;
+  onSave: (input: { name: string; squadNumber: number; position: string; positions: string[]; teamId: string; photo: string }) => void;
 }) {
   const [name, setName] = useState("");
   const [number, setNumber] = useState(1);
   const [role, setRole] = useState<PositionChoice>("Central midfielder");
   const [roles, setRoles] = useState<StandardPosition[]>([]);
+  const [photo, setPhoto] = useState("");
 
   return (
     <form
@@ -147,8 +149,10 @@ function RegisterForm({
           position: role,
           positions: roles,
           teamId: "",
+          photo,
         });
         setName("");
+        setPhoto("");
         setNumber((current) => Math.min(99, current + 1));
       }}
     >
@@ -177,6 +181,9 @@ function RegisterForm({
           className="mt-1 h-11 w-full rounded-md border border-slate-300 px-3 text-base"
         />
       </label>
+      <div className="sm:col-span-2">
+        <PlayerPhotoField photo={photo} name={name} field="register-photo" onPhoto={setPhoto} />
+      </div>
       <div className="sm:col-span-2">
         <PositionFields
           role={role}
@@ -208,7 +215,7 @@ function PlayerList({
   empty: string;
   players: ClubPlayer[];
   teams: { id: string; ageGroup: string; division?: string; name: string }[];
-  onSave: (playerId: string, input: { name: string; squadNumber: number; position: string; positions?: string[] }) => void;
+  onSave: (playerId: string, input: { name: string; squadNumber: number; position: string; positions?: string[]; photo?: string }) => void;
   onAssign: (playerId: string, teamId: string) => void;
 }) {
   return (
@@ -242,7 +249,7 @@ function AllocateFields({ onAssign }: { onAssign: (teamId: string) => void }) {
   return (
     <div className="mt-3">
       <p className="text-sm font-semibold text-slate-800">Age group</p>
-      <div className="mt-2 flex flex-wrap gap-2">
+      <div className="mt-3 flex flex-wrap gap-3">
         {ageGroups.map((group) => {
           const label = ageLabel(group.name);
           const active = group.id === selected?.id;
@@ -253,7 +260,7 @@ function AllocateFields({ onAssign }: { onAssign: (teamId: string) => void }) {
               data-age-tile={label}
               aria-pressed={active}
               onClick={() => setAgeId(group.id)}
-              className={`min-h-11 min-w-16 rounded-xl px-4 text-base font-black ${
+              className={`min-h-12 min-w-16 rounded-xl px-4 text-base font-black ${
                 active ? "bg-primary text-primary-foreground" : "bg-slate-100 text-slate-950 ring-1 ring-slate-300"
               }`}
             >
@@ -298,9 +305,10 @@ function PlayerRow({
 }: {
   player: ClubPlayer;
   teams: { id: string; ageGroup: string; division?: string; name: string }[];
-  onSave: (playerId: string, input: { name: string; squadNumber: number; position: string; positions?: string[] }) => void;
+  onSave: (playerId: string, input: { name: string; squadNumber: number; position: string; positions?: string[]; photo?: string }) => void;
   onAssign: (playerId: string, teamId: string) => void;
 }) {
+  const setPlayerPhoto = useClubStore((state) => state.setPlayerPhoto);
   const [open, setOpen] = useState(false);
   const stored = normalizePositions(player.position, player.positions);
   const [name, setName] = useState(player.name);
@@ -312,7 +320,9 @@ function PlayerRow({
   return (
     <li className="rounded-xl bg-white p-4 ring-1 ring-slate-300" data-player={player.name}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
+        <div className="flex min-w-0 items-center gap-3">
+          <PlayerPortrait photo={player.photo} name={player.name} size="sm" />
+          <div className="min-w-0">
           <p className="text-base font-bold text-slate-950">
             {player.squadNumber} {player.name}
           </p>
@@ -320,6 +330,7 @@ function PlayerRow({
           <p className="text-sm font-medium text-slate-600">
             {teamLabel ? `${teamLabel.ageGroup} · ${teamLabel.division ?? teamLabel.name}` : "Not on a team yet"}
           </p>
+          </div>
         </div>
         <button
           type="button"
@@ -377,6 +388,12 @@ function PlayerRow({
             }}
             onToggle={(item) => setRoles((current) => (current.includes(item) ? current.filter((entry) => entry !== item) : [...current, item]))}
             field={`edit-${player.id}`}
+          />
+          <PlayerPhotoField
+            photo={player.photo}
+            name={player.name}
+            field="edit-photo"
+            onPhoto={(next) => setPlayerPhoto(player.id, next)}
           />
           <Button type="submit" size="lg" className="h-11">
             Save player

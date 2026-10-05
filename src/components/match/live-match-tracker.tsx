@@ -247,10 +247,10 @@ export function LiveMatchTracker() {
             ) : null}
           </div>
         </div>
-      <section className="match-clock mt-4 min-w-0 rounded-xl bg-slate-900 p-4 text-white shadow-lg">
+      <section className="match-clock ink-panel mt-4 min-w-0 rounded-xl bg-slate-900 p-4 text-white shadow-lg">
         <div className="flex items-start justify-between gap-3">
           <p className="text-sm font-semibold uppercase tracking-wide text-emerald-300">{teamName}</p>
-          <p className="rounded-full bg-emerald-500 px-3 py-1 text-sm font-bold text-slate-950">
+          <p className="rounded-full bg-emerald-500 px-3 py-1 text-sm font-bold text-[#1e1d1b]">
             {isClockRunning ? "LIVE" : "READY"}
           </p>
         </div>
@@ -273,7 +273,7 @@ export function LiveMatchTracker() {
           <Button
             type="button"
             size="lg"
-            className="h-14 min-w-36 bg-emerald-500 text-base text-slate-950 hover:bg-emerald-400"
+            className="h-14 min-w-36 bg-emerald-500 text-base text-[#1e1d1b] hover:bg-emerald-400"
             onClick={() => (isClockRunning ? pauseMatchClock() : startMatchClock())}
           >
             {isClockRunning ? <Pause className="size-5" /> : <Play className="size-5" />}

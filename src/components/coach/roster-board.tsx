@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 
+import { PlayerPhotoField, PlayerPortrait } from "@/components/club/player-photo";
 import { PositionFields } from "@/components/club/position-fields";
 import { Button } from "@/components/ui/button";
 import { useCoachTeam } from "@/components/coach/team-picker";
@@ -34,6 +35,7 @@ export function RosterBoard() {
   const [editRoles, setEditRoles] = useState<StandardPosition[]>(initialPosition.positions);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const updatePlayer = useClubStore((state) => state.updatePlayer);
+  const setPlayerPhoto = useClubStore((state) => state.setPlayerPhoto);
   const deletePlayer = useClubStore((state) => state.deletePlayer);
   const [weekStart, setWeekStart] = useState(() => mondayOf(sessionToday()));
   const dates = weekDates(weekStart);
@@ -73,18 +75,22 @@ export function RosterBoard() {
             : "Open an age and a league on Home. Attendance starts after players are allocated."}
         </p>
         {squad.length > 0 ? (
-          <ul className="space-y-2" data-squad-list>
+          <ul className="space-y-3" data-squad-list>
             {squad.map((player) => (
               <li key={player.id}>
                 <button
                   type="button"
                   onClick={() => selectPlayer(player.id)}
-                  className="grid min-h-11 w-full grid-cols-[2.75rem_minmax(0,1fr)_auto] items-center gap-x-3 rounded-xl bg-white px-4 py-3 text-left ring-1 ring-slate-300"
+                  data-squad-player={player.name}
+                  className="grid min-h-11 w-full grid-cols-[2.75rem_2.25rem_minmax(0,1fr)_auto] items-center gap-x-4 rounded-2xl bg-white px-4 py-4 text-left ring-1 ring-slate-300 sm:px-5"
                 >
+                  <span className="row-span-2">
+                    <PlayerPortrait photo={player.photo} name={player.name} size="sm" />
+                  </span>
                   <span className="row-span-2 text-lg font-black tabular-nums text-slate-950">{player.squadNumber}</span>
                   <span className="min-w-0 truncate font-semibold text-slate-950">{player.name}</span>
                   <span className="text-sm font-bold text-slate-700">Open</span>
-                  <span className="col-start-2 truncate text-sm text-slate-600">{formatPosition(player)}</span>
+                  <span className="col-start-3 truncate text-sm text-slate-600">{formatPosition(player)}</span>
                 </button>
               </li>
             ))}
@@ -120,10 +126,15 @@ export function RosterBoard() {
           setSaved(`Saved scores for ${selected.name}.`);
         }}
       >
-        <h2 className="text-lg font-bold text-slate-950">{selected.name}</h2>
-        <p className="text-sm font-medium text-slate-600">
-          {latest ? `Last rating ${latest.date}` : "No rating yet"}
-        </p>
+        <div className="flex items-center gap-3">
+          <PlayerPortrait photo={selected.photo} name={selected.name} size="lg" />
+          <div className="min-w-0">
+            <h2 className="text-lg font-bold text-slate-950">{selected.name}</h2>
+            <p className="text-sm font-medium text-slate-600">
+              {latest ? `Last rating ${latest.date}` : "No rating yet"}
+            </p>
+          </div>
+        </div>
         <div className="mt-4 space-y-3">
           <ScoreRow label="Technical" value={scores.technical} onChange={(value) => setScores({ ...scores, technical: value })} />
           <ScoreRow label="Tactical" value={scores.tactical} onChange={(value) => setScores({ ...scores, tactical: value })} />
@@ -164,6 +175,12 @@ export function RosterBoard() {
         >
           <h3 className="text-sm font-bold uppercase tracking-wide text-slate-700">Edit player</h3>
           <p className="text-sm font-medium text-slate-700">Change the name, shirt number, or position, then save.</p>
+          <PlayerPhotoField
+            photo={selected.photo}
+            name={selected.name}
+            field="squad-photo"
+            onPhoto={(next) => setPlayerPhoto(selected.id, next)}
+          />
           <label className="block text-sm font-semibold text-slate-800">
             Name
             <input
@@ -223,7 +240,7 @@ export function RosterBoard() {
               <Button
                 type="button"
                 size="lg"
-                className="h-11 bg-slate-950 text-white hover:bg-slate-800"
+                className="h-11 bg-[#1e1d1b] text-white hover:bg-[#3a342c]"
                 onClick={() => {
                   deletePlayer(selected.id);
                   setSelectedId("");
@@ -450,6 +467,7 @@ function AddSquadPlayer({ teamId }: { teamId: string }) {
   const [number, setNumber] = useState(1);
   const [role, setRole] = useState<PositionChoice>("Central midfielder");
   const [roles, setRoles] = useState<StandardPosition[]>([]);
+  const [photo, setPhoto] = useState("");
 
   return (
     <form
@@ -463,8 +481,10 @@ function AddSquadPlayer({ teamId }: { teamId: string }) {
           position: role,
           positions: roles,
           teamId,
+          photo,
         });
         setName("");
+        setPhoto("");
         setRole("Central midfielder");
         setRoles([]);
       }}
@@ -477,6 +497,9 @@ function AddSquadPlayer({ teamId }: { teamId: string }) {
         Number
         <input type="number" min={1} max={99} data-field="add-number" value={number} onChange={(event) => setNumber(Number(event.target.value))} className="mt-1 block h-11 w-24 rounded-md border border-slate-300 px-3 text-base" />
       </label>
+      <div className="w-full">
+        <PlayerPhotoField photo={photo} name={name} field="add-photo" onPhoto={setPhoto} />
+      </div>
       <PositionFields
         role={role}
         roles={roles}

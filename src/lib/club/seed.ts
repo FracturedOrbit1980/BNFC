@@ -12,6 +12,7 @@ export interface ClubPlayer {
   positions?: string[];
   teamId: string;
   homework: string;
+  photo?: string;
 }
 
 export interface ClubCoach {
@@ -112,6 +113,7 @@ export function createSeed(): ClubData {
       positions: [] as string[],
       teamId: SQUAD_TEAM_ID,
       homework: "",
+      photo: "",
     })),
   );
   return {

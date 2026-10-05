@@ -30,10 +30,10 @@ export function TeamPicker() {
   const divisionValue = openTeam?.division ?? "";
 
   return (
-    <div className="mb-4 rounded-xl bg-white p-4 ring-1 ring-slate-300" data-team-setup>
+    <div className="mb-6 rounded-2xl bg-white p-5 ring-1 ring-slate-300" data-team-setup>
       <p className="text-sm font-semibold text-slate-800">Age group</p>
       <div
-        className="mt-2 flex flex-wrap gap-2"
+        className="mt-3 flex flex-wrap gap-3"
         data-age-order={ageGroups.map((group) => ageLabel(group.name)).join(" ")}
       >
         {ageGroups.map((group) => {
@@ -46,7 +46,7 @@ export function TeamPicker() {
               data-age-tile={label}
               aria-pressed={active}
               onClick={() => setAgeId(group.id)}
-              className={`min-h-11 min-w-16 rounded-xl px-4 text-base font-black ${
+              className={`min-h-12 min-w-16 rounded-xl px-4 text-base font-black ${
                 active ? "bg-primary text-primary-foreground" : "bg-slate-100 text-slate-950 ring-1 ring-slate-300"
               }`}
             >

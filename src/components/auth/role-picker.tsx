@@ -24,7 +24,7 @@ export function RolePicker() {
   const { signIn } = useRole();
 
   return (
-    <div className="grid gap-4 md:grid-cols-3">
+    <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
       {ROLES.map((item) => (
         <Card key={item.role}>
           <CardHeader>

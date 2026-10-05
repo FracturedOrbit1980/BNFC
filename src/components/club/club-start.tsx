@@ -21,15 +21,16 @@ export function ClubStart() {
   if (!ready) return null;
 
   return (
-    <div>
+    <div className="grid items-start gap-10 lg:grid-cols-2 lg:gap-14">
+      <div>
       <p className="text-sm font-bold uppercase tracking-widest text-emerald-700">Club</p>
-      <h1 className="mt-1 break-words text-3xl font-black leading-tight tracking-tight text-slate-950 sm:text-4xl">{current ? current.name : "Load a club"}</h1>
-      <p className="mt-3 max-w-2xl text-lg text-slate-700">
+      <h1 className="mt-2 break-words text-[clamp(1.85rem,1.2rem+2.2vw,3.25rem)] font-black leading-[1.12] tracking-tight text-slate-950">{current ? current.name : "Load a club"}</h1>
+      <p className="mt-4 max-w-xl text-lg leading-relaxed text-slate-700">
         Choose a club to open. Players, teams, drills, attendance, and the colours stay with that club.
       </p>
-      <div className="mt-6 grid gap-3" data-club-list>
+      <div className="mt-8 grid gap-4" data-club-list>
         {clubs.map((club) => (
-          <article key={club.id} className="rounded-xl bg-white p-4 ring-1 ring-slate-300" data-club={club.id}>
+          <article key={club.id} className="rounded-2xl bg-white p-5 ring-1 ring-slate-300 sm:p-6" data-club={club.id}>
             <div className="flex flex-wrap items-center gap-3">
               <ClubLogo club={club} />
               <div className="min-w-0 flex-1 basis-40">
@@ -70,18 +71,20 @@ export function ClubStart() {
           </article>
         ))}
       </div>
+      </div>
+      <div className="grid content-start gap-8">
       {current ? (
-        <div className="mt-8">
+        <div>
           <h2 className="text-lg font-black text-slate-950">Open {current.name}</h2>
-          <p className="mt-1 text-sm font-medium text-slate-600">Register players as club admin, then coach the squad.</p>
-          <div className="mt-3">
+          <p className="mt-2 text-sm font-medium leading-relaxed text-slate-600">Register players as club admin, then coach the squad.</p>
+          <div className="mt-4">
             <RolePicker />
           </div>
         </div>
       ) : (
-        <p className="mt-6 text-base font-semibold text-slate-700">Load {CLUB_NAME}, or add a club, before you open a role.</p>
+        <p className="text-base font-semibold text-slate-700">Load {CLUB_NAME}, or add a club, before you open a role.</p>
       )}
-      <section className="mt-8 rounded-xl bg-white p-4 ring-1 ring-slate-300" aria-label="Add a club">
+      <section className="rounded-2xl bg-white p-5 ring-1 ring-slate-300 sm:p-6" aria-label="Add a club">
         <h2 className="text-lg font-black text-slate-950">Add a club</h2>
         <ClubForm
           submitLabel="Add club"
@@ -90,6 +93,7 @@ export function ClubStart() {
           }}
         />
       </section>
+      </div>
     </div>
   );
 }
@@ -161,7 +165,7 @@ function ClubForm({
               aria-pressed={theme === item.id}
               onClick={() => setTheme(item.id)}
               className={`inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-bold ${
-                theme === item.id ? "bg-slate-950 text-white" : "bg-slate-100 text-slate-950"
+                theme === item.id ? "bg-[#1e1d1b] text-white" : "bg-slate-100 text-slate-950"
               }`}
             >
               <span className="size-4 rounded-full" style={{ background: item.swatch }} />

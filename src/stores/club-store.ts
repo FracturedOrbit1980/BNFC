@@ -39,6 +39,7 @@ export interface NewPlayerInput {
   position: string;
   positions?: string[];
   teamId: string;
+  photo?: string;
 }
 
 export interface NewEvaluationInput {
@@ -63,7 +64,8 @@ interface ClubState extends ClubData {
   setCoachTeam: (teamId: string) => void;
   addPlayer: (input: NewPlayerInput) => void;
   importPlayers: (rows: RosterRow[]) => { added: number; updated: number };
-  updatePlayer: (playerId: string, input: { name: string; squadNumber: number; position: string; positions?: string[] }) => void;
+  updatePlayer: (playerId: string, input: { name: string; squadNumber: number; position: string; positions?: string[]; photo?: string }) => void;
+  setPlayerPhoto: (playerId: string, photo: string) => void;
   assignPlayer: (playerId: string, teamId: string) => void;
   deletePlayer: (playerId: string) => void;
   addCoach: (teamId: string, name: string) => void;
@@ -156,6 +158,7 @@ export const useClubStore = create<ClubState>()(
               ...normalizePositions(input.position, input.positions),
               teamId: input.teamId,
               homework: "",
+              photo: input.photo ?? "",
             },
           ],
         })),
@@ -186,6 +189,7 @@ export const useClubStore = create<ClubState>()(
               positions: [],
               teamId: placed.teamId,
               homework: "",
+              photo: "",
             });
             added += 1;
           }
@@ -202,9 +206,14 @@ export const useClubStore = create<ClubState>()(
                   name: input.name,
                   squadNumber: input.squadNumber,
                   ...normalizePositions(input.position, input.positions),
+                  ...(input.photo !== undefined ? { photo: input.photo } : {}),
                 }
               : player,
           ),
+        })),
+      setPlayerPhoto: (playerId, photo) =>
+        set((state) => ({
+          players: state.players.map((player) => (player.id === playerId ? { ...player, photo } : player)),
         })),
       assignPlayer: (playerId, teamId) =>
         set((state) => ({
@@ -486,6 +495,7 @@ export const useClubStore = create<ClubState>()(
           return {
             ...next,
             ...normalizePositions(player.position, player.positions),
+            photo: typeof player.photo === "string" ? player.photo : "",
           };
         });
         const placed = placeOnU12Prem(ageGroups, players);

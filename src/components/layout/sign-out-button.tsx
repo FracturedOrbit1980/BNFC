@@ -9,7 +9,7 @@ export function SignOutButton() {
     <button
       type="button"
       onClick={() => signOut()}
-      className="h-9 rounded-md bg-slate-800 px-3 text-sm font-semibold text-white hover:bg-slate-700"
+      className="min-h-11 rounded-lg bg-white/10 px-3 text-sm font-bold text-white ring-1 ring-white/20"
     >
       Sign out
     </button>

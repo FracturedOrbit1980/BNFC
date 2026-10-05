@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { PlayerPortrait } from "@/components/club/player-photo";
 import { PlayerRadar } from "@/components/dashboard/player-radar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -62,7 +63,10 @@ export function PlayerHome() {
         <>
           <Card>
             <CardHeader>
-              <CardTitle>{player.name}</CardTitle>
+              <div className="flex items-center gap-3">
+                <PlayerPortrait photo={player.photo} name={player.name} size="lg" />
+                <CardTitle>{player.name}</CardTitle>
+              </div>
             </CardHeader>
             <CardContent className="grid gap-3 sm:grid-cols-4">
               <Fact label="Squad" value={String(player.squadNumber)} />

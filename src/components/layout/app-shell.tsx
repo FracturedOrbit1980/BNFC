@@ -13,6 +13,7 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { useRole } from "@/components/auth/role-session";
+import { AppearanceToggle } from "@/components/layout/appearance";
 import { SignOutButton } from "@/components/layout/sign-out-button";
 import { ROLE_HOME, ROLE_LABEL, type UserRole } from "@/lib/auth/roles";
 import { BNFC_CLUB_ID } from "@/lib/club/registry";
@@ -59,15 +60,18 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-full bg-slate-100 text-slate-950">
-      <header className="fixed inset-x-0 top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-slate-800 bg-slate-950 px-4 text-white md:hidden">
+      <header className="app-chrome fixed inset-x-0 top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-white/10 px-4 md:hidden">
         <Link href="/" className="flex min-w-0 items-center gap-2 font-bold">
           <ClubMark club={club} />
           <span className="truncate">{clubName}</span>
         </Link>
-        {role ? <SignOutButton /> : null}
+        <div className="flex shrink-0 items-center gap-2">
+          <AppearanceToggle />
+          {role ? <SignOutButton /> : null}
+        </div>
       </header>
 
-      <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 flex-col bg-slate-950 text-white md:flex">
+      <aside className="app-chrome fixed inset-y-0 left-0 z-20 hidden w-64 flex-col md:flex">
         <Link href="/" className="flex items-center gap-3 px-5 py-5">
           <ClubMark club={club} />
           <span>
@@ -84,7 +88,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 key={item.href}
                 href={item.href}
                 className={`flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold ${
-                  active ? "bg-emerald-500 text-slate-950" : "text-slate-100 hover:bg-slate-800"
+                  active ? "bg-emerald-500 text-[#1e1d1b]" : "text-white/85 hover:bg-white/10"
                 }`}
               >
                 <Icon className="size-5" />
@@ -93,21 +97,22 @@ export function AppShell({ children }: { children: ReactNode }) {
             );
           })}
         </nav>
-        <div className="space-y-3 border-t border-slate-800 p-4">
+        <div className="space-y-3 border-t border-white/10 p-4">
+          <AppearanceToggle />
           <Link href="/" className="flex min-h-11 items-center text-sm font-bold text-emerald-300">
             Clubs
           </Link>
-          {role ? <p className="text-sm font-semibold text-slate-200">{ROLE_LABEL[role]}</p> : null}
+          {role ? <p className="text-sm font-semibold text-white/80">{ROLE_LABEL[role]}</p> : null}
           {role ? <SignOutButton /> : null}
         </div>
       </aside>
 
-      <main className="px-4 pb-32 pt-20 md:pb-10 md:pl-72 md:pr-8 md:pt-8">
-        <div className="mx-auto w-full max-w-6xl">{children}</div>
+      <main className="px-4 pb-32 pt-24 sm:px-6 md:pb-12 md:pl-72 md:pr-10 md:pt-10">
+        <div className="mx-auto w-full max-w-[76rem]">{children}</div>
       </main>
 
       {items.length > 0 ? (
-        <nav className="fixed inset-x-0 bottom-0 z-30 grid border-t border-slate-800 bg-slate-950 text-white md:hidden" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
+        <nav className="app-chrome fixed inset-x-0 bottom-0 z-30 grid border-t border-white/10 md:hidden" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
           {items.map((item) => {
             const Icon = item.icon;
             const active = isActive(pathname, item.href);
@@ -116,7 +121,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 key={item.href}
                 href={item.href}
                 className={`flex min-h-16 flex-col items-center justify-center gap-1 text-xs font-bold ${
-                  active ? "text-emerald-400" : "text-slate-200"
+                  active ? "text-emerald-300" : "text-white/75"
                 }`}
               >
                 <Icon className="size-5" />
@@ -135,7 +140,7 @@ function ClubMark({ club }: { club: ReturnType<typeof activeClub> }) {
   const src = club?.logo || (club?.id === BNFC_CLUB_ID ? `${base}/icons/bnfc-logo.jpg` : "");
   if (!src) {
     return (
-      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-emerald-500 text-xs font-black text-slate-950">
+      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-emerald-500 text-xs font-black text-[#1e1d1b]">
         {(club?.name ?? "C").slice(0, 1).toUpperCase()}
       </span>
     );

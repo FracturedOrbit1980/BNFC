@@ -91,7 +91,7 @@ export function DrillStopwatch({
   }
 
   return (
-    <div className="w-full rounded-xl bg-slate-900 p-4 text-white shadow-lg">
+    <div className="ink-panel w-full rounded-xl bg-slate-900 p-4 text-white shadow-lg">
       <h3 className="text-lg font-bold text-slate-200">{drillTitle}</h3>
       <p className="mt-1 text-sm font-medium text-slate-300">
         {state.secondsLeft === 0 ? "Block complete" : state.isActive ? "Running" : "Ready"}
