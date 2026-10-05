@@ -6,6 +6,7 @@ import {
   type DrillTemplate,
   type DrillType,
   type MomentOfGame,
+  type LicenseLevel,
   type PlayerCount,
 } from "@/lib/club/catalog";
 
@@ -58,7 +59,7 @@ export function withUefaDrills(saved: Partial<ClubDrill>[] | undefined, baseline
         videoUrl: typeof raw.videoUrl === "string" ? raw.videoUrl : "",
         videoName: typeof raw.videoName === "string" ? raw.videoName : "",
       });
-    } else {
+    } else if (!(raw.isClubOfficial !== false && /^dr-\d{2}$/.test(raw.id))) {
       custom.push(normalizeCustomDrill(raw));
     }
   }
@@ -79,6 +80,12 @@ function count(value: unknown) {
   const number = Number(value);
   if (!Number.isFinite(number)) return 0;
   return Math.min(22, Math.max(0, Math.round(number)));
+}
+
+function meters(value: unknown) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return 0;
+  return Math.min(120, Math.max(0, Math.round(number)));
 }
 
 function textList(value: unknown) {
@@ -120,11 +127,24 @@ function normalizeCustomDrill(raw: Partial<ClubDrill> & { objectiveCategory?: st
     instructions: raw.instructions ?? "",
     coachingPoints: textList(raw.coachingPoints),
     progressions: textList(raw.progressions),
+    tags: textList(raw.tags),
+    licenseLevel: licenseOf(raw.licenseLevel),
+    ageBand: raw.ageBand || raw.targetAgeGroup || "All ages",
+    minPlayers: count(raw.minPlayers) || count(players.attackers) + count(players.defenders) + count(players.neutrals),
+    maxPlayers: count(raw.maxPlayers) || count(players.attackers) + count(players.defenders) + count(players.neutrals),
+    pitchLengthM: meters(raw.pitchLengthM),
+    pitchWidthM: meters(raw.pitchWidthM),
     defaultDurationSeconds: raw.defaultDurationSeconds ?? raw.durationSeconds ?? 300,
     durationSeconds: raw.durationSeconds ?? raw.defaultDurationSeconds ?? 300,
     videoUrl: raw.videoUrl ?? "",
     videoName: raw.videoName ?? "",
   };
+}
+
+function licenseOf(value: unknown): LicenseLevel {
+  return value === "Grassroots" || value === "UEFA C" || value === "UEFA B" || value === "UEFA A" || value === "UEFA Pro"
+    ? value
+    : "Grassroots";
 }
 
 function typeFromLegacy(category: string | undefined, diagram: DrillTemplate["diagram"] | undefined, title: string | undefined): DrillType {

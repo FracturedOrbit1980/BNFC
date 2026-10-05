@@ -40,7 +40,7 @@ export function DrillLibrary({
     const momentOk = moment === "All" || drill.moment === moment;
     const typeOk = drillType === "All" || drill.drillType === drillType;
     const levelOk = level === "All" || drill.level === level;
-    const text = `${drill.title} ${drill.focus} ${drill.playerSetup} ${drill.constraint} ${momentLabel(drill.moment)} ${drillTypeLabel(drill.drillType)} ${drill.level}`.toLowerCase();
+    const text = `${drill.title} ${drill.focus} ${drill.playerSetup} ${drill.constraint} ${drill.tags.join(" ")} ${drill.licenseLevel} ${drill.ageBand} ${drill.coachingPoints.join(" ")} ${momentLabel(drill.moment)} ${drillTypeLabel(drill.drillType)} ${drill.level}`.toLowerCase();
     return momentOk && typeOk && levelOk && (!query || text.includes(query));
   });
   const selected = visible.find((drill) => drill.id === selectedId) ?? visible[0];
@@ -156,7 +156,7 @@ export function DrillLibrary({
                 <p className="text-sm font-semibold text-slate-950">{momentLabel(selected.moment)} · {drillTypeLabel(selected.drillType)} · {selected.level}</p>
                 <p className="mt-1 text-sm font-medium text-slate-800">{playerCountLine(selected.players)}</p>
                 <p className="mt-1 text-sm font-medium text-slate-800">
-                  {selected.dimensions || "Pitch size not set"} · {selected.workRest || "Work and rest not set"} · {selected.repetitions} reps
+                  {selected.dimensions || "Pitch size not set"} · {selected.workRest || "Work and rest not set"} · {selected.licenseLevel} · {selected.ageBand}
                 </p>
                 <p className="mt-1 text-sm font-medium text-slate-800">{selected.equipment.length ? selected.equipment.join(", ") : "No equipment listed"}</p>
                 <p className="mt-2 text-sm font-semibold text-slate-950">{selected.pitchSetup}</p>
