@@ -1,7 +1,7 @@
 {
-  "name": "Benoni Northerns FC",
-  "short_name": "BNFC",
-  "description": "Club platform for Benoni Northerns FC",
+  "name": "Sportfica",
+  "short_name": "Sportfica",
+  "description": "Club platform for Sportfica",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

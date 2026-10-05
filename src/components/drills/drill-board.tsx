@@ -13,6 +13,7 @@ import {
   SESSION_PHASES,
   clampPoint,
   boardColors,
+  pitchFill,
   emptyDrillBoard,
   type BoardFrame,
   type BoardMark,
@@ -196,7 +197,10 @@ function DrillBoardEditor({
         <svg
           ref={svgRef}
           viewBox={`${windowBox.x} ${windowBox.y} ${windowBox.width} ${windowBox.height}`}
-          className="editor-pitch-svg h-auto w-full max-w-full touch-none rounded-lg bg-emerald-700"
+          className="editor-pitch-svg h-auto w-full max-w-full touch-none rounded-lg"
+          style={{ backgroundColor: pitchFill(board) }}
+          data-pitch="session"
+          data-pitch-color={pitchFill(board)}
           role="img"
           aria-label="Drill pitch"
           onPointerDown={onPointerDown}
@@ -244,6 +248,19 @@ function DrillBoardEditor({
         </svg>
       </div>
       <div className="mt-3 min-w-0 space-y-3">
+        <ControlRow label="Field">
+          <label className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-slate-950">
+            Colour
+            <input
+              type="color"
+              aria-label="Field colour"
+              data-field="pitch-color"
+              value={pitchFill(board)}
+              onChange={(event) => commit({ ...board, pitchColor: event.target.value })}
+              className="size-11 cursor-pointer rounded-md border border-slate-300 bg-transparent p-0.5"
+            />
+          </label>
+        </ControlRow>
         <ControlRow label="View">
           {PITCH_VIEWS.map((view) => (
             <Chip key={view} active={board.view === view} onClick={() => commit({ ...board, view })}>

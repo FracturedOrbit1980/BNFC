@@ -43,6 +43,7 @@ import {
   PITCH_WINDOW,
   clampPoint,
   boardColors,
+  pitchFill,
   emptyDrillBoard,
   type BoardFrame,
   type BoardMark,
@@ -283,7 +284,7 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
     setTool("move");
   }
 
-  function paintColor(field: "playerColor" | "opponentColor", value: string) {
+  function paintColor(field: "playerColor" | "opponentColor" | "pitchColor", value: string) {
     if (!colorRecorded.current) {
       past.current.push(structuredClone(board));
       if (past.current.length > 40) past.current.shift();
@@ -645,7 +646,9 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
           data-pitch="editor"
           data-frame={safeIndex}
           viewBox={`${windowBox.x} ${windowBox.y} ${windowBox.width} ${windowBox.height}`}
-          className="editor-pitch-svg h-auto w-full max-w-full touch-none rounded-lg bg-emerald-700"
+          className="editor-pitch-svg h-auto w-full max-w-full touch-none rounded-lg"
+          style={{ backgroundColor: pitchFill(board) }}
+          data-pitch-color={pitchFill(board)}
           role="img"
           aria-label="Drill editor pitch"
           onPointerDown={onPointerDown}
@@ -737,6 +740,17 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
         ) : (
           <p className="min-w-0 flex-1 text-sm font-medium text-slate-500">Descriptions are off.</p>
         )}
+        <label className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-slate-950">
+          Field
+          <input
+            type="color"
+            aria-label="Field colour"
+            data-field="pitch-color"
+            value={pitchFill(board)}
+            onChange={(event) => paintColor("pitchColor", event.target.value)}
+            className="size-11 cursor-pointer rounded-md border border-slate-300 bg-transparent p-0.5"
+          />
+        </label>
         <label className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-slate-950">
           Player
           <input

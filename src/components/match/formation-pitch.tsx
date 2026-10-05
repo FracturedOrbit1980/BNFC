@@ -3,7 +3,7 @@
 import { useRef, type PointerEvent as ReactPointerEvent } from "react";
 
 import { MannequinFigure } from "@/components/pitch/mannequin-figure";
-import { DEFAULT_PLAYER_COLOR } from "@/lib/club/board";
+import { DEFAULT_PITCH_COLOR, DEFAULT_PLAYER_COLOR } from "@/lib/club/board";
 import { playsInGoal } from "@/lib/club/positions";
 import type { CustomFormation } from "@/lib/club/seed";
 import type { PlayerMatchState } from "@/stores/match-store";
@@ -137,12 +137,14 @@ export function FormationPitch({
   emptyMessage,
   positions,
   onMove,
+  fieldColor = DEFAULT_PITCH_COLOR,
 }: {
   formation: string;
   players: PlayerMatchState[];
   emptyMessage: string | null;
   positions?: { playerId: string; x: number; y: number }[];
   onMove?: (playerId: string, x: number, y: number) => void;
+  fieldColor?: string;
 }) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dragId = useRef<string | null>(null);
@@ -174,7 +176,10 @@ export function FormationPitch({
       <svg
         ref={svgRef}
         viewBox="0 0 100 64"
-        className="match-pitch-svg h-auto w-full max-w-full rounded-lg bg-emerald-700"
+        className="match-pitch-svg h-auto w-full max-w-full rounded-lg"
+        style={{ backgroundColor: fieldColor }}
+        data-pitch="match"
+        data-pitch-color={fieldColor}
         role="img"
         aria-label={`${formation} formation`}
         data-formation={formation}

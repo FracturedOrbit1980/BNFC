@@ -3,7 +3,7 @@
 import { useEffect, useId, useState } from "react";
 
 import { MarkShape, PieceShape, PitchLines } from "@/components/drills/drill-board";
-import { boardColors, PITCH_WINDOW, type DrillBoard } from "@/lib/club/board";
+import { boardColors, pitchFill, PITCH_WINDOW, type DrillBoard } from "@/lib/club/board";
 
 export function DrillMotionPreview({
   board,
@@ -39,7 +39,9 @@ export function DrillMotionPreview({
       data-frame={Math.min(slide, frames.length - 1)}
       role="img"
       aria-hidden="true"
-      className={`pointer-events-none shrink-0 rounded-lg bg-emerald-700 ${box}`}
+      className={`pointer-events-none shrink-0 rounded-lg ${box}`}
+      style={{ backgroundColor: pitchFill(board) }}
+      data-pitch-color={pitchFill(board)}
     >
       <defs>
         <marker id={markerId} markerWidth="2.2" markerHeight="2.2" refX="1.8" refY="1.1" orient="auto">

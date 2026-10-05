@@ -43,7 +43,11 @@ export function readRegistry(): ClubRegistry {
     const clubs = Array.isArray(parsed.clubs) ? parsed.clubs.map(normalizeProfile).filter((club) => club.name) : [];
     if (!clubs.some((club) => club.id === BNFC_CLUB_ID)) clubs.unshift(bnfcProfile());
     const activeId = clubs.some((club) => club.id === parsed.activeId) ? parsed.activeId ?? null : null;
-    return { clubs, activeId };
+    const registry = { clubs, activeId };
+    const stored = JSON.stringify(parsed.clubs ?? []);
+    const next = JSON.stringify(clubs);
+    if (stored !== next) writeRegistry(registry);
+    return registry;
   } catch {
     return { clubs: [bnfcProfile()], activeId: null };
   }
@@ -55,11 +59,13 @@ export function writeRegistry(registry: ClubRegistry) {
 
 function normalizeProfile(value: Partial<ClubProfile>): ClubProfile {
   const theme = value.theme && isClubTheme(value.theme) ? value.theme : "red";
+  const id = value.id || `club-${Date.now()}`;
+  const isBnfc = id === BNFC_CLUB_ID || value.kind === "bnfc";
   return {
-    id: value.id || `club-${Date.now()}`,
-    name: (value.name ?? "").trim(),
-    logo: value.logo ?? "",
+    id: isBnfc ? BNFC_CLUB_ID : id,
+    name: isBnfc ? CLUB_NAME : (value.name ?? "").trim(),
+    logo: isBnfc ? "" : (value.logo ?? ""),
     theme,
-    kind: value.kind === "bnfc" ? "bnfc" : "custom",
+    kind: isBnfc ? "bnfc" : "custom",
   };
 }

@@ -14,6 +14,7 @@ import {
   type FormationName,
 } from "@/components/match/formation-pitch";
 import { TeamPicker, useCoachTeam } from "@/components/coach/team-picker";
+import { DEFAULT_PITCH_COLOR } from "@/lib/club/board";
 import { formatPosition, playsInGoal } from "@/lib/club/positions";
 import { useClubStore } from "@/stores/club-store";
 import { useMatchStore, type PlayerMatchState } from "@/stores/match-store";
@@ -35,6 +36,8 @@ export function LiveMatchTracker() {
   const resetMatch = useMatchStore((state) => state.resetMatch);
   const saveMatch = useClubStore((state) => state.saveMatch);
   const customFormations = useClubStore((state) => state.customFormations);
+  const matchPitchColor = useClubStore((state) => state.matchPitchColor) || DEFAULT_PITCH_COLOR;
+  const setMatchPitchColor = useClubStore((state) => state.setMatchPitchColor);
   const saveCustomFormation = useClubStore((state) => state.saveCustomFormation);
   const loadSquad = useMatchStore((state) => state.loadSquad);
   const clubPlayers = useClubStore((state) => state.players);
@@ -209,12 +212,24 @@ export function LiveMatchTracker() {
             ) : null}
           </div>
           <div className="min-h-0 flex-1">
+            <label className="mb-2 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-slate-950">
+              Field
+              <input
+                type="color"
+                aria-label="Match field colour"
+                data-field="match-pitch-color"
+                value={matchPitchColor}
+                onChange={(event) => setMatchPitchColor(event.target.value)}
+                className="size-11 cursor-pointer rounded-md border border-slate-300 bg-transparent p-0.5"
+              />
+            </label>
             <FormationPitch
               formation={formation}
               players={players}
               emptyMessage={emptyMessage}
               positions={layout ?? (isFormationName(formation) ? undefined : positionsFor(formation, null))}
               onMove={movePlayer}
+              fieldColor={matchPitchColor}
             />
             <div className="mt-2 flex flex-wrap items-end gap-2">
               <label className="min-w-[12rem] flex-1 text-sm font-semibold text-slate-800">

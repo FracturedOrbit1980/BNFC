@@ -24,14 +24,14 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: {
     default: CLUB_NAME,
-    template: `%s · BNFC`,
+    template: `%s · Sportfica`,
   },
-  description: "Club platform for Benoni Northerns FC. Squads, drills, and pitch-side match tools.",
+  description: "Club platform for Sportfica. Squads, drills, and pitch-side match tools.",
   applicationName: CLUB_NAME,
   manifest: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/manifest.webmanifest`,
   appleWebApp: {
     capable: true,
-    title: "BNFC",
+    title: "Sportfica",
     statusBarStyle: "black-translucent",
   },
   icons: {

@@ -48,6 +48,7 @@ export type PieceTeam = "player" | "opponent";
 
 export const DEFAULT_PLAYER_COLOR = "#d16b6f";
 export const DEFAULT_OPPONENT_COLOR = "#2563eb";
+export const DEFAULT_PITCH_COLOR = "#047857";
 
 export interface BoardPiece {
   id: string;
@@ -77,6 +78,7 @@ export interface DrillBoard {
   frames: BoardFrame[];
   playerColor?: string;
   opponentColor?: string;
+  pitchColor?: string;
 }
 
 export function boardColors(board: DrillBoard) {
@@ -84,6 +86,10 @@ export function boardColors(board: DrillBoard) {
     player: board.playerColor || DEFAULT_PLAYER_COLOR,
     opponent: board.opponentColor || DEFAULT_OPPONENT_COLOR,
   };
+}
+
+export function pitchFill(board: { pitchColor?: string }) {
+  return board.pitchColor || DEFAULT_PITCH_COLOR;
 }
 
 export interface PitchWindow {
@@ -108,6 +114,7 @@ export function emptyDrillBoard(): DrillBoard {
     speed: 1,
     playerColor: DEFAULT_PLAYER_COLOR,
     opponentColor: DEFAULT_OPPONENT_COLOR,
+    pitchColor: DEFAULT_PITCH_COLOR,
     frames: [{ id: "frame-1", pieces: [], marks: [] }],
   };
 }

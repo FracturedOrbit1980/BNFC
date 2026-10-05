@@ -1,4 +1,4 @@
-export const CLUB_NAME = "Benoni Northerns FC";
+export const CLUB_NAME = "Sportfica";
 
 export const OBJECTIVE_CATEGORIES = ["Technical", "Tactical", "Physical", "Set Piece"] as const;
 

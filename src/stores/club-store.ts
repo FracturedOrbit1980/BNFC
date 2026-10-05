@@ -4,7 +4,7 @@ import { persist } from "zustand/middleware";
 import { ageNumber, ensureYouthAges, sortByAge } from "@/lib/club/age";
 import { normalizePositions } from "@/lib/club/positions";
 import { canonicalDivision, canonicalTeamName, DRILL_LEVELS, OBJECTIVE_CATEGORIES, type Division, type DrillLevel, type ObjectiveCategory, type SetupDiagram } from "@/lib/club/catalog";
-import type { DrillBoard } from "@/lib/club/board";
+import { DEFAULT_PITCH_COLOR, type DrillBoard } from "@/lib/club/board";
 import { placeOnU12Prem, playerId, SQUAD_TEAM_ID, type RosterRow } from "@/lib/club/roster";
 import { weekDates } from "@/lib/club/week";
 import { clubDataKey } from "@/lib/club/registry";
@@ -78,6 +78,7 @@ interface ClubState extends ClubData {
   saveMatch: (teamId: string, opponent: string, minutes: { playerId: string; minutesPlayed: number }[]) => void;
   saveCustomFormation: (name: string, slots: { x: number; y: number }[]) => string;
   setDrillBoard: (drillId: string, board: DrillBoard) => void;
+  setMatchPitchColor: (color: string) => void;
   saveEditorDrill: (
     drillId: string | null,
     input: {
@@ -417,6 +418,7 @@ export const useClubStore = create<ClubState>()(
         }));
         return id;
       },
+      setMatchPitchColor: (color) => set({ matchPitchColor: color }),
       setDrillBoard: (drillId, board) =>
         set((state) => ({
           boards: { ...state.boards, [drillId]: board },
@@ -474,6 +476,7 @@ export const useClubStore = create<ClubState>()(
         matches: state.matches,
         coachTeamId: state.coachTeamId,
         boards: state.boards,
+        matchPitchColor: state.matchPitchColor,
       }),
       merge: (persisted, current) => {
         const saved = (persisted ?? {}) as Partial<ClubData>;
@@ -533,6 +536,7 @@ export const useClubStore = create<ClubState>()(
           weeklyReports: saved.weeklyReports ?? [],
           sessions: saved.sessions ?? [],
           matches: saved.matches ?? [],
+          matchPitchColor: saved.matchPitchColor || DEFAULT_PITCH_COLOR,
           hydrated: false,
         };
       },
