@@ -111,7 +111,7 @@ export function RosterBoard() {
       <button
         type="button"
         onClick={() => setSelectedId("")}
-        className="min-h-11 rounded-xl bg-white px-4 py-2 text-left ring-1 ring-slate-300"
+        className="btn-quiet min-h-11 rounded-xl px-4 py-2 text-left"
       >
         <span className="block text-sm font-bold text-slate-950">Back to squad</span>
         <span className="mt-0.5 block text-xs font-medium text-slate-600">Return to the player list.</span>
@@ -240,7 +240,7 @@ export function RosterBoard() {
               <Button
                 type="button"
                 size="lg"
-                className="h-11 bg-[#1e1d1b] text-white hover:bg-[#3a342c]"
+                className="h-11"
                 onClick={() => {
                   deletePlayer(selected.id);
                   setSelectedId("");
@@ -323,7 +323,7 @@ function TrainingWeek({ playerId, dates }: { playerId: string; dates: string[] }
                   aria-pressed={mark?.present === true}
                   onClick={() => setTrainingAttendance(playerId, date, true)}
                   className={`min-h-11 rounded-md px-3 text-sm font-bold ${
-                    mark?.present === true ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-950"
+                    mark?.present === true ? "btn-shade" : "btn-quiet"
                   }`}
                 >
                   Present
@@ -333,7 +333,7 @@ function TrainingWeek({ playerId, dates }: { playerId: string; dates: string[] }
                   aria-pressed={mark?.present === false}
                   onClick={() => setTrainingAttendance(playerId, date, false)}
                   className={`min-h-11 rounded-md px-3 text-sm font-bold ${
-                    mark?.present === false ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-950"
+                    mark?.present === false ? "btn-shade" : "btn-quiet"
                   }`}
                 >
                   Not present
@@ -535,9 +535,7 @@ function ScoreRow({
             key={score}
             type="button"
             onClick={() => onChange(score)}
-            className={`size-11 rounded-md text-sm font-bold ${
-              score === value ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-950"
-            }`}
+            className={`size-11 rounded-md text-sm font-bold ${score === value ? "btn-shade" : "btn-quiet"}`}
           >
             {score}
           </button>

@@ -181,7 +181,7 @@ export function LiveMatchTracker() {
                       data-formation={name}
                       onClick={() => chooseFormation(name)}
                       className={`min-h-11 rounded-md px-3 text-sm font-bold ${
-                        formation === name ? "bg-emerald-600 text-white" : "bg-white text-slate-950 ring-1 ring-slate-300"
+                        formation === name ? "btn-shade" : "btn-quiet"
                       }`}
                     >
                       {name}
@@ -201,7 +201,7 @@ export function LiveMatchTracker() {
                       data-formation={item.name}
                       onClick={() => chooseFormation(item.id)}
                       className={`min-h-11 rounded-md px-3 text-sm font-bold ${
-                        formation === item.id ? "bg-emerald-600 text-white" : "bg-white text-slate-950 ring-1 ring-slate-300"
+                        formation === item.id ? "btn-shade" : "btn-quiet"
                       }`}
                     >
                       {item.name}
@@ -250,7 +250,7 @@ export function LiveMatchTracker() {
                 data-formation-save
                 onClick={saveFormation}
                 disabled={players.every((player) => !player.isOnPitch)}
-                className="min-h-11 rounded-md bg-emerald-600 px-4 text-sm font-bold text-white disabled:bg-slate-300"
+                className="btn-shade min-h-11 rounded-md px-4 text-sm font-bold"
               >
                 Save
               </button>
@@ -265,7 +265,7 @@ export function LiveMatchTracker() {
       <section className="match-clock ink-panel mt-4 min-w-0 rounded-xl bg-slate-900 p-4 text-white shadow-lg">
         <div className="flex items-start justify-between gap-3">
           <p className="text-sm font-semibold uppercase tracking-wide text-emerald-300">{teamName}</p>
-          <p className="rounded-full bg-emerald-500 px-3 py-1 text-sm font-bold text-[#1e1d1b]">
+          <p className="btn-shade rounded-full px-3 py-1 text-sm font-bold">
             {isClockRunning ? "LIVE" : "READY"}
           </p>
         </div>
@@ -288,7 +288,7 @@ export function LiveMatchTracker() {
           <Button
             type="button"
             size="lg"
-            className="h-14 min-w-36 bg-emerald-500 text-base text-[#1e1d1b] hover:bg-emerald-400"
+            className="h-14 min-w-36 text-base"
             onClick={() => (isClockRunning ? pauseMatchClock() : startMatchClock())}
           >
             {isClockRunning ? <Pause className="size-5" /> : <Play className="size-5" />}
@@ -298,7 +298,7 @@ export function LiveMatchTracker() {
             type="button"
             size="lg"
             variant="secondary"
-            className="h-14 min-w-36 bg-slate-700 text-base text-white hover:bg-slate-600"
+            className="h-14 min-w-36 text-base"
             onClick={() => {
               resetMatch();
               setSelectedOff(null);
@@ -312,7 +312,7 @@ export function LiveMatchTracker() {
             type="button"
             size="lg"
             variant="secondary"
-            className="h-14 min-w-36 bg-white text-base text-slate-950 hover:bg-slate-200"
+            className="h-14 min-w-36 text-base"
             disabled={players.length === 0 || opponent.trim().length === 0}
             onClick={() => {
               if (!team) return;
@@ -379,13 +379,13 @@ function PlayerColumn({
                 type="button"
                 onClick={() => onSelect(player.playerId)}
                 className={`flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left ${
-                  selected ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-950 hover:bg-slate-200"
+                  selected ? "btn-shade" : "btn-quiet"
                 }`}
               >
                 <span className="w-8 text-lg font-bold tabular-nums">{player.squadNumber}</span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-base font-semibold">{player.name}</span>
-                  <span className={`block text-sm font-medium ${selected ? "text-emerald-100" : "text-slate-600"}`}>
+                  <span className={`block text-sm font-medium ${selected ? "opacity-80" : "text-slate-600"}`}>
                     {player.position}
                   </span>
                 </span>

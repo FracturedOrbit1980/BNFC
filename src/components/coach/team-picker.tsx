@@ -46,9 +46,7 @@ export function TeamPicker() {
               data-age-tile={label}
               aria-pressed={active}
               onClick={() => setAgeId(group.id)}
-              className={`min-h-12 min-w-16 rounded-xl px-4 text-base font-black ${
-                active ? "bg-primary text-primary-foreground" : "bg-slate-100 text-slate-950 ring-1 ring-slate-300"
-              }`}
+              className={`min-h-12 min-w-16 rounded-xl px-4 text-base font-black ${active ? "btn-shade" : "btn-quiet"}`}
             >
               {label}
             </button>
@@ -65,7 +63,7 @@ export function TeamPicker() {
               if (!isDivision(event.target.value)) return;
               openDivisionTeam(selected.id, event.target.value);
             }}
-            className="mt-1 block h-11 w-full max-w-xs rounded-md border border-slate-300 bg-white px-3 text-base"
+            className={`mt-1 block h-11 w-full max-w-xs rounded-md px-3 text-base font-bold ${divisionValue ? "btn-shade" : "btn-quiet"}`}
           >
             {divisionValue === "" ? (
               <option value="" hidden>

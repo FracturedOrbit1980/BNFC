@@ -50,7 +50,7 @@ export function DrillVideo({
           type="file"
           accept="video/*"
           data-field="video-file"
-          className="mt-1 block w-full text-base file:mr-3 file:h-11 file:rounded-md file:border-0 file:bg-emerald-600 file:px-3 file:font-bold file:text-white"
+          className="mt-1 block w-full text-base file:mr-3 file:h-11 file:rounded-md file:px-3 file:font-bold"
           onChange={(event) => {
             const file = event.target.files?.[0];
             if (!file) return;

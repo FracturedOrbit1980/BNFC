@@ -15,7 +15,7 @@ export function AppearanceToggle() {
       type="button"
       data-appearance-toggle
       onClick={toggle}
-      className="min-h-11 rounded-lg bg-white/10 px-3 text-sm font-bold text-white ring-1 ring-white/20"
+      className="btn-chrome min-h-11 rounded-lg px-3 text-sm font-bold"
     >
       <span className="dark:hidden">Dark</span>
       <span className="hidden dark:inline">Light</span>

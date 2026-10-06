@@ -464,9 +464,7 @@ function Chip({
     <button
       type="button"
       onClick={onClick}
-      className={`min-h-11 rounded-md px-3 text-sm font-bold ${
-        active ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-950"
-      }`}
+      className={`min-h-11 rounded-md px-3 text-sm font-bold ${active ? "btn-shade" : "btn-quiet"}`}
     >
       {children}
     </button>

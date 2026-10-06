@@ -43,7 +43,7 @@ export function ClubStart() {
                   data-load-club={club.id}
                   onClick={() => void load(club.id)}
                   className={`min-h-11 shrink-0 rounded-lg px-4 text-sm font-bold ${
-                    club.id === activeId ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-950"
+                    club.id === activeId ? "btn-shade" : "btn-quiet"
                   }`}
                 >
                   {club.id === activeId ? "Loaded" : "Load"}
@@ -52,7 +52,7 @@ export function ClubStart() {
                   type="button"
                   data-edit-club={club.id}
                   onClick={() => setEditingId(editingId === club.id ? null : club.id)}
-                  className="min-h-11 shrink-0 rounded-lg bg-white px-4 text-sm font-bold text-slate-950 ring-1 ring-slate-300"
+                  className="btn-quiet min-h-11 shrink-0 rounded-lg px-4 text-sm font-bold"
                 >
                   Edit
                 </button>
@@ -145,7 +145,7 @@ function ClubForm({
           type="file"
           accept="image/*"
           data-field={initial ? "edit-club-logo" : "new-club-logo"}
-          className="mt-1 block w-full max-w-full text-base file:mr-3 file:h-11 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:font-bold"
+          className="mt-1 block w-full max-w-full text-base file:mr-3 file:h-11 file:rounded-md file:px-3 file:font-bold"
           onChange={(event) => {
             const file = event.target.files?.[0];
             if (!file) return;
@@ -165,7 +165,7 @@ function ClubForm({
               aria-pressed={theme === item.id}
               onClick={() => setTheme(item.id)}
               className={`inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-bold ${
-                theme === item.id ? "bg-[#1e1d1b] text-white" : "bg-slate-100 text-slate-950"
+                theme === item.id ? "btn-shade" : "btn-quiet"
               }`}
             >
               <span className="size-4 rounded-full" style={{ background: item.swatch }} />
@@ -174,7 +174,7 @@ function ClubForm({
           ))}
         </div>
       </fieldset>
-      <button type="submit" className="min-h-11 rounded-lg bg-emerald-600 px-4 text-sm font-bold text-white">
+      <button type="submit" className="btn-shade min-h-11 rounded-lg px-4 text-sm font-bold">
         {submitLabel}
       </button>
       {notice ? <p className="text-sm font-semibold text-slate-700">{notice}</p> : null}

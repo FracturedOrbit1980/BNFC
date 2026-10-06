@@ -67,7 +67,7 @@ export function PlayerPhotoField({
             type="file"
             accept="image/*"
             data-field={field}
-            className="mt-1 block w-full max-w-full text-base file:mr-3 file:inline-flex file:min-h-11 file:items-center file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:font-bold file:text-slate-950"
+            className="mt-1 block w-full max-w-full text-base file:mr-3 file:inline-flex file:min-h-11 file:items-center file:rounded-md file:px-3 file:font-bold"
             onChange={(event) => {
               const file = event.target.files?.[0];
               event.target.value = "";

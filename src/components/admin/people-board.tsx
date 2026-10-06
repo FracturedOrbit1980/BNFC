@@ -260,9 +260,7 @@ function AllocateFields({ onAssign }: { onAssign: (teamId: string) => void }) {
               data-age-tile={label}
               aria-pressed={active}
               onClick={() => setAgeId(group.id)}
-              className={`min-h-12 min-w-16 rounded-xl px-4 text-base font-black ${
-                active ? "bg-primary text-primary-foreground" : "bg-slate-100 text-slate-950 ring-1 ring-slate-300"
-              }`}
+              className={`min-h-12 min-w-16 rounded-xl px-4 text-base font-black ${active ? "btn-shade" : "btn-quiet"}`}
             >
               {label}
             </button>
@@ -280,7 +278,7 @@ function AllocateFields({ onAssign }: { onAssign: (teamId: string) => void }) {
               const teamId = openDivisionTeam(selected.id, event.target.value);
               if (teamId) onAssign(teamId);
             }}
-            className="mt-1 block h-11 w-full max-w-xs rounded-md border border-slate-300 bg-white px-3 text-base"
+            className="btn-quiet mt-1 block h-11 w-full max-w-xs rounded-md px-3 text-base font-bold"
           >
             <option value="">Choose a division</option>
             {DIVISIONS.map((item) => (
@@ -335,7 +333,7 @@ function PlayerRow({
         <button
           type="button"
           onClick={() => setOpen((current) => !current)}
-          className="min-h-11 w-full shrink-0 rounded-xl bg-slate-100 px-3 py-2 text-left ring-1 ring-slate-300 sm:w-auto"
+          className="btn-quiet min-h-11 w-full shrink-0 rounded-xl px-3 py-2 text-left sm:w-auto"
         >
           <span className="block text-sm font-bold text-slate-950">{open ? "Close editor" : "Edit player"}</span>
           <span className="mt-0.5 block text-xs font-medium text-slate-600">Change the name, number, or position.</span>

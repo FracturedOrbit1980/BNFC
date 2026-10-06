@@ -45,9 +45,7 @@ export function SessionPlanner() {
                 key={drill.id}
                 type="button"
                 onClick={() => toggle(drill.id)}
-                className={`rounded-full px-3 py-2 text-sm font-semibold ${
-                  on ? "bg-emerald-600 text-white" : "bg-white text-slate-950 ring-1 ring-slate-300"
-                }`}
+                className={`rounded-full px-3 py-2 text-sm font-semibold ${on ? "btn-shade" : "btn-quiet"}`}
               >
                 {drill.title}
               </button>

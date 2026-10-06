@@ -88,7 +88,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 key={item.href}
                 href={item.href}
                 className={`flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold ${
-                  active ? "bg-emerald-500 text-[#1e1d1b]" : "text-white/85 hover:bg-white/10"
+                  active ? "btn-shade" : "text-white/85 hover:bg-white/10"
                 }`}
               >
                 <Icon className="size-5" />

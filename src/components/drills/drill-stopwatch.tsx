@@ -160,9 +160,7 @@ export function DrillStopwatch({
           size="icon-lg"
           aria-label={state.isActive ? "Pause drill" : "Start drill"}
           onClick={() => dispatch({ type: "toggle" })}
-          className={`size-16 rounded-full text-slate-950 ${
-            state.isActive ? "bg-amber-500 hover:bg-amber-400" : "bg-emerald-500 hover:bg-emerald-400"
-          }`}
+          className="size-16 rounded-full"
         >
           {state.isActive ? <Pause className="size-8" /> : <Play className="size-8" />}
         </Button>
@@ -172,7 +170,7 @@ export function DrillStopwatch({
           variant="secondary"
           aria-label="Reset drill timer"
           onClick={() => dispatch({ type: "reset", targetSeconds })}
-          className="size-16 rounded-full bg-slate-700 text-white hover:bg-slate-600"
+          className="size-16 rounded-full"
         >
           <RotateCcw className="size-8" />
         </Button>
@@ -196,7 +194,7 @@ function TimeStep({
       variant="secondary"
       disabled={disabled}
       onClick={onClick}
-      className="h-11 bg-slate-700 px-3 text-sm text-white hover:bg-slate-600"
+      className="h-11 px-3 text-sm"
     >
       {label}
     </Button>

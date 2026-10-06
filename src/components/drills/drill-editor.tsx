@@ -728,7 +728,7 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
               type="button"
               data-clear-slide
               onClick={clearSlide}
-              className="min-h-11 rounded-md bg-slate-100 px-4 text-sm font-bold text-slate-950"
+              className="btn-quiet min-h-11 rounded-md px-4 text-sm font-bold"
             >
               Clear
             </button>
@@ -798,7 +798,7 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
             setHint("");
           }}
           className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg px-3 text-sm font-bold ${
-            descriptions ? "bg-emerald-600 text-white" : "bg-white text-slate-950 ring-1 ring-slate-300"
+            descriptions ? "btn-shade" : "btn-quiet"
           }`}
         >
           <MessageSquareText className="size-4" aria-hidden />
@@ -904,11 +904,11 @@ function DrillEditorForm({ requestedId }: { requestedId: string | null }) {
                   type="button"
                   onClick={() => openSaved(drill.id)}
                   className={`min-h-11 max-w-full rounded-xl px-3 py-2 text-left ${
-                    drill.id === drillId ? "bg-emerald-600 text-white" : "bg-white text-slate-950 ring-1 ring-slate-300"
+                    drill.id === drillId ? "btn-shade" : "btn-quiet"
                   }`}
                 >
                   <span className="block truncate text-sm font-bold">{drill.title}</span>
-                  <span className={`mt-0.5 block text-xs font-medium ${drill.id === drillId ? "text-emerald-50" : "text-slate-600"}`}>
+                  <span className={`mt-0.5 block text-xs font-medium ${drill.id === drillId ? "opacity-80" : "text-slate-600"}`}>
                     {drill.level} · open this layout in the editor
                   </span>
                 </button>
@@ -971,7 +971,7 @@ function ToolButton({
         onClick();
       }}
       className={`editor-tool flex size-11 shrink-0 items-center justify-center rounded-lg disabled:opacity-40 ${
-        active ? "bg-emerald-600 text-white" : "bg-white text-slate-950 ring-1 ring-slate-300"
+        active ? "btn-shade" : "btn-quiet"
       }`}
     >
       {children}
