@@ -12,8 +12,8 @@ export function useSlideTravel(active: boolean, speed: number, onStep: () => voi
     if (!active) return;
     let start = performance.now();
     const pace = Math.max(0.25, speed);
-    const travelMs = Math.max(480, Math.round(1100 / pace));
-    const holdMs = Math.max(220, Math.round(420 / pace));
+    const travelMs = Math.max(640, Math.round(1500 / pace));
+    const holdMs = Math.max(320, Math.round(700 / pace));
     let raf = 0;
     let stopped = false;
     const tick = (now: number) => {

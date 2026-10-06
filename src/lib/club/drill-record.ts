@@ -62,6 +62,51 @@ export function skillOf(drill: { skillLevel?: string; level?: string }): SkillLe
   return "Beginner";
 }
 
+function oneSentence(text: string) {
+  const trimmed = text.trim().replace(/\s+/g, " ");
+  if (!trimmed) return "";
+  const first = trimmed.split(/(?<=[.!?])\s+/)[0] ?? trimmed;
+  return /[.!?]$/.test(first) ? first : `${first}.`;
+}
+
+function setupSentence(pitchSetup?: string, dimensions?: string, playerSetup?: string) {
+  const raw = (pitchSetup || [dimensions, playerSetup].filter(Boolean).join(", ")).trim();
+  if (!raw) return "Set the players out on the pitch.";
+  const bits = raw
+    .split(/(?<=\.)\s+/)
+    .map((bit) => bit.replace(/[.]+$/, "").trim())
+    .filter(Boolean)
+    .map((bit, index) => (index === 0 ? bit : `${bit.charAt(0).toLowerCase()}${bit.slice(1)}`));
+  const joined = bits.join(", ");
+  const body = `${joined.charAt(0).toLowerCase()}${joined.slice(1)}`;
+  if (/^(a|an|the)\b/i.test(body)) return `Set this up as ${body}.`;
+  return `Set this up as a ${body}.`;
+}
+
+function coachingSentence(point?: string) {
+  const raw = (point || "Watch the first action").trim().replace(/[.]+$/, "");
+  if (/^ball close when turning$/i.test(raw)) return "Keep the ball close when turning.";
+  if (/^width before the switch$/i.test(raw)) return "Use width before the switch.";
+  if (/^numbers beyond the ball$/i.test(raw)) return "Get numbers beyond the ball.";
+  if (/^first pass forward$/i.test(raw)) return "Play the first pass forward.";
+  const text = `${raw.charAt(0).toUpperCase()}${raw.slice(1)}`;
+  return `${text}.`;
+}
+
+/** Three plain sentences a coach can read before opening the drill. */
+export function plainDrillBlurb(drill: {
+  instructions?: string;
+  pitchSetup?: string;
+  dimensions?: string;
+  playerSetup?: string;
+  coachingPoints?: string[];
+}) {
+  const action = oneSentence(drill.instructions || "Players work the pattern on the pitch.");
+  const setup = setupSentence(drill.pitchSetup, drill.dimensions, drill.playerSetup);
+  const point = coachingSentence(drill.coachingPoints?.[0]);
+  return `${action} ${setup} ${point}`;
+}
+
 export function playerCountLine(players: PlayerCount) {
   return `Attackers ${players.attackers} · Defenders ${players.defenders} · Neutrals ${players.neutrals} · Goalkeepers ${players.goalkeepers}`;
 }

@@ -14,7 +14,7 @@ import { DrillVideo } from "@/components/drills/drill-video";
 import { YOUTH_AGES } from "@/lib/club/age";
 import { emptyDrillBoard, type DrillBoard as DrillBoardState } from "@/lib/club/board";
 import { SKILL_LEVELS, type SkillLevel } from "@/lib/club/catalog";
-import { drillTypeLabel, momentLabel, playerCountLine, skillOf, youthAgeOf } from "@/lib/club/drill-record";
+import { drillTypeLabel, momentLabel, plainDrillBlurb, playerCountLine, skillOf, youthAgeOf } from "@/lib/club/drill-record";
 import type { ClubDrill } from "@/lib/club/seed";
 import { useClubStore } from "@/stores/club-store";
 
@@ -105,9 +105,7 @@ export function DrillLibrary({
                         <span className="block">
                           {momentLabel(drill.moment)} · {drillTypeLabel(drill.drillType)} · {skillOf(drill)}
                         </span>
-                        <span className="mt-1 block text-slate-800">{firstSentence(drill.instructions)}</span>
-                        <span className="mt-1 block">Setup: {drill.pitchSetup || drill.dimensions || drill.playerSetup}</span>
-                        <span className="mt-1 block">Coaching point: {drill.coachingPoints[0] || "Watch the first action."}</span>
+                        <span className="mt-1 block text-slate-800">{plainDrillBlurb(drill)}</span>
                       </CardDescription>
                     </CardHeader>
                   </Card>
@@ -257,13 +255,6 @@ function formatBlock(totalSeconds: number) {
   const seconds = totalSeconds % 60;
   if (seconds === 0) return `${minutes} min`;
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-}
-
-function firstSentence(text: string) {
-  const trimmed = text.trim();
-  if (!trimmed) return "Players work the pattern on the pitch.";
-  const split = trimmed.split(/(?<=\.)\s+/);
-  return split[0] || trimmed;
 }
 
 function FilterChip({

@@ -52,6 +52,11 @@ function pairs(nudge: number): BoardFrame[] {
       [player("a", 46, y - 12, "1"), player("b", 58, y + 12, "2"), cone("c1", 18, y + 10), cone("c2", 78, y + 10)],
       [line("pass", 56, y + 8, 46, y - 8, "pass"), line("run", 46, y - 6, 30, y - 16, "run")],
     ),
+    slide(
+      "slide-3",
+      [player("a", 72, y, "1"), player("b", 26, y + 4, "2"), cone("c1", 18, y + 10), cone("c2", 78, y + 10)],
+      [line("pass", 66, y, 32, y + 2, "pass"), line("run", 26, y, 18, y - 8, "run")],
+    ),
   ];
 }
 
@@ -68,6 +73,11 @@ function lineShape(nudge: number): BoardFrame[] {
       [player("a", x + 22, 14, "1"), player("b", x + 22, 32, "2"), player("c", x + 22, 50, "3"), cone("c1", x + 16, 16), cone("c2", x + 16, 48)],
       [line("press", x + 28, 12, x + 28, 52, "press"), line("run", x + 22, 32, x + 36, 24, "run")],
     ),
+    slide(
+      "slide-3",
+      [player("a", x + 40, 16, "1"), player("b", x + 40, 32, "2"), player("c", x + 40, 48, "3"), cone("c1", x + 16, 16), cone("c2", x + 16, 48)],
+      [line("press", x + 46, 14, x + 46, 50, "press"), line("run", x + 40, 32, x + 54, 20, "run")],
+    ),
   ];
 }
 
@@ -83,6 +93,11 @@ function boxPass(): BoardFrame[] {
       [player("a", 36, 24, "1"), player("b", 64, 24, "2"), player("c", 64, 42, "3"), player("d", 36, 42, "4"), cone("c1", 36, 32)],
       [line("pass", 64, 28, 64, 38, "pass"), line("run", 60, 42, 40, 42, "run")],
     ),
+    slide(
+      "slide-3",
+      [player("a", 30, 46, "1"), player("b", 48, 18, "2"), player("c", 74, 28, "3"), player("d", 52, 46, "4"), cone("c1", 36, 32)],
+      [line("pass", 70, 32, 54, 44, "pass"), line("run", 48, 46, 32, 46, "run")],
+    ),
   ];
 }
 
@@ -97,6 +112,11 @@ function pressAngle(): BoardFrame[] {
       "slide-2",
       [player("a", 42, 34, "1"), player("b", 52, 28, "2", "opponent"), cone("c1", 22, 20), cone("c2", 22, 44)],
       [line("pass", 40, 36, 28, 40, "dribble"), line("press", 50, 26, 40, 34, "press")],
+    ),
+    slide(
+      "slide-3",
+      [player("a", 22, 44, "1"), player("b", 34, 38, "2", "opponent"), cone("c1", 22, 20), cone("c2", 22, 44)],
+      [line("pass", 24, 42, 16, 48, "dribble"), line("press", 32, 36, 22, 42, "press")],
     ),
   ];
 }
@@ -127,6 +147,18 @@ function attack(): BoardFrame[] {
       ],
       [line("pass", 50, 18, 58, 30, "pass"), line("run", 58, 28, 78, 28, "run")],
     ),
+    slide(
+      "slide-3",
+      [
+        player("a", 72, 14, "1"),
+        player("b", 56, 48, "2"),
+        player("c", 76, 30, "3"),
+        player("d", 82, 20, "4", "opponent"),
+        player("e", 84, 42, "5", "opponent"),
+        keeper("gk", 92, 32),
+      ],
+      [line("pass", 74, 28, 88, 30, "pass"), line("run", 72, 16, 86, 22, "run")],
+    ),
   ];
 }
 
@@ -155,6 +187,18 @@ function rondo(): BoardFrame[] {
         player("f", 58, 30, "6", "opponent"),
       ],
       [line("pass", 68, 24, 66, 42, "pass"), line("press", 54, 22, 66, 28, "press")],
+    ),
+    slide(
+      "slide-3",
+      [
+        player("a", 34, 22, "1"),
+        player("b", 66, 16, "2"),
+        player("c", 64, 46, "3"),
+        player("d", 30, 46, "4"),
+        player("e", 48, 32, "5", "opponent"),
+        player("f", 56, 34, "6", "opponent"),
+      ],
+      [line("pass", 60, 44, 36, 44, "pass"), line("press", 50, 30, 40, 40, "press")],
     ),
   ];
 }
@@ -189,6 +233,20 @@ function smallSided(): BoardFrame[] {
       ],
       [line("pass", 44, 18, 58, 28, "pass"), line("run", 54, 40, 72, 30, "run")],
     ),
+    slide(
+      "slide-3",
+      [
+        player("a", 64, 14, "1"),
+        player("b", 60, 28, "2"),
+        player("c", 72, 40, "3"),
+        player("d", 86, 16, "4", "opponent"),
+        player("e", 90, 32, "5", "opponent"),
+        player("f", 84, 48, "6", "opponent"),
+        cone("c1", 50, 12),
+        cone("c2", 50, 52),
+      ],
+      [line("pass", 66, 16, 80, 18, "pass"), line("run", 72, 36, 84, 28, "run")],
+    ),
   ];
 }
 
@@ -219,6 +277,19 @@ function block(): BoardFrame[] {
         player("g", 74, 50, "7", "opponent"),
       ],
       [line("pass", 48, 30, 62, 22, "pass"), line("run", 60, 24, 74, 18, "run")],
+    ),
+    slide(
+      "slide-3",
+      [
+        player("a", 60, 12, "1"),
+        player("b", 58, 30, "2"),
+        player("c", 60, 48, "3"),
+        player("d", 74, 22, "4"),
+        player("e", 86, 16, "5", "opponent"),
+        player("f", 90, 34, "6", "opponent"),
+        player("g", 86, 50, "7", "opponent"),
+      ],
+      [line("pass", 62, 28, 78, 18, "pass"), line("run", 74, 20, 88, 14, "run")],
     ),
   ];
 }
@@ -276,11 +347,16 @@ export const libraryBoards: Record<string, DrillBoard> = Object.fromEntries(
   ]),
 );
 
-/** Keep a coach's saved layout. Fill a library drill only when its board is missing or empty. */
+function isGeneratedPreview(board: DrillBoard | undefined) {
+  if (!boardHasPattern(board)) return true;
+  return board!.frames.every((frame) => /^slide-\d+$/.test(frame.id)) && board!.frames.length < 3;
+}
+
+/** Keep a coach's saved layout. Refresh a generated library preview that is still shorter than three slides. */
 export function mergeLibraryBoards(saved: Record<string, DrillBoard> | undefined) {
   const next = { ...(saved ?? {}) };
   for (const [id, board] of Object.entries(libraryBoards)) {
-    if (!boardHasPattern(next[id])) next[id] = board;
+    if (isGeneratedPreview(next[id])) next[id] = board;
   }
   return next;
 }
