@@ -1,7 +1,7 @@
 {
-  "name": "Sportfica",
-  "short_name": "Sportfica",
-  "description": "Club platform for Sportfica",
+  "name": "Football",
+  "short_name": "Football",
+  "description": "Squads, drills, and pitch-side match tools for Sportfica",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

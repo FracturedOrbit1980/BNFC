@@ -1,9 +1,8 @@
-# Benoni Northerns FC
+# Football
 
-Club platform scaffold (Next.js App Router). The full specification is in `PROMPT.md`.
+Club platform (Next.js App Router). The product specification is in `PROMPT.md`.
 
 ```bash
-cd bnfc
 npm install
 npm run dev
 ```
@@ -12,6 +11,15 @@ Open http://localhost:3000 and choose Club admin, Head coach, or Player. The off
 
 The hosted app is https://fracturedorbit1980.github.io/Football/
 
-Supabase credentials are optional; see `.env.example`.
+This app is a static export, so `npm run build` does not need secrets. Supabase credentials stay optional; see `.env.example`.
 
-`npm run build` does not need a live Supabase project.
+## Supabase
+
+`main` added the club schema in `supabase/migrations/20261003120000_initial_schema.sql` (tables, row level security, and a signup trigger). The screens in this branch do not call that database yet. They keep the club in the browser. Apply the migration when a server connection is wired up:
+
+```bash
+npx supabase link --project-ref YOUR_PROJECT_REF
+npx supabase db push
+```
+
+The migration does not insert auth users. Copy `.env.example` to `.env.local` only for that later connection.

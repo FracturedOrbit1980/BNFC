@@ -7,7 +7,6 @@ import { ClubProvider } from "@/components/club/club-provider";
 import { ClubTheme } from "@/components/club/club-theme";
 import { appearanceScript } from "@/components/layout/appearance";
 import { AppShell } from "@/components/layout/app-shell";
-import { CLUB_NAME } from "@/lib/club/catalog";
 
 import "./globals.css";
 
@@ -23,15 +22,15 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: CLUB_NAME,
-    template: `%s · Sportfica`,
+    default: "Football",
+    template: `%s · Football`,
   },
-  description: "Club platform for Sportfica. Squads, drills, and pitch-side match tools.",
-  applicationName: CLUB_NAME,
+  description: "Football. Squads, drills, and pitch-side match tools for Sportfica.",
+  applicationName: "Football",
   manifest: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/manifest.webmanifest`,
   appleWebApp: {
     capable: true,
-    title: "Sportfica",
+    title: "Football",
     statusBarStyle: "black-translucent",
   },
   icons: {
@@ -54,7 +53,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full">
-        <Script id="bnfc-appearance" strategy="beforeInteractive">
+        <Script id="football-appearance" strategy="beforeInteractive">
           {appearanceScript}
         </Script>
         <RoleProvider>

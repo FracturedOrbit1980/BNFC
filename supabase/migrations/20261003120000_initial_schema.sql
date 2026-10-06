@@ -1,4 +1,4 @@
--- Benoni Northerns FC schema, row level security, signup profile trigger, and club seed.
+-- Football schema, row level security, signup profile trigger, and the Sportfica club seed.
 -- Apply with `supabase db push` after `supabase link`, or paste this file into the Supabase SQL editor.
 -- The app builds without running this file. Reference rows below do not depend on auth.users.
 
@@ -8,7 +8,7 @@ CREATE TYPE user_role AS ENUM ('SUPER_ADMIN', 'HEAD_COACH', 'PLAYER');
 
 CREATE TABLE clubs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name VARCHAR(255) NOT NULL DEFAULT 'Benoni Northerns FC',
+    name VARCHAR(255) NOT NULL DEFAULT 'Sportfica',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -463,9 +463,9 @@ CREATE POLICY match_minutes_player_select ON match_player_minutes
     )
   );
 
--- Reference data for Benoni Northerns FC. No auth.users ids.
+-- Reference data for Sportfica. No auth.users ids.
 INSERT INTO clubs (id, name)
-VALUES ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Benoni Northerns FC')
+VALUES ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Sportfica')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO age_groups (id, club_id, name, display_order)
