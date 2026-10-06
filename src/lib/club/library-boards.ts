@@ -10,6 +10,8 @@ import {
   type MarkKind,
   type SessionPhase,
 } from "@/lib/club/board";
+import type { DrillType, MomentOfGame } from "@/lib/club/catalog";
+import { clubLibrary } from "@/lib/club/library";
 
 function player(id: string, x: number, y: number, label: string, team: "player" | "opponent" = "player"): BoardPiece {
   return { id, kind: "player", x, y, label, team };
@@ -294,6 +296,91 @@ function block(): BoardFrame[] {
   ];
 }
 
+function hashId(id: string) {
+  let hash = 0;
+  for (let index = 0; index < id.length; index += 1) hash = (hash * 33 + id.charCodeAt(index)) >>> 0;
+  return hash;
+}
+
+function clamp(value: number, low: number, high: number) {
+  return Math.max(low, Math.min(high, value));
+}
+
+function place(id: string, x: number, y: number, label: string, team: "player" | "opponent" = "player") {
+  return player(id, clamp(x, 8, 92), clamp(y, 8, 56), label, team);
+}
+
+/** Three slides for a catalogue drill that is not one of the hand-built previews. */
+function storyFrames(id: string, moment: MomentOfGame): BoardFrame[] {
+  const hash = hashId(id);
+  const attackers = 3 + (hash % 2);
+  const defenders = moment === "IP" ? hash % 5 : 1 + ((hash >> 4) % 2);
+  const baseX = 18 + (hash % 10);
+  const baseY = 14 + ((hash >> 6) % 8);
+  const coneA = cone("c0", clamp(baseX + 4, 8, 92), clamp(baseY + 22, 8, 56));
+  const coneB = cone("c1", clamp(baseX + 34, 8, 92), clamp(baseY + 6, 8, 56));
+  const frames: BoardFrame[] = [];
+
+  for (let step = 0; step < 3; step += 1) {
+    const pieces: BoardPiece[] = [];
+    for (let index = 0; index < attackers; index += 1) {
+      let x = baseX + index * 12;
+      let y = baseY + (index % 2) * 14;
+      if (moment === "IP") {
+        x = baseX + ((index + step) % attackers) * 16;
+        y = baseY + ((index + step * 2) % 3) * 12;
+      } else if (moment === "T2A") {
+        x = baseX + step * 16 + index * 7;
+        y = baseY + (index % 2) * 12 - step * 3;
+      } else if (moment === "OOP") {
+        x = baseX + step * 8 + (index === 0 ? step * 6 : 0);
+        y = baseY + index * 11;
+      } else {
+        x = baseX + (index === 0 ? step * 12 : -step * 5) + index * 8;
+        y = baseY + index * 10 + (index === 0 ? step * 2 : -step);
+      }
+      pieces.push(place(`p${index}`, x, y, String(index + 1)));
+    }
+    for (let index = 0; index < defenders; index += 1) {
+      let x = 72 - step * 8 + index * 10;
+      let y = 18 + index * 14;
+      if (moment === "T2A") {
+        x = 80 - step * 4 + index * 6;
+        y = 20 + index * 14;
+      } else if (moment === "T2D") {
+        x = 64 - step * 14 + index * 8;
+        y = 22 + index * 12 - step * 2;
+      } else if (moment === "OOP") {
+        x = 46 + step * 10 + index * 6;
+        y = 16 + index * 16;
+      }
+      pieces.push(place(`o${index}`, x, y, String(attackers + index + 1), "opponent"));
+    }
+    pieces.push(coneA, coneB);
+
+    const lead = pieces.find((piece) => piece.id === "p0")!;
+    const next = pieces.find((piece) => piece.id === "p1")!;
+    const target = pieces.find((piece) => piece.id === (moment === "IP" ? "p2" : "o0")) ?? next;
+    const travel: MarkKind = moment === "OOP" || moment === "T2D" ? "press" : "pass";
+    const support: MarkKind = moment === "IP" ? "pass" : moment === "T2A" ? "run" : "press";
+    frames.push(
+      slide(`slide-${step + 1}`, pieces, [
+        line("m1", lead.x + 2, lead.y, next.x - 2, next.y, travel),
+        line("m2", next.x, next.y + 2, target.x, target.y - 2, support),
+      ]),
+    );
+  }
+  return frames;
+}
+
+function phaseFromType(type: DrillType): SessionPhase {
+  if (type === "WU") return "Warm-up";
+  if (type === "TP") return "Technical";
+  if (type === "SP" || type === "Rondo") return "Skill";
+  if (type === "SSG") return "Small-sided game";
+  return "Game";
+}
+
 function framesFor(id: string, index: number): BoardFrame[] {
   if (id === "drill_uefa_oop_wu") return lineShape(index);
   if (id === "drill_uefa_oop_tp") return pressAngle();
@@ -332,19 +419,25 @@ const LIBRARY_IDS = [
   "drill_uefa_t2d_11",
 ] as const;
 
+const HAND_BUILT = new Set<string>(LIBRARY_IDS);
+
 export const libraryBoards: Record<string, DrillBoard> = Object.fromEntries(
-  LIBRARY_IDS.map((id, index) => [
-    id,
-    {
-      view: "full" as const,
-      phase: phaseFor(id),
-      speed: 1,
-      playerColor: DEFAULT_PLAYER_COLOR,
-      opponentColor: DEFAULT_OPPONENT_COLOR,
-      pitchColor: DEFAULT_PITCH_COLOR,
-      frames: framesFor(id, index),
-    },
-  ]),
+  clubLibrary.map((item, index) => {
+    const frames = HAND_BUILT.has(item.id) ? framesFor(item.id, index) : storyFrames(item.id, item.moment);
+    if (frames.length < 3) throw new Error(`${item.id} needs three slides`);
+    return [
+      item.id,
+      {
+        view: "full" as const,
+        phase: HAND_BUILT.has(item.id) ? phaseFor(item.id) : phaseFromType(item.drillType),
+        speed: 1,
+        playerColor: DEFAULT_PLAYER_COLOR,
+        opponentColor: DEFAULT_OPPONENT_COLOR,
+        pitchColor: DEFAULT_PITCH_COLOR,
+        frames,
+      },
+    ];
+  }),
 );
 
 function isGeneratedPreview(board: DrillBoard | undefined) {

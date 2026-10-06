@@ -9,6 +9,7 @@ import {
   type SetupDiagram,
   type SkillLevel,
 } from "@/lib/club/catalog";
+import { buildExtra } from "@/lib/club/library-extra";
 
 type AgeBand = "U8-U10" | "U11-U13" | "U14-U16" | "senior";
 
@@ -34,6 +35,8 @@ type DrillInput = {
   instructions: string;
   coachingPoints: string[];
   progressions: string[];
+  youthAge?: number;
+  skillLevel?: SkillLevel;
 };
 
 function levelFor(ageBand: AgeBand, license: LicenseLevel): DrillLevel {
@@ -73,7 +76,9 @@ const PLACEMENT: Record<string, { youthAge: number; skillLevel: SkillLevel }> = 
 };
 
 function drill(input: DrillInput): DrillTemplate {
-  const place = PLACEMENT[input.id];
+  const place =
+    PLACEMENT[input.id] ??
+    (input.youthAge && input.skillLevel ? { youthAge: input.youthAge, skillLevel: input.skillLevel } : undefined);
   if (!place) throw new Error(`Missing age and skill for ${input.id}`);
   const outfield = input.players.attackers + input.players.defenders + input.players.neutrals;
   return {
@@ -120,7 +125,7 @@ const players = (attackers: number, defenders = 0, neutrals = 0, goalkeepers = 0
 });
 
 /** UEFA training drill library. Names follow type, focus, player setup, and constraint. */
-export const clubLibrary: DrillTemplate[] = [
+const baseLibrary: DrillTemplate[] = [
   drill({
     id: "drill_uefa_ip_wu",
     moment: "IP",
@@ -681,3 +686,33 @@ export const clubLibrary: DrillTemplate[] = [
     progressions: ["The counter has six seconds.", "One of the three may jump if the first pass is backwards."],
   }),
 ];
+
+export const clubLibrary: DrillTemplate[] = [...baseLibrary, ...buildExtra(baseLibrary).map((input) => drill(input))];
+
+function assertLibrary(drills: DrillTemplate[]) {
+  const titles = new Set<string>();
+  const actions = new Set<string>();
+  const cells = new Map<string, { count: number; moments: Set<string> }>();
+  for (const item of drills) {
+    if (titles.has(item.title)) throw new Error(`Duplicate drill title: ${item.title}`);
+    titles.add(item.title);
+    if (actions.has(item.instructions)) throw new Error(`Duplicate drill instructions: ${item.id}`);
+    actions.add(item.instructions);
+    const key = `${item.youthAge}-${item.skillLevel}`;
+    const cell = cells.get(key) ?? { count: 0, moments: new Set<string>() };
+    cell.count += 1;
+    cell.moments.add(item.moment);
+    cells.set(key, cell);
+  }
+  for (const age of [6, 7, 8, 9, 10, 11, 12, 13]) {
+    for (const skill of ["Beginner", "Intermediate", "Professional"] as const) {
+      const cell = cells.get(`${age}-${skill}`);
+      if (!cell || cell.count < 6) throw new Error(`Expected 6 drills for U${age} ${skill}`);
+      for (const moment of ["IP", "OOP", "T2A", "T2D"]) {
+        if (!cell.moments.has(moment)) throw new Error(`U${age} ${skill} is missing ${moment}`);
+      }
+    }
+  }
+}
+
+assertLibrary(clubLibrary);
