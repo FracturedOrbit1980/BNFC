@@ -7,6 +7,7 @@ import { ClubProvider } from "@/components/club/club-provider";
 import { ClubTheme } from "@/components/club/club-theme";
 import { appearanceScript } from "@/components/layout/appearance";
 import { AppShell } from "@/components/layout/app-shell";
+import { InstallServiceWorker } from "@/components/layout/install-service-worker";
 
 import "./globals.css";
 
@@ -52,10 +53,14 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`} suppressHydrationWarning>
+      <head>
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+      </head>
       <body className="min-h-full">
         <Script id="football-appearance" strategy="beforeInteractive">
           {appearanceScript}
         </Script>
+        <InstallServiceWorker />
         <RoleProvider>
           <ClubTheme />
           <AppShell>
